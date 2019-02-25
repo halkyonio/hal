@@ -116,7 +116,9 @@ func main() {
 			if Proceed("Use supported version") {
 				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
 			}
-			p.OutDir = Ask("Where should we create your new project")
+
+			currentDir, _ := os.Getwd()
+			p.OutDir = Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir))
 
 			client := http.Client{}
 
@@ -158,7 +160,6 @@ func main() {
 				return err
 			}
 
-			currentDir, _ := os.Getwd()
 			dir := filepath.Join(currentDir, p.OutDir)
 			zipFile := dir + ".zip"
 
