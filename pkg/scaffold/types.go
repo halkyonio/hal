@@ -41,8 +41,12 @@ func (c *Config) GetTemplateNames() []string {
 }
 
 func (c *Config) GetModuleNames() []string {
-	result := make([]string, len(c.Modules))
-	for i, v := range c.Modules {
+	return GetModuleNamesFor(c.Modules)
+}
+
+func GetModuleNamesFor(modules []Module) []string {
+	result := make([]string, len(modules))
+	for i, v := range modules {
 		result[i] = v.Name
 	}
 

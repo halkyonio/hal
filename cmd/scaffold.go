@@ -110,7 +110,7 @@ func main() {
 			if Proceed("Create from template") {
 				p.Template = Select("Available templates", c.GetTemplateNames())
 			} else {
-				p.Modules = MultiSelect("Select modules", c.GetModuleNames())
+				p.Modules = MultiSelect("Select modules", getCompatibleModuleNameFor(p))
 			}
 
 			p.GroupId = Ask("Group Id", "me.snowdrop")
@@ -232,6 +232,12 @@ func getGeneratorServiceConfig(url string) *scaffold.Config {
 	getYamlFrom(url, "config", c)
 
 	return c
+}
+
+func getCompatibleModuleNameFor(p *scaffold.Project) []string {
+	modules := &[]scaffold.Module{}
+	getYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
+	return scaffold.GetModuleNamesFor(*modules)
 }
 
 func addClientHeader(req *http.Request) {
