@@ -101,9 +101,11 @@ func main() {
 			c := getGeneratorServiceConfig(p.UrlService)
 
 			// first select Spring Boot version
-			versions, defaultVersion := c.GetSpringBootVersions()
-			p.SpringBootVersion = Select("Spring Boot version", versions, defaultVersion)
-			if Proceed("Use supported version") {
+			versions, defaultVersion := c.GetBOMMap()
+			p.SpringBootVersion = Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
+			bom := versions[p.SpringBootVersion]
+			p.SnowdropBomVersion = bom.Snowdrop
+			if len(bom.Supported) > 0 && Proceed("Use supported version") {
 				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
 			}
 

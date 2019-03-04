@@ -53,11 +53,11 @@ func GetModuleNamesFor(modules []Module) []string {
 	return result
 }
 
-func (c *Config) GetSpringBootVersions() ([]string, string) {
+func (c *Config) GetBOMMap() (map[string]Bom, string) {
 	var defaultVersion string
-	result := make([]string, len(c.Boms))
-	for k, v := range c.Boms {
-		result[k] = v.Community
+	result := make(map[string]Bom, len(c.Boms))
+	for _, v := range c.Boms {
+		result[v.Community] = v
 		if v.Default {
 			defaultVersion = v.Community
 		}
@@ -65,10 +65,23 @@ func (c *Config) GetSpringBootVersions() ([]string, string) {
 	return result, defaultVersion
 }
 
+func (c *Config) GetSpringBootVersions() []string {
+	boms, _ := c.GetBOMMap()
+	return GetSpringBootVersions(boms)
+}
+
+func GetSpringBootVersions(boms map[string]Bom) []string {
+	result := make([]string, 0, len(boms))
+	for k := range boms {
+		result = append(result, k)
+	}
+	return result
+}
+
 func (c *Config) GetSupportedVersionFor(springBootVersion string) string {
 	for _, v := range c.Boms {
 		if v.Community == springBootVersion {
-			return v.Snowdrop
+			return v.Supported
 		}
 	}
 	return ""
@@ -82,6 +95,7 @@ type Template struct {
 type Bom struct {
 	Community string `yaml:"community" json:"community"`
 	Snowdrop  string `yaml:"snowdrop"  json:"snowdrop"`
+	Supported string `yaml:"supported"  json:"supported"`
 	Default   bool   `yaml:"default"  json:"default"`
 }
 
