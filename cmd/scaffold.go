@@ -98,7 +98,7 @@ func main() {
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c := GetGeneratorServiceConfig(p.UrlService)
+			c := getGeneratorServiceConfig(p.UrlService)
 
 			// first select Spring Boot version
 			versions, defaultVersion := c.GetSpringBootVersions()
@@ -196,9 +196,9 @@ func main() {
 	}
 }
 
-func GetGeneratorServiceConfig(url string) *scaffold.Config {
+func getYamlFrom(url, endpoint string, result interface{}) {
 	// Call the /config endpoint to get the configuration
-	URL := strings.Join([]string{url, "config"}, "/")
+	URL := strings.Join([]string{url, endpoint}, "/")
 	client := http.Client{}
 
 	req, err := http.NewRequest(http.MethodGet, URL, strings.NewReader(""))
@@ -218,14 +218,18 @@ func GetGeneratorServiceConfig(url string) *scaffold.Config {
 	}
 
 	if strings.Contains(string(body), "Application is not available") {
-		log.Fatal("Generator service is not able to find the config !")
+		log.Fatal("Generator service is not available")
 	}
 
-	c := &scaffold.Config{}
-	err = yaml.Unmarshal(body, &c)
+	err = yaml.Unmarshal(body, &result)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
+
+func getGeneratorServiceConfig(url string) *scaffold.Config {
+	c := &scaffold.Config{}
+	getYamlFrom(url, "config", c)
 
 	return c
 }
