@@ -100,6 +100,13 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := GetGeneratorServiceConfig(p.UrlService)
 
+			// first select Spring Boot version
+			versions, defaultVersion := c.GetSpringBootVersions()
+			p.SpringBootVersion = Select("Spring Boot version", versions, defaultVersion)
+			if Proceed("Use supported version") {
+				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
+			}
+
 			if Proceed("Create from template") {
 				p.Template = Select("Available templates", c.GetTemplateNames())
 			} else {
@@ -110,11 +117,6 @@ func main() {
 			p.ArtifactId = Ask("Artifact Id", "myproject")
 			p.Version = Ask("Version", "1.0.0-SNAPSHOT")
 			p.PackageName = Ask("Package name", p.GroupId+"."+p.ArtifactId)
-			versions, defaultVersion := c.GetSpringBootVersions()
-			p.SpringBootVersion = Select("Spring Boot version", versions, defaultVersion)
-			if Proceed("Use supported version") {
-				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
-			}
 
 			currentDir, _ := os.Getwd()
 			p.OutDir = Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir))
