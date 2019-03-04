@@ -90,9 +90,6 @@ func askOne(prompt survey.Prompt, stdio ...terminal.Stdio) string {
 }
 
 func main() {
-	// Call the service at this address SERVICE_ENDPOINT
-	// to get the configuration
-	c := GetGeneratorServiceConfig()
 	p := &scaffold.Project{}
 
 	createCmd := &cobra.Command{
@@ -101,6 +98,8 @@ func main() {
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			c := GetGeneratorServiceConfig(p.UrlService)
+
 			if Proceed("Create from template") {
 				p.Template = Select("Available templates", c.GetTemplateNames())
 			} else {
@@ -179,8 +178,7 @@ func main() {
 		},
 	}
 
-	createCmd.Flags().StringVarP(&p.Template, "template", "t", "",
-		fmt.Sprintf("Template name used to select the project to be created. Supported templates are '%s'", strings.Join(c.GetTemplateNames(), ",")))
+	createCmd.Flags().StringVarP(&p.Template, "template", "t", "", "Template name used to select the project to be created")
 	createCmd.Flags().StringVarP(&p.UrlService, "urlservice", "u", ServiceEndpoint, "URL of the HTTP Server exposing the spring boot service")
 	createCmd.Flags().StringArrayVarP(&p.Modules, "module", "m", []string{}, "Spring Boot modules/starters")
 	createCmd.Flags().StringVarP(&p.GroupId, "groupid", "g", "", "GroupId : com.example")
@@ -196,9 +194,9 @@ func main() {
 	}
 }
 
-func GetGeneratorServiceConfig() *scaffold.Config {
+func GetGeneratorServiceConfig(url string) *scaffold.Config {
 	// Call the /config endpoint to get the configuration
-	URL := strings.Join([]string{ServiceEndpoint, "config"}, "/")
+	URL := strings.Join([]string{url, "config"}, "/")
 	client := http.Client{}
 
 	req, err := http.NewRequest(http.MethodGet, URL, strings.NewReader(""))
