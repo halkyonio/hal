@@ -229,8 +229,7 @@ func GetGeneratorServiceConfig(url string) *scaffold.Config {
 }
 
 func addClientHeader(req *http.Request) {
-	// TODO Define a version
-	userAgent := "sb/1.0"
+	userAgent := "snowdrop-scaffold/1.0"
 	req.Header.Set("User-Agent", userAgent)
 }
 
