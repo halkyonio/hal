@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -47,6 +48,7 @@ func Proceed(message string) bool {
 }
 
 func Select(message string, options []string, defaultValue ...string) string {
+	sort.Strings(options)
 	prompt := &survey.Select{
 		Message: message,
 		Options: options,
@@ -58,6 +60,7 @@ func Select(message string, options []string, defaultValue ...string) string {
 }
 
 func MultiSelect(message string, options []string) []string {
+	sort.Strings(options)
 	modules := []string{}
 	prompt := &survey.MultiSelect{
 		Message: message,
