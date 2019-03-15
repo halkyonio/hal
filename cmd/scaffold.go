@@ -6,91 +6,20 @@ import (
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/scaffold"
+	"github.com/snowdrop/odo-scaffold-plugin/pkg/ui"
 	"github.com/spf13/cobra"
-	"gopkg.in/AlecAivazis/survey.v1"
-	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 )
 
 const (
 	ServiceEndpoint = "https://generator.snowdrop.me"
 )
-
-// HandleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
-func HandleError(err error) {
-	if err != nil {
-		if err == terminal.InterruptErr {
-			os.Exit(1)
-		} else {
-			fmt.Printf("Encountered an error processing prompt: %v", err)
-		}
-	}
-}
-
-// Proceed displays a given message and asks the user if they want to proceed
-func Proceed(message string) bool {
-	var response bool
-	prompt := &survey.Confirm{
-		Message: message,
-	}
-
-	err := survey.AskOne(prompt, &response, survey.Required)
-	HandleError(err)
-
-	return response
-}
-
-func Select(message string, options []string, defaultValue ...string) string {
-	sort.Strings(options)
-	prompt := &survey.Select{
-		Message: message,
-		Options: options,
-	}
-	if len(defaultValue) == 1 {
-		prompt.Default = defaultValue[0]
-	}
-	return askOne(prompt)
-}
-
-func MultiSelect(message string, options []string) []string {
-	sort.Strings(options)
-	modules := []string{}
-	prompt := &survey.MultiSelect{
-		Message: message,
-		Options: options,
-	}
-	err := survey.AskOne(prompt, &modules, survey.Required)
-	HandleError(err)
-	return modules
-}
-
-func Ask(message string, defaultValue ...string) string {
-	input := &survey.Input{
-		Message: message,
-	}
-
-	if len(defaultValue) == 1 {
-		input.Default = defaultValue[0]
-	}
-
-	return askOne(input)
-}
-
-func askOne(prompt survey.Prompt, stdio ...terminal.Stdio) string {
-	var response string
-
-	err := survey.AskOne(prompt, &response, survey.Required)
-	HandleError(err)
-
-	return response
-}
 
 func main() {
 	p := &scaffold.Project{}
@@ -105,26 +34,26 @@ func main() {
 
 			// first select Spring Boot version
 			versions, defaultVersion := c.GetBOMMap()
-			p.SpringBootVersion = Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
+			p.SpringBootVersion = ui.Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
 			bom := versions[p.SpringBootVersion]
 			p.SnowdropBomVersion = bom.Snowdrop
-			if len(bom.Supported) > 0 && Proceed("Use supported version") {
+			if len(bom.Supported) > 0 && ui.Proceed("Use supported version") {
 				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
 			}
 
-			if Proceed("Create from template") {
-				p.Template = Select("Available templates", c.GetTemplateNames())
+			if ui.Proceed("Create from template") {
+				p.Template = ui.Select("Available templates", c.GetTemplateNames())
 			} else {
-				p.Modules = MultiSelect("Select modules", getCompatibleModuleNameFor(p))
+				p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
 			}
 
-			p.GroupId = Ask("Group Id", "me.snowdrop")
-			p.ArtifactId = Ask("Artifact Id", "myproject")
-			p.Version = Ask("Version", "1.0.0-SNAPSHOT")
-			p.PackageName = Ask("Package name", p.GroupId+"."+p.ArtifactId)
+			p.GroupId = ui.Ask("Group Id", "me.snowdrop")
+			p.ArtifactId = ui.Ask("Artifact Id", "myproject")
+			p.Version = ui.Ask("Version", "1.0.0-SNAPSHOT")
+			p.PackageName = ui.Ask("Package name", p.GroupId+"."+p.ArtifactId)
 
 			currentDir, _ := os.Getwd()
-			p.OutDir = Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir))
+			p.OutDir = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir))
 
 			client := http.Client{}
 
