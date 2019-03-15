@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	ServiceEndpoint = "http://spring-boot-generator.195.201.87.126.nip.io"
+	ServiceEndpoint = "https://generator.snowdrop.me"
 )
 
 // HandleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
