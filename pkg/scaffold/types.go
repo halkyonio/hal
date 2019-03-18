@@ -13,6 +13,7 @@ type Project struct {
 	Modules            []string
 
 	UrlService string
+	UseAp4k    bool
 }
 
 type Config struct {

@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -43,6 +44,7 @@ func main() {
 
 			if ui.Proceed("Create from template") {
 				p.Template = ui.Select("Available templates", c.GetTemplateNames())
+				p.UseAp4k = ui.Proceed("Use ap4k to generate OpenShift / Kubernetes resources")
 			} else {
 				p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
 			}
@@ -66,6 +68,7 @@ func main() {
 			form.Add("snowdropbom", p.SnowdropBomVersion)
 			form.Add("springbootversion", p.SpringBootVersion)
 			form.Add("outdir", p.OutDir)
+			form.Add("ap4k", strconv.FormatBool(p.UseAp4k))
 			for _, v := range p.Modules {
 				if v != "" {
 					form.Add("module", v)
