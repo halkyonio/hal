@@ -24,6 +24,7 @@ func Proceed(message string) bool {
 	var response bool
 	prompt := &survey.Confirm{
 		Message: message,
+		Default: true,
 	}
 
 	err := survey.AskOne(prompt, &response, survey.Required)
