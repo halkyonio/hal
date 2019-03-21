@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/snowdrop/odo-scaffold-plugin/pkg/validation"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"os"
@@ -76,4 +77,10 @@ func askOne(prompt survey.Prompt, stdio ...terminal.Stdio) string {
 	HandleError(err)
 
 	return response
+}
+
+// GetValidatorFor returns an implementation specific validator for the given validatable to avoid type casting at each calling
+// site
+func GetValidatorFor(prop validation.Validatable) survey.Validator {
+	return survey.Validator(validation.GetValidatorFor(prop))
 }

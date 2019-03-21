@@ -4,12 +4,16 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/ghodss/yaml"
+	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
+	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/scaffold"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/ui"
 	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"net/url"
 	"os"
@@ -45,6 +49,9 @@ func main() {
 			if ui.Proceed("Create from template") {
 				p.Template = ui.Select("Available templates", c.GetTemplateNames())
 				p.UseAp4k = ui.Proceed("Use ap4k to generate OpenShift / Kubernetes resources")
+				if p.UseAp4k && ui.Proceed("Create a service from service catalog") {
+					generateAp4kAnnotations()
+				}
 			} else {
 				p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
 			}
@@ -131,6 +138,92 @@ func main() {
 	if err != nil {
 		fmt.Print(err.Error())
 	}
+}
+
+func generateAp4kAnnotations() error {
+	classesByCategory, svcatClient, err := getServiceClassesByCategory()
+	if err != nil {
+		return fmt.Errorf("unable to retrieve service classes: %v", err)
+	}
+	class, serviceType := ui.SelectClassInteractively(classesByCategory)
+
+	plans, err := GetMatchingPlans(svcatClient, class)
+	if err != nil {
+		return fmt.Errorf("couldn't retrieve plans for class %s: %v", class.GetExternalName(), err)
+	}
+
+	var plan string
+	var svcPlan scv1beta1.ClusterServicePlan
+	// if there is only one available plan, we select it
+	if len(plans) == 1 {
+		for k, v := range plans {
+			plan = k
+			svcPlan = v
+		}
+		//glog.V(4).Infof("Plan %s was automatically selected since it's the only one available for service %s", o.Plan, o.ServiceType)
+	} else {
+		// otherwise select the plan interactively
+		plan = ui.SelectPlanNameInteractively(plans, "Which service plan should we use ")
+		svcPlan = plans[plan]
+	}
+
+	parametersMap := ui.EnterServicePropertiesInteractively(svcPlan)
+	log.Infof("parameters: %v+", parametersMap)
+	serviceName := ui.EnterServiceNameInteractively(serviceType, "How should we name your service ")
+	log.Infof("service name: %s", serviceName)
+	return nil
+}
+
+func getServiceClassesByCategory() (categories map[string][]scv1beta1.ClusterServiceClass, svcatClient *servicecatalogclienset.ServicecatalogV1beta1Client, err error) {
+	// initialize client-go clients
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+
+	config, err := kubeConfig.ClientConfig()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	serviceCatalogClient, err := servicecatalogclienset.NewForConfig(config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	categories = make(map[string][]scv1beta1.ClusterServiceClass)
+
+	classList, err := serviceCatalogClient.ClusterServiceClasses().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	classes := classList.Items
+
+	// TODO: Should we replicate the classification performed in
+	// https://github.com/openshift/console/blob/master/frontend/public/components/catalog/catalog-items.jsx?
+	for _, class := range classes {
+		tags := class.Spec.Tags
+		category := "other"
+		if len(tags) > 0 && len(tags[0]) > 0 {
+			category = tags[0]
+		}
+		categories[category] = append(categories[category], class)
+	}
+
+	return categories, serviceCatalogClient, err
+}
+
+// GetMatchingPlans retrieves a map associating service plan name to service plan instance associated with the specified service
+// class
+func GetMatchingPlans(serviceCatalogClient *servicecatalogclienset.ServicecatalogV1beta1Client, class scv1beta1.ClusterServiceClass) (plans map[string]scv1beta1.ClusterServicePlan, err error) {
+	planList, err := serviceCatalogClient.ClusterServicePlans().List(metav1.ListOptions{
+		FieldSelector: "spec.clusterServiceClassRef.name==" + class.Spec.ExternalID,
+	})
+
+	plans = make(map[string]scv1beta1.ClusterServicePlan)
+	for _, v := range planList.Items {
+		plans[v.Spec.ExternalName] = v
+	}
+	return plans, err
 }
 
 func getYamlFrom(url, endpoint string, result interface{}) {
