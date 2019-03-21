@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
 	"github.com/ghodss/yaml"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
@@ -20,10 +21,22 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 const (
-	ServiceEndpoint = "https://generator.snowdrop.me"
+	ServiceEndpoint          = "https://generator.snowdrop.me"
+	serviceCatalogAnnotation = `@ServiceCatalog(instances = @ServiceCatalogInstance(
+        name = "{{.Name}}",
+        serviceClass = "{{.Class}}",
+        servicePlan = "{{.Plan}}",
+        parameters = {
+{{parameters .Parameters}}
+        },
+        bindingSecret = "my-db-secret")
+)
+
+`
 )
 
 func main() {
@@ -140,6 +153,13 @@ func main() {
 	}
 }
 
+type svcInstance struct {
+	Class      string
+	Plan       string
+	Parameters map[string]string
+	Name       string
+}
+
 func generateAp4kAnnotations() error {
 	classesByCategory, svcatClient, err := getServiceClassesByCategory()
 	if err != nil {
@@ -168,10 +188,33 @@ func generateAp4kAnnotations() error {
 	}
 
 	parametersMap := ui.EnterServicePropertiesInteractively(svcPlan)
-	log.Infof("parameters: %v+", parametersMap)
 	serviceName := ui.EnterServiceNameInteractively(serviceType, "How should we name your service ")
-	log.Infof("service name: %s", serviceName)
+
+	instance := svcInstance{
+		Class:      class.GetExternalName(),
+		Plan:       plan,
+		Parameters: parametersMap,
+		Name:       serviceName,
+	}
+	var tpl bytes.Buffer
+	tmpl := template.New("service-create-cli")
+	tmpl.Funcs(template.FuncMap{"parameters": parameters})
+	t := template.Must(tmpl.Parse(serviceCatalogAnnotation))
+	e := t.Execute(&tpl, instance)
+	if e != nil {
+		panic(e) // shouldn't happen
+	}
+	log.Infof("ap4k annotation:\n%s", strings.TrimSpace(tpl.String()))
+
 	return nil
+}
+
+func parameters(parameters map[string]string) string {
+	pAsArray := make([]string, 0, len(parameters))
+	for key, value := range parameters {
+		pAsArray = append(pAsArray, "\t\t@Parameter(key = \""+key+"\", value = \""+value+"\")")
+	}
+	return strings.Join(pAsArray, ",\n")
 }
 
 func getServiceClassesByCategory() (categories map[string][]scv1beta1.ClusterServiceClass, svcatClient *servicecatalogclienset.ServicecatalogV1beta1Client, err error) {
