@@ -165,6 +165,9 @@ func generateAp4kAnnotations() error {
 	if err != nil {
 		return fmt.Errorf("unable to retrieve service classes: %v", err)
 	}
+	if len(classesByCategory) == 0 {
+		return fmt.Errorf("unable to retrieve service classes or none present")
+	}
 	class, serviceType := ui.SelectClassInteractively(classesByCategory)
 
 	plans, err := GetMatchingPlans(svcatClient, class)
