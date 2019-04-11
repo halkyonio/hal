@@ -1,7 +1,7 @@
 # Snowdrop `scaffold` command
 
 - `git clone` this project *outside* of your `$GOPATH` (since it uses `go modules`)
-- Build: `go build -o scaffold cmd/create.go`
+- Build: `go build -o scaffold cmd/scaffold.go`
 - Run: `./scaffold`
 - Enjoy!
 
