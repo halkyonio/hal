@@ -91,5 +91,5 @@ func OutputSelection(msg, choice string) {
 }
 
 func ErrorMessage(msg, wrong string) string {
-	return fmt.Sprintf("%s%s: %s.%s\nSelect another one from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
+	return fmt.Sprintf("%s%s: %s%s\nSelect other(s) from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
 }
