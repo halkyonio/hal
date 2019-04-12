@@ -7,6 +7,7 @@ import (
 	"github.com/ghodss/yaml"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
+	"github.com/mgutz/ansi"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/scaffold"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/ui"
@@ -26,6 +27,7 @@ import (
 
 const (
 	ServiceEndpoint          = "https://generator.snowdrop.me"
+	ReleaseSuffix            = ".RELEASE"
 	serviceCatalogAnnotation = `@ServiceCatalog(instances = @ServiceCatalogInstance(
         name = "{{.Name}}",
         serviceClass = "{{.Class}}",
@@ -52,10 +54,26 @@ func main() {
 
 			// first select Spring Boot version
 			versions, defaultVersion := c.GetBOMMap()
-			p.SpringBootVersion = ui.Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
-			bom := versions[p.SpringBootVersion]
+			hasSB := len(p.SpringBootVersion) > 0
+
+			// modify given SB version if needed since we allow 2.1.3 instead of full 2.1.3.RELEASE
+			if hasSB && !strings.HasSuffix(p.SpringBootVersion, ReleaseSuffix) {
+				p.SpringBootVersion = p.SpringBootVersion + ReleaseSuffix
+			}
+
+			// check that the given SB version yields a known BOM, if not ask the user for a supported SB version
+			bom, ok := versions[p.SpringBootVersion]
+			if !hasSB || !ok {
+				s := "Spring Boot version"
+				if !ok {
+					s = fmt.Sprintf("%sUnknown Spring Boot version: %s.%s\nSelect another one from:",
+						ansi.Red, p.SpringBootVersion, ansi.ColorCode("default"))
+				}
+				p.SpringBootVersion = ui.Select(s, scaffold.GetSpringBootVersions(versions), defaultVersion)
+			}
+
 			p.SnowdropBomVersion = bom.Snowdrop
-			if len(bom.Supported) > 0 && ui.Proceed("Use supported version") {
+			if len(bom.Supported) > 0 && ui.Proceed(fmt.Sprintf("Use %s supported version", p.SpringBootVersion)) {
 				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
 			}
 
