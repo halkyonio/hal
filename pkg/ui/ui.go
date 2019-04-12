@@ -47,12 +47,13 @@ func Select(message string, options []string, defaultValue ...string) string {
 	return askOne(prompt)
 }
 
-func MultiSelect(message string, options []string) []string {
+func MultiSelect(message string, options []string, defaultValues []string) []string {
 	sort.Strings(options)
 	modules := []string{}
 	prompt := &survey.MultiSelect{
 		Message: message,
 		Options: options,
+		Default: defaultValues,
 	}
 	err := survey.AskOne(prompt, &modules, survey.Required)
 	HandleError(err)
