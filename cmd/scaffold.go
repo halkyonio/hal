@@ -49,6 +49,13 @@ func main() {
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// fail fast if needed
+			useTemplate := len(p.Template) > 0
+			useModules := len(p.Modules) > 0
+			if useTemplate && useModules {
+				return fmt.Errorf("specifying both modules and template is not currently supported")
+			}
+
 			c := getGeneratorServiceConfig(p.UrlService)
 
 			// first select Spring Boot version
