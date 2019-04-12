@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"github.com/mgutz/ansi"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/validation"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
@@ -83,4 +84,12 @@ func askOne(prompt survey.Prompt, stdio ...terminal.Stdio) string {
 // site
 func GetValidatorFor(prop validation.Validatable) survey.Validator {
 	return survey.Validator(validation.GetValidatorFor(prop))
+}
+
+func OutputSelection(msg, choice string) {
+	fmt.Println(ansi.Green + ansi.ColorCode("default+hb") + msg + ": " + ansi.Cyan + choice + ansi.Reset)
+}
+
+func ErrorMessage(msg, wrong string) string {
+	return fmt.Sprintf("%s%s: %s.%s\nSelect another one from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
 }
