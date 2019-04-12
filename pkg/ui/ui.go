@@ -60,7 +60,7 @@ func MultiSelect(message string, options []string, defaultValues []string) []str
 	return modules
 }
 
-func Ask(message string, defaultValue ...string) string {
+func Ask(message, provided string, defaultValue ...string) string {
 	input := &survey.Input{
 		Message: message,
 	}
@@ -69,6 +69,11 @@ func Ask(message string, defaultValue ...string) string {
 		input.Default = defaultValue[0]
 	}
 
+	if len(provided) > 0 {
+		// todo: validate provided and ask if value is invalid
+		OutputSelection("Selected "+message, provided)
+		return provided
+	}
 	return askOne(input)
 }
 
