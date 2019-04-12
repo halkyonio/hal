@@ -186,7 +186,7 @@ func main() {
 
 	createCmd.Flags().StringVarP(&p.Template, "template", "t", "", "Template name used to select the project to be created")
 	createCmd.Flags().StringVarP(&p.UrlService, "urlservice", "u", ServiceEndpoint, "URL of the HTTP Server exposing the spring boot service")
-	createCmd.Flags().StringArrayVarP(&p.Modules, "module", "m", []string{}, "Spring Boot modules/starters")
+	createCmd.Flags().StringSliceVarP(&p.Modules, "module", "m", []string{}, "Spring Boot modules/starters")
 	createCmd.Flags().StringVarP(&p.GroupId, "groupid", "g", "", "GroupId : com.example")
 	createCmd.Flags().StringVarP(&p.ArtifactId, "artifactid", "i", "", "ArtifactId: demo")
 	createCmd.Flags().StringVarP(&p.Version, "version", "v", "", "Version: 0.0.1-SNAPSHOT")
