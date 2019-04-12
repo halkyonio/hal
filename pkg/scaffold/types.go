@@ -1,5 +1,7 @@
 package scaffold
 
+import "sort"
+
 type Project struct {
 	GroupId     string
 	ArtifactId  string
@@ -76,6 +78,7 @@ func GetSpringBootVersions(boms map[string]Bom) []string {
 	for k := range boms {
 		result = append(result, k)
 	}
+	sort.Strings(result)
 	return result
 }
 
