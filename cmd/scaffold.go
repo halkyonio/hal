@@ -97,6 +97,31 @@ func main() {
 				}
 			}
 
+			// deal with modules
+			if useModules {
+				// check if all provided modules are known
+				moduleNames := getCompatibleModuleNamesFor(p)
+				sort.Strings(moduleNames)
+				unknown := make([]string, 0, len(moduleNames))
+				valid := make([]string, 0, len(moduleNames))
+				for _, module := range p.Modules {
+					if !isContained(module, moduleNames) {
+						unknown = append(unknown, module)
+					} else {
+						valid = append(valid, module)
+					}
+				}
+
+				if !isContained("core", valid) {
+					valid = append(valid, "core")
+				}
+				ui.OutputSelection("Selected modules", strings.Join(valid, ","))
+
+				if len(unknown) > 0 {
+					p.Modules = ui.MultiSelect(ui.ErrorMessage("Unknown modules", strings.Join(unknown, ",")), moduleNames, valid)
+				}
+			}
+
 			// if user didn't specify either template or modules, ask what to do
 			if !useModules && !useTemplate {
 				if ui.Proceed("Create from template") {
