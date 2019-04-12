@@ -103,7 +103,7 @@ func main() {
 					p.Template = ui.Select("Available templates", templateNames)
 					useTemplate = true
 				} else {
-					p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p))
+					p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core"})
 					useModules = true
 				}
 			}
