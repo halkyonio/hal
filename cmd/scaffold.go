@@ -103,7 +103,7 @@ func main() {
 					p.Template = ui.Select("Available templates", templateNames)
 					useTemplate = true
 				} else {
-					p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
+					p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p))
 					useModules = true
 				}
 			}
@@ -356,7 +356,7 @@ func getGeneratorServiceConfig(url string) *scaffold.Config {
 	return c
 }
 
-func getCompatibleModuleNameFor(p *scaffold.Project) []string {
+func getCompatibleModuleNamesFor(p *scaffold.Project) []string {
 	modules := &[]scaffold.Module{}
 	getYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
 	return scaffold.GetModuleNamesFor(*modules)
