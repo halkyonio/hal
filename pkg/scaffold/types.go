@@ -39,7 +39,7 @@ func (c *Config) GetTemplateNames() []string {
 	for i, value := range c.Templates {
 		result[i] = value.Name
 	}
-
+	sort.Strings(result)
 	return result
 }
 
@@ -52,7 +52,7 @@ func GetModuleNamesFor(modules []Module) []string {
 	for i, v := range modules {
 		result[i] = v.Name
 	}
-
+	sort.Strings(result)
 	return result
 }
 
