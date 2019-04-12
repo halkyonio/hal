@@ -141,13 +141,13 @@ func main() {
 				}
 			}
 
-			p.GroupId = ui.Ask("Group Id", "me.snowdrop")
-			p.ArtifactId = ui.Ask("Artifact Id", "myproject")
-			p.Version = ui.Ask("Version", "1.0.0-SNAPSHOT")
-			p.PackageName = ui.Ask("Package name", p.GroupId+"."+p.ArtifactId)
+			p.GroupId = ui.Ask("Group Id", p.GroupId, "me.snowdrop")
+			p.ArtifactId = ui.Ask("Artifact Id", p.ArtifactId, "myproject")
+			p.Version = ui.Ask("Version", p.Version, "1.0.0-SNAPSHOT")
+			p.PackageName = ui.Ask("Package name", p.PackageName, p.GroupId+"."+p.ArtifactId)
 
 			currentDir, _ := os.Getwd()
-			p.OutDir = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir))
+			p.OutDir = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir), p.OutDir)
 
 			client := http.Client{}
 
