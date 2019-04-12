@@ -75,11 +75,14 @@ func main() {
 					s = ui.ErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
 				}
 				p.SpringBootVersion = ui.Select(s, scaffold.GetSpringBootVersions(versions), defaultVersion)
+			} else {
+				ui.OutputSelection("Selected Spring Boot", p.SpringBootVersion)
 			}
 
 			p.SnowdropBomVersion = bom.Snowdrop
 			if len(bom.Supported) > 0 && ui.Proceed(fmt.Sprintf("Use %s supported version", p.SpringBootVersion)) {
 				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
+				ui.OutputSelection("Selected supported Spring Boot", p.SnowdropBomVersion)
 			}
 
 			if ui.Proceed("Create from template") {
