@@ -7,7 +7,6 @@ import (
 	"github.com/ghodss/yaml"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
-	"github.com/mgutz/ansi"
 	log "github.com/sirupsen/logrus"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/scaffold"
 	"github.com/snowdrop/odo-scaffold-plugin/pkg/ui"
@@ -66,8 +65,7 @@ func main() {
 			if !hasSB || !ok {
 				s := "Spring Boot version"
 				if !ok {
-					s = fmt.Sprintf("%sUnknown Spring Boot version: %s.%s\nSelect another one from:",
-						ansi.Red, p.SpringBootVersion, ansi.ColorCode("default"))
+					s = ui.ErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
 				}
 				p.SpringBootVersion = ui.Select(s, scaffold.GetSpringBootVersions(versions), defaultVersion)
 			}
