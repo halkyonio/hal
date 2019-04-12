@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -85,14 +86,34 @@ func main() {
 				ui.OutputSelection("Selected supported Spring Boot", p.SnowdropBomVersion)
 			}
 
-			if ui.Proceed("Create from template") {
-				p.Template = ui.Select("Available templates", c.GetTemplateNames())
+			// deal with template
+			templateNames := c.GetTemplateNames()
+			if useTemplate {
+				if !isContained(p.Template, templateNames) {
+					// provided template doesn't exist, select one from available
+					p.Template = ui.Select(ui.ErrorMessage("Unknown template", p.Template), templateNames)
+				} else {
+					ui.OutputSelection("Selected template", p.Template)
+				}
+			}
+
+			// if user didn't specify either template or modules, ask what to do
+			if !useModules && !useTemplate {
+				if ui.Proceed("Create from template") {
+					p.Template = ui.Select("Available templates", templateNames)
+					useTemplate = true
+				} else {
+					p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
+					useModules = true
+				}
+			}
+
+			// if we're using a template, ask additional information
+			if useTemplate {
 				p.UseAp4k = ui.Proceed("Use ap4k to generate OpenShift / Kubernetes resources")
 				if p.UseAp4k && ui.Proceed("Create a service from service catalog") {
 					generateAp4kAnnotations()
 				}
-			} else {
-				p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNameFor(p))
 			}
 
 			p.GroupId = ui.Ask("Group Id", "me.snowdrop")
@@ -390,4 +411,12 @@ func Unzip(src, dest string) error {
 		}
 	}
 	return nil
+}
+
+func isContained(element string, sortedElements []string) bool {
+	i := sort.SearchStrings(sortedElements, element)
+	if i < len(sortedElements) && sortedElements[i] == element {
+		return true
+	}
+	return false
 }
