@@ -403,7 +403,7 @@ func getCompatibleModuleNamesFor(p *scaffold.Project) []string {
 }
 
 func addClientHeader(req *http.Request) {
-	userAgent := "snowdrop-scaffold/1.0"
+	userAgent := "snowdrop-kreate/1.0"
 	req.Header.Set("User-Agent", userAgent)
 }
 
