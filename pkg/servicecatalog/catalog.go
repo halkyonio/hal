@@ -6,9 +6,9 @@ import (
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/sirupsen/logrus"
+	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/servicecatalog/ui"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/clientcmd"
 	"strings"
 	"text/template"
 )
@@ -93,23 +93,14 @@ func parameters(parameters map[string]string) string {
 }
 
 func getServiceClassesByCategory() (categories map[string][]scv1beta1.ClusterServiceClass, svcatClient *servicecatalogclienset.ServicecatalogV1beta1Client, err error) {
-	// initialize client-go clients
-	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	configOverrides := &clientcmd.ConfigOverrides{}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
-
-	config, err := kubeConfig.ClientConfig()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	serviceCatalogClient, err := servicecatalogclienset.NewForConfig(config)
+	client, err := k8s.GetClient()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	categories = make(map[string][]scv1beta1.ClusterServiceClass)
 
+	serviceCatalogClient := client.ServiceCatalogClient
 	classList, err := serviceCatalogClient.ClusterServiceClasses().List(metav1.ListOptions{})
 	if err != nil {
 		return nil, nil, err
