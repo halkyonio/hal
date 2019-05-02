@@ -22,7 +22,7 @@ const (
 )
 
 func NewCmdProject() *cobra.Command {
-	p := &scaffold.Project{}
+	p := &project{}
 
 	createCmd := &cobra.Command{
 		Use:   "scaffold [flags]",
@@ -206,7 +206,7 @@ func getGeneratorServiceConfig(url string) *scaffold.Config {
 	return c
 }
 
-func getCompatibleModuleNamesFor(p *scaffold.Project) []string {
+func getCompatibleModuleNamesFor(p *project) []string {
 	modules := &[]scaffold.Module{}
 	io.GetYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
 	return scaffold.GetModuleNamesFor(*modules)
@@ -218,4 +218,21 @@ func isContained(element string, sortedElements []string) bool {
 		return true
 	}
 	return false
+}
+
+type project struct {
+	GroupId     string
+	ArtifactId  string
+	Version     string
+	PackageName string
+	OutDir      string
+	Template    string `yaml:"template"  json:"template"`
+
+	SnowdropBomVersion string
+	SpringBootVersion  string
+	Modules            []string
+
+	UrlService   string
+	UseAp4k      bool
+	UseSupported bool
 }

@@ -2,23 +2,6 @@ package scaffold
 
 import "sort"
 
-type Project struct {
-	GroupId     string
-	ArtifactId  string
-	Version     string
-	PackageName string
-	OutDir      string
-	Template    string `yaml:"template"  json:"template"`
-
-	SnowdropBomVersion string
-	SpringBootVersion  string
-	Modules            []string
-
-	UrlService   string
-	UseAp4k      bool
-	UseSupported bool
-}
-
 type Config struct {
 	Templates []Template `yaml:"templates"    json:"templates"`
 	Boms      []Bom      `yaml:"bomversions"  json:"bomversions"`
