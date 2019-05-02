@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/snowdrop/kreate/pkg/kreate/cli/project"
+	"github.com/snowdrop/kreate/pkg/kreate/cli/push"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,10 @@ func NewCmdKreate() *cobra.Command {
 		Long:  `Easily create and manage Kubernetes applications using the Component operator created by the Snowdrop team.`,
 	}
 
-	kreate.AddCommand(project.NewCmdProject(commandName))
+	kreate.AddCommand(
+		project.NewCmdProject(commandName),
+		push.NewCmdPush(commandName),
+	)
 
 	return kreate
 }
