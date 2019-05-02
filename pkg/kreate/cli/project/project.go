@@ -19,16 +19,17 @@ import (
 const (
 	ServiceEndpoint = "https://generator.snowdrop.me"
 	ReleaseSuffix   = ".RELEASE"
+	commandName     = "project"
 )
 
-func NewCmdProject() *cobra.Command {
+func NewCmdProject(parent string) *cobra.Command {
 	p := &project{}
 
 	createCmd := &cobra.Command{
-		Use:   "scaffold [flags]",
+		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Create a Spring Boot maven project",
 		Long:  `Create a Spring Boot maven project.`,
-		Args:  cobra.RangeArgs(0, 1),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// fail fast if needed
 			useTemplate := len(p.Template) > 0

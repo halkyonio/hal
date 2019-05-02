@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/snowdrop/kreate/pkg/kreate/cli/project"
+	"github.com/snowdrop/kreate/pkg/kreate/cli"
 )
 
 func main() {
-	createCmd := project.NewCmdProject()
+	createCmd := cli.NewCmdKreate()
 
 	err := createCmd.Execute()
 	if err != nil {
