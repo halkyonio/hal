@@ -93,22 +93,16 @@ func parameters(parameters map[string]string) string {
 }
 
 func getServiceClassesByCategory() (categories map[string][]scv1beta1.ClusterServiceClass, svcatClient *servicecatalogclienset.ServicecatalogV1beta1Client, err error) {
-	client, err := k8s.GetClient()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	categories = make(map[string][]scv1beta1.ClusterServiceClass)
-
-	serviceCatalogClient := client.ServiceCatalogClient
+	serviceCatalogClient := k8s.GetClient().ServiceCatalogClient
 	classList, err := serviceCatalogClient.ClusterServiceClasses().List(metav1.ListOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
 	classes := classList.Items
 
-	// TODO: Should we replicate the classification performed in
 	// https://github.com/openshift/console/blob/master/frontend/public/components/catalog/catalog-items.jsx?
+	// TODO: Should we replicate the classification performed in
+	categories = make(map[string][]scv1beta1.ClusterServiceClass)
 	for _, class := range classes {
 		tags := class.Spec.Tags
 		category := "other"
