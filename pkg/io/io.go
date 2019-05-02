@@ -9,13 +9,21 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func HttpGet(url, endpoint string) []byte {
+func HttpGet(url, endpoint string, values *url.Values) []byte {
 	u := strings.Join([]string{url, endpoint}, "/")
+	if values != nil {
+		parameters := values.Encode()
+		if len(parameters) > 0 {
+			u = u + "?" + parameters
+		}
+	}
+
 	client := http.Client{}
 
 	req, err := http.NewRequest(http.MethodGet, u, strings.NewReader(""))
@@ -36,7 +44,7 @@ func HttpGet(url, endpoint string) []byte {
 }
 
 func GetYamlFrom(url, endpoint string, result interface{}) {
-	body := HttpGet(url, endpoint)
+	body := HttpGet(url, endpoint, nil)
 
 	err := yaml.Unmarshal(body, &result)
 	if err != nil {
