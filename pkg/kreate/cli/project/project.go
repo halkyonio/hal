@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	ServiceEndpoint = "https://generator.snowdrop.me"
-	ReleaseSuffix   = ".RELEASE"
+	serviceEndpoint = "https://generator.snowdrop.me"
+	releaseSuffix   = ".RELEASE"
 	commandName     = "project"
 )
 
@@ -45,8 +45,8 @@ func NewCmdProject(parent string) *cobra.Command {
 			hasSB := len(p.SpringBootVersion) > 0
 
 			// modify given SB version if needed since we allow 2.1.3 instead of full 2.1.3.RELEASE
-			if hasSB && !strings.HasSuffix(p.SpringBootVersion, ReleaseSuffix) {
-				p.SpringBootVersion = p.SpringBootVersion + ReleaseSuffix
+			if hasSB && !strings.HasSuffix(p.SpringBootVersion, releaseSuffix) {
+				p.SpringBootVersion = p.SpringBootVersion + releaseSuffix
 			}
 
 			// if the user didn't specify an SB version, ask for it
@@ -187,7 +187,7 @@ func NewCmdProject(parent string) *cobra.Command {
 	}
 
 	createCmd.Flags().StringVarP(&p.Template, "template", "t", "", "Template name used to select the project to be created")
-	createCmd.Flags().StringVarP(&p.UrlService, "urlservice", "u", ServiceEndpoint, "URL of the HTTP Server exposing the spring boot service")
+	createCmd.Flags().StringVarP(&p.UrlService, "urlservice", "u", serviceEndpoint, "URL of the HTTP Server exposing the spring boot service")
 	createCmd.Flags().StringSliceVarP(&p.Modules, "module", "m", []string{}, "Spring Boot modules/starters")
 	createCmd.Flags().StringVarP(&p.GroupId, "groupid", "g", "", "GroupId : com.example")
 	createCmd.Flags().StringVarP(&p.ArtifactId, "artifactid", "i", "", "ArtifactId: demo")
