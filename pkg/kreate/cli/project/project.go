@@ -144,7 +144,7 @@ func NewCmdProject(parent string) *cobra.Command {
 			currentDir, _ := os.Getwd()
 			p.OutDir = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir), p.OutDir)
 
-			form := url.Values{}
+			form := &url.Values{}
 			form.Add("template", p.Template)
 			form.Add("groupid", p.GroupId)
 			form.Add("artifactid", p.ArtifactId)
@@ -160,12 +160,7 @@ func NewCmdProject(parent string) *cobra.Command {
 				}
 			}
 
-			parameters := form.Encode()
-			if parameters != "" {
-				parameters = "?" + parameters
-			}
-
-			body := io.HttpGet(p.UrlService, "app")
+			body := io.HttpGet(p.UrlService, "app", form)
 
 			dir := filepath.Join(currentDir, p.OutDir)
 			zipFile := dir + ".zip"
@@ -219,6 +214,16 @@ func isContained(element string, sortedElements []string) bool {
 		return true
 	}
 	return false
+}
+
+func (p *project) Complete(name string, cmd *cobra.Command, args []string) error {
+	return nil
+}
+func (p *project) Validate() error {
+	return nil
+}
+func (p *project) Run() error {
+	return nil
 }
 
 type project struct {
