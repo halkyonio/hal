@@ -84,9 +84,15 @@ func main() {
 			}
 
 			p.SnowdropBomVersion = bom.Snowdrop
-			if len(bom.Supported) > 0 && ui.Proceed(fmt.Sprintf("Use %s supported version", p.SpringBootVersion)) {
-				p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
-				ui.OutputSelection("Selected supported Spring Boot", p.SnowdropBomVersion)
+			if len(bom.Supported) > 0 {
+				if !cmd.Flag("supported").Changed {
+					p.UseSupported = ui.Proceed(fmt.Sprintf("Use %s supported version", p.SpringBootVersion))
+				}
+
+				if p.UseSupported {
+					p.SnowdropBomVersion = c.GetSupportedVersionFor(p.SpringBootVersion)
+					ui.OutputSelection("Selected supported Spring Boot", p.SnowdropBomVersion)
+				}
 			}
 
 			// deal with template
@@ -225,6 +231,7 @@ func main() {
 	createCmd.Flags().StringVarP(&p.PackageName, "packagename", "p", "", "Package Name: com.example.demo")
 	createCmd.Flags().StringVarP(&p.SpringBootVersion, "springbootversion", "s", "", "Spring Boot Version")
 	createCmd.Flags().BoolVarP(&p.UseAp4k, "ap4k", "a", false, "Use ap4k when possible")
+	createCmd.Flags().BoolVarP(&p.UseSupported, "supported", "o", false, "Use supported version")
 
 	err := createCmd.Execute()
 	if err != nil {

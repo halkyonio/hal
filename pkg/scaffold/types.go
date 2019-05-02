@@ -14,8 +14,9 @@ type Project struct {
 	SpringBootVersion  string
 	Modules            []string
 
-	UrlService string
-	UseAp4k    bool
+	UrlService   string
+	UseAp4k      bool
+	UseSupported bool
 }
 
 type Config struct {
