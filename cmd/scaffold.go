@@ -68,15 +68,18 @@ func main() {
 				p.SpringBootVersion = p.SpringBootVersion + ReleaseSuffix
 			}
 
+			// if the user didn't specify an SB version, ask for it
+			if !hasSB {
+				p.SpringBootVersion = ui.Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
+			}
+
 			// check that the given SB version yields a known BOM, if not ask the user for a supported SB version
 			bom, ok := versions[p.SpringBootVersion]
-			if !hasSB || !ok {
-				s := "Spring Boot version"
-				if !ok {
-					s = ui.ErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
-				}
+			if !ok {
+				s := ui.ErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
 				p.SpringBootVersion = ui.Select(s, scaffold.GetSpringBootVersions(versions), defaultVersion)
-			} else {
+			} else if hasSB {
+				// if we provided an SB version and it yields a valid BOM, display it
 				ui.OutputSelection("Selected Spring Boot", p.SpringBootVersion)
 			}
 
