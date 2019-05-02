@@ -20,7 +20,7 @@ func HttpGet(url, endpoint string) []byte {
 
 	req, err := http.NewRequest(http.MethodGet, u, strings.NewReader(""))
 	LogErrorAndExit(err, "error creating request for "+u)
-	AddClientHeader(req)
+	addClientHeader(req)
 
 	res, err := client.Do(req)
 	LogErrorAndExit(err, fmt.Sprintf("error performing request %v", req))
@@ -44,7 +44,7 @@ func GetYamlFrom(url, endpoint string, result interface{}) {
 	}
 }
 
-func AddClientHeader(req *http.Request) {
+func addClientHeader(req *http.Request) {
 	userAgent := "snowdrop-kreate/1.0"
 	req.Header.Set("User-Agent", userAgent)
 }
