@@ -1,2 +1,2 @@
 # kreate
-A CLI tool to easily create Kubernetes application using the Component operator.
+A CLI tool to easily create Kubernetes applications using the Component operator.
