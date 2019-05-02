@@ -1,21 +1,18 @@
 package main
 
 import (
-	"archive/zip"
 	"bytes"
 	"fmt"
-	"github.com/ghodss/yaml"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	log "github.com/sirupsen/logrus"
+	io2 "github.com/snowdrop/kreate/pkg/io"
 	"github.com/snowdrop/kreate/pkg/scaffold"
 	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
-	"io"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -162,8 +159,6 @@ func main() {
 			currentDir, _ := os.Getwd()
 			p.OutDir = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir), p.OutDir)
 
-			client := http.Client{}
-
 			form := url.Values{}
 			form.Add("template", p.Template)
 			form.Add("groupid", p.GroupId)
@@ -185,32 +180,16 @@ func main() {
 				parameters = "?" + parameters
 			}
 
-			u := strings.Join([]string{p.UrlService, "app"}, "/") + parameters
-			log.Infof("URL of the request calling the service is %s", u)
-			req, err := http.NewRequest(http.MethodGet, u, strings.NewReader(""))
-
-			if err != nil {
-				return err
-			}
-			addClientHeader(req)
-
-			res, err := client.Do(req)
-			if err != nil {
-				return err
-			}
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				return err
-			}
+			body := io2.HttpGet(p.UrlService, "app")
 
 			dir := filepath.Join(currentDir, p.OutDir)
 			zipFile := dir + ".zip"
 
-			err = ioutil.WriteFile(zipFile, body, 0644)
+			err := ioutil.WriteFile(zipFile, body, 0644)
 			if err != nil {
 				return fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 			}
-			err = Unzip(zipFile, dir)
+			err = io2.Unzip(zipFile, dir)
 			if err != nil {
 				return fmt.Errorf("failed to unzip new project file %s due to %s", zipFile, err)
 			}
@@ -358,99 +337,17 @@ func GetMatchingPlans(serviceCatalogClient *servicecatalogclienset.Servicecatalo
 	return plans, err
 }
 
-func getYamlFrom(url, endpoint string, result interface{}) {
-	// Call the /config endpoint to get the configuration
-	URL := strings.Join([]string{url, endpoint}, "/")
-	client := http.Client{}
-
-	req, err := http.NewRequest(http.MethodGet, URL, strings.NewReader(""))
-
-	if err != nil {
-		log.Error(err.Error())
-	}
-	addClientHeader(req)
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Error(err.Error())
-	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Error(err.Error())
-	}
-
-	if strings.Contains(string(body), "Application is not available") {
-		log.Fatal("Generator service is not available")
-	}
-
-	err = yaml.Unmarshal(body, &result)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
-
 func getGeneratorServiceConfig(url string) *scaffold.Config {
 	c := &scaffold.Config{}
-	getYamlFrom(url, "config", c)
+	io2.GetYamlFrom(url, "config", c)
 
 	return c
 }
 
 func getCompatibleModuleNamesFor(p *scaffold.Project) []string {
 	modules := &[]scaffold.Module{}
-	getYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
+	io2.GetYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
 	return scaffold.GetModuleNamesFor(*modules)
-}
-
-func addClientHeader(req *http.Request) {
-	userAgent := "snowdrop-kreate/1.0"
-	req.Header.Set("User-Agent", userAgent)
-}
-
-func Unzip(src, dest string) error {
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		defer rc.Close()
-
-		name := filepath.Join(dest, f.Name)
-		if f.FileInfo().IsDir() {
-			err := os.MkdirAll(name, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		} else {
-			var fdir string
-			if lastIndex := strings.LastIndex(name, string(os.PathSeparator)); lastIndex > -1 {
-				fdir = name[:lastIndex]
-			}
-
-			err = os.MkdirAll(fdir, os.ModePerm)
-			if err != nil {
-				return err
-			}
-			f, err := os.OpenFile(
-				name, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			_, err = io.Copy(f, rc)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }
 
 func isContained(element string, sortedElements []string) bool {
