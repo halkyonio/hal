@@ -5,7 +5,7 @@ import (
 	"fmt"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	"github.com/mgutz/ansi"
-	"github.com/snowdrop/odo-scaffold-plugin/pkg/validation"
+	"github.com/snowdrop/kreate/pkg/validation"
 	terminal2 "golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/core"

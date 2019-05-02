@@ -1,4 +1,4 @@
-module github.com/snowdrop/odo-scaffold-plugin
+module github.com/snowdrop/kreate
 
 require (
 	github.com/ghodss/yaml v1.0.0

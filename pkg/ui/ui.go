@@ -3,7 +3,7 @@ package ui
 import (
 	"fmt"
 	"github.com/mgutz/ansi"
-	"github.com/snowdrop/odo-scaffold-plugin/pkg/validation"
+	"github.com/snowdrop/kreate/pkg/validation"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"os"
