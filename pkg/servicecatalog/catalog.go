@@ -6,7 +6,7 @@ import (
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/sirupsen/logrus"
-	"github.com/snowdrop/kreate/pkg/ui"
+	"github.com/snowdrop/kreate/pkg/servicecatalog/ui"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"strings"

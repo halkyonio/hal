@@ -5,6 +5,7 @@ import (
 	"fmt"
 	scv1beta1 "github.com/kubernetes-incubator/service-catalog/pkg/apis/servicecatalog/v1beta1"
 	"github.com/mgutz/ansi"
+	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/snowdrop/kreate/pkg/validation"
 	terminal2 "golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/AlecAivazis/survey.v1"
@@ -72,19 +73,19 @@ func getServiceClassNames(stringMap map[string]scv1beta1.ClusterServiceClass) (k
 // SelectPlanNameInteractively lets the user to select the plan name from possible options, specifying which text should appear
 // in the prompt
 func SelectPlanNameInteractively(plans map[string]scv1beta1.ClusterServicePlan, promptText string) (plan string) {
-	return Select(promptText, GetServicePlanNames(plans))
+	return ui.Select(promptText, GetServicePlanNames(plans))
 }
 
 // EnterServiceNameInteractively lets the user enter the name of the service instance to create, defaulting to the provided
 // default value and specifying both the prompt text and validation function for the name
 func EnterServiceNameInteractively(defaultValue, promptText string) (serviceName string) {
-	return Ask(promptText, defaultValue)
+	return ui.Ask(promptText, defaultValue)
 }
 
 // SelectClassInteractively lets the user select target service class from possible options, first filtering by categories then
 // by class name
 func SelectClassInteractively(classesByCategory map[string][]scv1beta1.ClusterServiceClass) (class scv1beta1.ClusterServiceClass, serviceType string) {
-	category := Select("Which kind of service do you wish to create", getServiceClassesCategories(classesByCategory))
+	category := ui.Select("Which kind of service do you wish to create", getServiceClassesCategories(classesByCategory))
 
 	classes := getServiceClassMap(classesByCategory[category])
 
@@ -116,7 +117,7 @@ func SelectClassInteractively(classesByCategory map[string][]scv1beta1.ClusterSe
 	  {{- end}}
 	{{- end}}`
 
-	serviceType = Select("Which "+category+" service class should we use", getServiceClassNames(classes))
+	serviceType = ui.Select("Which "+category+" service class should we use", getServiceClassNames(classes))
 
 	return classes[serviceType], serviceType
 }
@@ -236,7 +237,7 @@ func enterServicePropertiesInteractively(svcPlan scv1beta1.ClusterServicePlan, s
 	}
 
 	// finally check if we still have plan properties that have not been considered
-	if len(properties) > 0 && Proceed("Provide values for non-required properties") {
+	if len(properties) > 0 && ui.Proceed("Provide values for non-required properties") {
 		for _, prop := range properties {
 			addValueFor(prop, values, stdio...)
 		}
@@ -259,8 +260,8 @@ func addValueFor(prop ServicePlanParameter, values map[string]string, stdio ...t
 		prompt.Default = prop.Default
 	}
 
-	err := survey.AskOne(prompt, &result, GetValidatorFor(prop.AsValidatable()))
-	HandleError(err)
+	err := survey.AskOne(prompt, &result, ui.GetValidatorFor(prop.AsValidatable()))
+	ui.HandleError(err)
 	values[prop.Name] = result
 }
 
