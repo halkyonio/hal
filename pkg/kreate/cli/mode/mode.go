@@ -5,9 +5,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
-	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/types"
+	"os/exec"
 )
 
 const commandName = "mode"
@@ -37,8 +36,10 @@ func (o *options) Run() error {
 		return fmt.Errorf("unknown mode: %s, valid modes are: dev,prod", o.mode)
 	}
 
-	patch := []byte(fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, mode))
-	err := client.KubeClient.CoreV1().RESTClient().
+	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, mode)
+
+	// todo: fix
+	/*err := client.KubeClient.CoreV1().RESTClient().
 		Patch(types.MergePatchType).
 		Namespace(client.Namespace).
 		Resource("components").
@@ -48,6 +49,12 @@ func (o *options) Run() error {
 		Error()
 	if err != nil {
 		return err
+	}*/
+
+	command := exec.Command("kubectl", "patch", "cp", o.TargetName, "-p", patch, "--type=merge", "-n", client.Namespace)
+	err := command.Run()
+	if err != nil {
+		return err
 	}
 
 	logrus.Info("Component for " + o.TargetName + " switched to " + o.mode)
@@ -55,7 +62,6 @@ func (o *options) Run() error {
 }
 
 func NewCmdMode(parent string) *cobra.Command {
-	ui.Proceed("foo")
 	o := &options{
 		TargetingOptions: cmdutil.NewTargetingOptions(),
 	}
