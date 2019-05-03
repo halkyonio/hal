@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/snowdrop/kreate/pkg/kreate/cli/initialize"
+	"github.com/snowdrop/kreate/pkg/kreate/cli/mode"
 	"github.com/snowdrop/kreate/pkg/kreate/cli/project"
 	"github.com/snowdrop/kreate/pkg/kreate/cli/push"
 	"github.com/spf13/cobra"
@@ -21,6 +22,7 @@ func NewCmdKreate() *cobra.Command {
 		project.NewCmdProject(commandName),
 		push.NewCmdPush(commandName),
 		initialize.NewCmdInit(commandName),
+		mode.NewCmdMode(commandName),
 	)
 
 	return kreate
