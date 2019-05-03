@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -16,24 +15,21 @@ import (
 const commandName = "push"
 
 type options struct {
+	*cmdutil.TargetingOptions
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
-	return nil
+	return o.TargetingOptions.Complete(name, cmd, args)
 }
 
 func (o *options) Validate() error {
-	return nil
+	return o.TargetingOptions.Validate()
 }
 
 func (o *options) Run() error {
-	c := k8s.GetClient()
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	app := filepath.Base(currentDir)
+	app := filepath.Base(o.Target)
 
+	c := k8s.GetClient()
 	pods, err := c.KubeClient.CoreV1().Pods(c.Namespace).List(metav1.ListOptions{
 		LabelSelector: "app=" + app,
 		Limit:         1,
@@ -50,7 +46,7 @@ func (o *options) Run() error {
 		return err
 	}*/
 
-	jar := filepath.Join("target", app+"-0.0.1-SNAPSHOT.jar")
+	jar := filepath.Join(o.Target, "target", app+"-0.0.1-SNAPSHOT.jar")
 	command := exec.Command("kubectl", "cp", jar, fmt.Sprintf("%s:/deployments/app.jar", podName), "-n", c.Namespace)
 	err = command.Run()
 	if err != nil {
@@ -85,7 +81,9 @@ func (o *options) Run() error {
 }
 
 func NewCmdPush(parent string) *cobra.Command {
-	p := &options{}
+	p := &options{
+		TargetingOptions: cmdutil.NewTargetingOptions(),
+	}
 
 	push := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
@@ -96,6 +94,8 @@ func NewCmdPush(parent string) *cobra.Command {
 			cmdutil.GenericRun(p, cmd, args)
 		},
 	}
+
+	p.AttachFlagTo(push)
 
 	return push
 }

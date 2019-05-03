@@ -6,7 +6,6 @@ import (
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/spf13/cobra"
-	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -14,35 +13,34 @@ import (
 const commandName = "init"
 
 type options struct {
+	*cmdutil.TargetingOptions
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
-	return nil
+	return o.TargetingOptions.Complete(name, cmd, args)
 }
 
 func (o *options) Validate() error {
-	return nil
+	return o.TargetingOptions.Validate()
 }
 
 func (o *options) Run() error {
-	component := filepath.Join("target", "classes", "META-INF", "ap4k", "component.yml")
+	component := filepath.Join(o.Target, "target", "classes", "META-INF", "ap4k", "component.yml")
 	command := exec.Command("kubectl", "apply", "-f", component, "-n", k8s.GetClient().Namespace)
 	err := command.Run()
 	if err != nil {
 		return err
 	}
 
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	app := filepath.Base(currentDir)
+	app := filepath.Base(o.Target)
 	logrus.Info("Component for " + app + " initialized. Wait a few seconds for it to be ready!")
 	return nil
 }
 
 func NewCmdInit(parent string) *cobra.Command {
-	o := &options{}
+	o := &options{
+		TargetingOptions: cmdutil.NewTargetingOptions(),
+	}
 
 	init := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", commandName),
@@ -54,6 +52,8 @@ func NewCmdInit(parent string) *cobra.Command {
 			cmdutil.GenericRun(o, cmd, args)
 		},
 	}
+
+	o.AttachFlagTo(init)
 
 	return init
 }
