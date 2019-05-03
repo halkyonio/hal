@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -19,4 +20,13 @@ func ValidateName(name string) error {
 
 	return nil
 
+}
+
+// CheckFileExist check if given file exists or not
+func CheckFileExist(fileName string) bool {
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
