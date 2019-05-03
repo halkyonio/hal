@@ -1,11 +1,12 @@
 package push
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
-	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
+	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"os/exec"
@@ -26,7 +27,6 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
-	ui.Proceed("foo")
 	c := k8s.GetClient()
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -44,26 +44,39 @@ func (o *options) Run() error {
 
 	podName := pods.Items[0].Name
 
-	jar := filepath.Join("target", app+"-0.0.1-SNAPSHOT.jar")
-
-	// todo: fix copy function
-	/*err = c.CopyFile(jar, podName, "/deployments")
+	/*// todo: fix copy function
+	err = c.CopyFile(".", podName, "/deployments", []string{"target/" + app + "-0.0.1-SNAPSHOT.jar"}, nil)
 	if err != nil {
 		return err
 	}*/
 
+	jar := filepath.Join("target", app+"-0.0.1-SNAPSHOT.jar")
 	command := exec.Command("kubectl", "cp", jar, fmt.Sprintf("%s:/deployments/app.jar", podName), "-n", c.Namespace)
 	err = command.Run()
 	if err != nil {
 		return err
 	}
 
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run-java"}, nil, nil, nil, false)
+	// use pipes to write output from ExecCMDInContainer in yellow  to 'out' io.Writer
+	pipeReader, pipeWriter := io.Pipe()
+	var cmdOutput string
+
+	// This Go routine will automatically pipe the output from ExecCMDInContainer to
+	// our logger.
+	go func() {
+		scanner := bufio.NewScanner(pipeReader)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cmdOutput += fmt.Sprintln(line)
+		}
+	}()
+
+	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run-java"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
 
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run-java"}, nil, nil, nil, false)
+	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run-java"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
