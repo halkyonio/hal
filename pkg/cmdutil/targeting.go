@@ -9,7 +9,8 @@ import (
 )
 
 type TargetingOptions struct {
-	Target string
+	TargetPath string
+	TargetName string
 }
 
 func NewTargetingOptions() *TargetingOptions {
@@ -22,14 +23,17 @@ func (o *TargetingOptions) Complete(name string, cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if len(o.Target) > 0 {
-		o.Target = filepath.Join(currentDir, o.Target)
-		if !validation.CheckFileExist(o.Target) {
-			return fmt.Errorf("%s doesn't exist", o.Target)
+	if len(o.TargetPath) > 0 {
+		o.TargetPath = filepath.Join(currentDir, o.TargetPath)
+		if !validation.CheckFileExist(o.TargetPath) {
+			return fmt.Errorf("%s doesn't exist", o.TargetPath)
 		}
 	} else {
-		o.Target = currentDir
+		o.TargetPath = currentDir
 	}
+
+	o.TargetName = filepath.Base(o.TargetPath)
+
 	return nil
 }
 
@@ -42,5 +46,5 @@ func (o *TargetingOptions) Run() error {
 }
 
 func (o *TargetingOptions) AttachFlagTo(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.Target, "target", "t", "", "Execute the command on the target directory instead of the current one")
+	cmd.Flags().StringVarP(&o.TargetPath, "target", "t", "", "Execute the command on the target directory instead of the current one")
 }

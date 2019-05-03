@@ -27,11 +27,9 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
-	app := filepath.Base(o.Target)
-
 	c := k8s.GetClient()
 	pods, err := c.KubeClient.CoreV1().Pods(c.Namespace).List(metav1.ListOptions{
-		LabelSelector: "app=" + app,
+		LabelSelector: "app=" + o.TargetName,
 		Limit:         1,
 	})
 	if err != nil {
@@ -46,7 +44,7 @@ func (o *options) Run() error {
 		return err
 	}*/
 
-	jar := filepath.Join(o.Target, "target", app+"-0.0.1-SNAPSHOT.jar")
+	jar := filepath.Join(o.TargetPath, "target", o.TargetName+"-0.0.1-SNAPSHOT.jar")
 	command := exec.Command("kubectl", "cp", jar, fmt.Sprintf("%s:/deployments/app.jar", podName), "-n", c.Namespace)
 	err = command.Run()
 	if err != nil {

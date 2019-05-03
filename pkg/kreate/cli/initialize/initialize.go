@@ -25,15 +25,14 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
-	component := filepath.Join(o.Target, "target", "classes", "META-INF", "ap4k", "component.yml")
+	component := filepath.Join(o.TargetPath, "target", "classes", "META-INF", "ap4k", "component.yml")
 	command := exec.Command("kubectl", "apply", "-f", component, "-n", k8s.GetClient().Namespace)
 	err := command.Run()
 	if err != nil {
 		return err
 	}
 
-	app := filepath.Base(o.Target)
-	logrus.Info("Component for " + app + " initialized. Wait a few seconds for it to be ready!")
+	logrus.Info("Component for " + o.TargetName + " initialized. Wait a few seconds for it to be ready!")
 	return nil
 }
 
