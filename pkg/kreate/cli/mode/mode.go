@@ -17,11 +17,11 @@ type options struct {
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
-	return o.TargetingOptions.Complete(name, cmd, args)
+	return nil
 }
 
 func (o *options) Validate() error {
-	return o.TargetingOptions.Validate()
+	return nil
 }
 
 func (o *options) Run() error {
@@ -61,24 +61,20 @@ func (o *options) Run() error {
 	return nil
 }
 
-func NewCmdMode(parent string) *cobra.Command {
-	o := &options{
-		TargetingOptions: cmdutil.NewTargetingOptions(),
-	}
+func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
+	o.TargetingOptions = options
+}
 
+func NewCmdMode(parent string) *cobra.Command {
+	o := &options{}
 	mode := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", commandName),
 		Short:   "Switch the component to the provided mode",
 		Long:    `Switch the component to the provided mode.`,
 		Aliases: []string{"switch"},
 		Args:    cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.GenericRun(o, cmd, args)
-		},
 	}
-
+	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, mode)
 	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode ('dev' or 'prod') to switch to")
-	o.AttachFlagTo(mode)
-
 	return mode
 }

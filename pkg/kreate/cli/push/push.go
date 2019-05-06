@@ -19,11 +19,11 @@ type options struct {
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
-	return o.TargetingOptions.Complete(name, cmd, args)
+	return nil
 }
 
 func (o *options) Validate() error {
-	return o.TargetingOptions.Validate()
+	return nil
 }
 
 func (o *options) Run() error {
@@ -78,22 +78,17 @@ func (o *options) Run() error {
 	return nil
 }
 
-func NewCmdPush(parent string) *cobra.Command {
-	p := &options{
-		TargetingOptions: cmdutil.NewTargetingOptions(),
-	}
+func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
+	o.TargetingOptions = options
+}
 
+func NewCmdPush(parent string) *cobra.Command {
 	push := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Push a local project to the remote cluster you're connected to",
 		Long:  `Push a local project to the remote cluster you're connected to.`,
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.GenericRun(p, cmd, args)
-		},
 	}
-
-	p.AttachFlagTo(push)
-
+	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options{}, push)
 	return push
 }

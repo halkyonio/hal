@@ -17,11 +17,11 @@ type options struct {
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
-	return o.TargetingOptions.Complete(name, cmd, args)
+	return nil
 }
 
 func (o *options) Validate() error {
-	return o.TargetingOptions.Validate()
+	return nil
 }
 
 func (o *options) Run() error {
@@ -36,23 +36,18 @@ func (o *options) Run() error {
 	return nil
 }
 
-func NewCmdInit(parent string) *cobra.Command {
-	o := &options{
-		TargetingOptions: cmdutil.NewTargetingOptions(),
-	}
+func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
+	o.TargetingOptions = options
+}
 
+func NewCmdInit(parent string) *cobra.Command {
 	init := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", commandName),
 		Short:   "Initialize the component on the remote cluster",
 		Long:    `Initialize the component on the remote cluster.`,
 		Aliases: []string{"initialize"},
 		Args:    cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.GenericRun(o, cmd, args)
-		},
 	}
-
-	o.AttachFlagTo(init)
-
+	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options{}, init)
 	return init
 }
