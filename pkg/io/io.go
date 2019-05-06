@@ -63,10 +63,10 @@ func addClientHeader(req *http.Request) {
 // detected using errors.Cause(err)
 func LogErrorAndExit(err error, context string, a ...interface{}) {
 	if err != nil {
-		if context == "" {
+		if len(context) == 0 {
 			logrus.Fatal(errors.Cause(err))
 		} else {
-			logrus.Fatalf(fmt.Sprintf("%s", context), a...)
+			logrus.Fatalf(fmt.Sprintf("%s: %v", context, errors.Cause(err)), a...)
 		}
 		os.Exit(1)
 	}
