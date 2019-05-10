@@ -268,3 +268,81 @@ func (c *Client) ExecCMDInContainer(podName string, cmd []string, stdout io.Writ
 
 	return nil
 }
+
+// WaitAndGetPod block and waits until pod matching selector is in in Running state
+// desiredPhase cannot be PodFailed or PodUnknown
+func (c *Client) WaitAndGetPod(selector string, desiredPhase corev1.PodPhase, waitMessage string) (*corev1.Pod, error) {
+	s := log2.Spinner(waitMessage)
+	defer s.End(false)
+
+	w, err := c.KubeClient.CoreV1().RESTClient().Get().
+		Namespace(c.Namespace).
+		Resource("pods").
+		VersionedParams(&metav1.ListOptions{
+			Watch:         true,
+			LabelSelector: selector,
+		}, scheme.ParameterCodec).
+		Timeout(30 * time.Second).
+		Watch()
+
+	/*w, err := c.KubeClient.CoreV1().Pods(c.Namespace).Watch(metav1.ListOptions{
+		LabelSelector: selector,
+	})*/
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to watch pod")
+	}
+	defer w.Stop()
+
+	podChannel := make(chan *corev1.Pod)
+	watchErrorChannel := make(chan error)
+
+	go func() {
+	loop:
+		for {
+			val, ok := <-w.ResultChan()
+			if !ok {
+				watchErrorChannel <- errors.New("watch channel was closed")
+				break loop
+			}
+			if e, ok := val.Object.(*corev1.Pod); ok {
+				switch e.Status.Phase {
+				case desiredPhase:
+					if desiredPhase == corev1.PodRunning {
+						conditions := e.Status.Conditions
+						if len(conditions) > 0 {
+							for _, condition := range conditions {
+								if condition.Type == corev1.ContainersReady && condition.Status == corev1.ConditionTrue {
+									s.End(true)
+									podChannel <- e
+									break loop
+								}
+							}
+						}
+					} else {
+						s.End(true)
+						podChannel <- e
+						break loop
+					}
+				case corev1.PodFailed, corev1.PodUnknown:
+					watchErrorChannel <- errors.Errorf("pod %s status %s", e.Name, e.Status.Phase)
+					break loop
+				}
+			} else {
+				watchErrorChannel <- errors.New("unable to convert event object to Pod")
+				break loop
+			}
+		}
+		close(podChannel)
+		close(watchErrorChannel)
+	}()
+
+	select {
+	case val := <-podChannel:
+		time.Sleep(20 * time.Second) // wait for 5 seconds before returning to let pod finish up
+		return val, nil
+	case err := <-watchErrorChannel:
+		return nil, err
+	case <-time.After(waitForPodTimeOut):
+		return nil, errors.Errorf("waited %s but couldn't find running pod matching selector: '%s'", waitForPodTimeOut, selector)
+	}
+}
