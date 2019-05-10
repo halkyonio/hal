@@ -275,19 +275,19 @@ func (c *Client) WaitAndGetPod(selector string, desiredPhase corev1.PodPhase, wa
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
-	w, err := c.KubeClient.CoreV1().RESTClient().Get().
-		Namespace(c.Namespace).
-		Resource("pods").
-		VersionedParams(&metav1.ListOptions{
-			Watch:         true,
-			LabelSelector: selector,
-		}, scheme.ParameterCodec).
-		Timeout(30 * time.Second).
-		Watch()
-
-	/*w, err := c.KubeClient.CoreV1().Pods(c.Namespace).Watch(metav1.ListOptions{
+	/*w, err := c.KubeClient.CoreV1().RESTClient().Get().
+	Namespace(c.Namespace).
+	Resource("pods").
+	VersionedParams(&metav1.ListOptions{
+		Watch:         true,
 		LabelSelector: selector,
-	})*/
+	}, scheme.ParameterCodec).
+	Timeout(30 * time.Second).
+	Watch()*/
+
+	w, err := c.KubeClient.CoreV1().Pods(c.Namespace).Watch(metav1.ListOptions{
+		LabelSelector: selector,
+	})
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to watch pod")
 	}
