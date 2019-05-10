@@ -2,12 +2,16 @@ package k8s
 
 import (
 	"archive/tar"
+	"github.com/gobwas/glob"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/pkg/errors"
 	io2 "github.com/snowdrop/kreate/pkg/io"
+	log2 "github.com/snowdrop/kreate/pkg/log"
+	"github.com/snowdrop/kreate/pkg/validation"
 	"io"
 	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
@@ -15,6 +19,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
+)
+
+const (
+	// waitForPodTimeOut controls how long we should wait for a pod before giving up
+	waitForPodTimeOut = 240 * time.Second
 )
 
 type Client struct {
@@ -53,16 +63,21 @@ func GetClient() *Client {
 	return client
 }
 
-func (c *Client) CopyFile(localPath string, targetPodName string, targetPath string) error {
+// CopyFile copies localPath directory or list of files in copyFiles list to the directory in running Pod.
+// copyFiles is list of changed files captured during `odo watch` as well as binary file path
+// During copying binary components, localPath represent base directory path to binary and copyFiles contains path of binary
+// During copying local source components, localPath represent base directory path whereas copyFiles is empty
+// During `odo watch`, localPath represent base directory path whereas copyFiles contains list of changed Files
+func (c *Client) CopyFile(localPath string, targetPodName string, targetPath string, copyFiles []string, globExps []string) error {
 	dest := path.Join(targetPath, filepath.Base(localPath))
 	reader, writer := io.Pipe()
-	// inspired from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp/cp.go
+	// inspired from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp.go#L235
 	go func() {
 		defer writer.Close()
 
 		var err error
-		err = makeTar(localPath, dest, writer)
-		io2.LogErrorAndExit(err, "couldn't create tar")
+		err = makeTar(localPath, dest, writer, copyFiles, globExps)
+		io2.LogErrorAndExit(err, "couldn't tar local files to send to cluster")
 
 	}()
 
@@ -75,28 +90,62 @@ func (c *Client) CopyFile(localPath string, targetPodName string, targetPath str
 	return nil
 }
 
-// makeTar function is copied from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp/cp.go
+// makeTar function is copied from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp.go#L309
 // srcPath is ignored if files is set
-func makeTar(srcPath, destPath string, writer io.Writer) error {
+func makeTar(srcPath, destPath string, writer io.Writer, files []string, globExps []string) error {
 	// TODO: use compression here?
 	tarWriter := tar.NewWriter(writer)
 	defer tarWriter.Close()
 	srcPath = path.Clean(srcPath)
 	destPath = path.Clean(destPath)
 
-	return recursiveTar(path.Dir(srcPath), path.Base(srcPath), path.Dir(destPath), path.Base(destPath), tarWriter)
+	if len(files) != 0 {
+		//watchTar
+		for _, fileName := range files {
+			if validation.CheckFileExist(fileName) {
+				// Fetch path of source file relative to that of source base path so that it can be passed to recursiveTar
+				// which uses path relative to base path for taro header to correctly identify file location when untarred
+				srcFile, err := filepath.Rel(srcPath, fileName)
+				if err != nil {
+					return err
+				}
+				srcFile = filepath.Join(filepath.Base(srcPath), srcFile)
+				// The file could be a regular file or even a folder, so use recursiveTar which handles symlinks, regular files and folders
+				err = recursiveTar(path.Dir(srcPath), srcFile, path.Dir(destPath), srcFile, tarWriter, globExps)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		return recursiveTar(path.Dir(srcPath), path.Base(srcPath), path.Dir(destPath), path.Base(destPath), tarWriter, globExps)
+	}
+
+	return nil
 }
 
-// recursiveTar function is copied from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp/cp.go
-func recursiveTar(srcBase, srcFile, destBase, destFile string, tw *tar.Writer) error {
+// recursiveTar function is copied from https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cp.go#L319
+func recursiveTar(srcBase, srcFile, destBase, destFile string, tw *tar.Writer, globExps []string) error {
 	joinedPath := path.Join(srcBase, srcFile)
 	matchedPathsDir, err := filepath.Glob(joinedPath)
 	if err != nil {
 		return err
 	}
 
+	// checking the files which are allowed by glob matching
+	matchedPaths := make([]string, 0, len(matchedPathsDir))
+	for _, p := range matchedPathsDir {
+		matched, err := IsGlobExpMatch(p, globExps)
+		if err != nil {
+			return err
+		}
+		if !matched {
+			matchedPaths = append(matchedPaths, p)
+		}
+	}
+
 	// adding the files for taring
-	for _, matchedPath := range matchedPathsDir {
+	for _, matchedPath := range matchedPaths {
 		stat, err := os.Lstat(matchedPath)
 		if err != nil {
 			return err
@@ -115,7 +164,7 @@ func recursiveTar(srcBase, srcFile, destBase, destFile string, tw *tar.Writer) e
 				}
 			}
 			for _, f := range files {
-				if err := recursiveTar(srcBase, path.Join(srcFile, f.Name()), destBase, path.Join(destFile, f.Name()), tw); err != nil {
+				if err := recursiveTar(srcBase, path.Join(srcFile, f.Name()), destBase, path.Join(destFile, f.Name()), tw, globExps); err != nil {
 					return err
 				}
 			}
@@ -158,6 +207,25 @@ func recursiveTar(srcBase, srcFile, destBase, destFile string, tw *tar.Writer) e
 		}
 	}
 	return nil
+}
+
+// IsGlobExpMatch compiles strToMatch against each of the passed globExps
+// Parameters:
+// strToMatch : a string for matching against the rules
+// globExps : a list of glob patterns to match strToMatch with
+// Returns: true if there is any match else false the error (if any)
+func IsGlobExpMatch(strToMatch string, globExps []string) (bool, error) {
+	for _, globExp := range globExps {
+		pattern, err := glob.Compile(globExp)
+		if err != nil {
+			return false, err
+		}
+		matched := pattern.Match(strToMatch)
+		if matched {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // ExecCMDInContainer execute command in first container of a pod
