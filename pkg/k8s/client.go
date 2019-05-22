@@ -2,9 +2,12 @@ package k8s
 
 import (
 	"archive/tar"
+	"fmt"
 	"github.com/gobwas/glob"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/pkg/errors"
+	devexp "github.com/snowdrop/component-operator/pkg/apis/clientset/versioned/typed/component/v1alpha2"
+	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha2"
 	io2 "github.com/snowdrop/kreate/pkg/io"
 	log2 "github.com/snowdrop/kreate/pkg/log"
 	"github.com/snowdrop/kreate/pkg/validation"
@@ -12,6 +15,8 @@ import (
 	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/clientcmd"
@@ -30,6 +35,7 @@ const (
 type Client struct {
 	KubeClient           kubernetes.Interface
 	ServiceCatalogClient *servicecatalogclienset.ServicecatalogV1beta1Client
+	DevexpClient         devexp.DevexpV1alpha2Interface
 	KubeConfig           clientcmd.ClientConfig
 	Namespace            string
 }
@@ -54,6 +60,9 @@ func GetClient() *Client {
 		serviceCatalogClient, err := servicecatalogclienset.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating k8s service catalog client")
 		client.ServiceCatalogClient = serviceCatalogClient
+
+		client.DevexpClient, err = devexp.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating devexp client")
 
 		namespace, _, err := client.KubeConfig.Namespace()
 		io2.LogErrorAndExit(err, "error retrieving namespace")
@@ -267,6 +276,88 @@ func (c *Client) ExecCMDInContainer(podName string, cmd []string, stdout io.Writ
 	}
 
 	return nil
+}
+
+func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPhase, waitMessage string) (*v1alpha2.Component, error) {
+	s := log2.Spinner(waitMessage)
+	defer s.End(false)
+
+	/*w, err := c.KubeClient.CoreV1().RESTClient().Get().
+		Namespace(c.Namespace).
+		Resource("components." +v1alpha2.GroupName).
+		Name(name).
+		VersionedParams(&metav1.ListOptions{
+			Watch: true,
+		}, scheme.ParameterCodec).
+		Timeout(30 * time.Second).
+		Watch()
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to watch for component %s", name)
+	}*/
+	//query := Query(c.Namespace, name)
+	var timeout int64 = 10
+	w, err := c.DevexpClient.
+		Components(c.Namespace).
+		Watch(metav1.ListOptions{
+			TimeoutSeconds: &timeout,
+			FieldSelector:  fields.OneTermEqualSelector("metadata.name", name).String(),
+		})
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to watch for component %s", name)
+	}
+	defer w.Stop()
+
+	podChannel := make(chan *v1alpha2.Component)
+	watchErrorChannel := make(chan error)
+
+	go func() {
+	loop:
+		for {
+			val, ok := <-w.ResultChan()
+			object := val.Object
+			fmt.Printf("received %#v", object)
+			if !ok {
+				watchErrorChannel <- errors.New("watch channel was closed")
+				break loop
+			}
+
+			if watch.Error == val.Type {
+				var msg string
+				if status, ok := object.(*metav1.Status); ok {
+					msg = fmt.Sprintf("error: %s", status.Message)
+				} else {
+					msg = fmt.Sprintf("error: %#v", object)
+				}
+				watchErrorChannel <- errors.New(msg)
+				break loop
+			}
+			if e, ok := object.(*v1alpha2.Component); ok {
+				switch e.Status.Phase {
+				case desiredPhase:
+					s.End(true)
+					podChannel <- e
+					break loop
+				case v1alpha2.ComponentFailed, v1alpha2.ComponentUnknown:
+					watchErrorChannel <- errors.Errorf("component %s status %s", e.Name, e.Status.Phase)
+					break loop
+				}
+			} else {
+				watchErrorChannel <- errors.New("unable to convert event object to Component")
+				break loop
+			}
+		}
+		close(podChannel)
+		close(watchErrorChannel)
+	}()
+
+	select {
+	case val := <-podChannel:
+		return val, nil
+	case err := <-watchErrorChannel:
+		return nil, err
+	case <-time.After(waitForPodTimeOut):
+		return nil, errors.Errorf("waited %s but couldn't find running component named '%s'", waitForPodTimeOut, name)
+	}
 }
 
 // WaitAndGetPod block and waits until pod matching selector is in in Running state

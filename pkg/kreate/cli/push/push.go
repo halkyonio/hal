@@ -3,13 +3,16 @@ package push
 import (
 	"bufio"
 	"fmt"
+	"github.com/pkg/errors"
+	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
+	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
 	"io"
-	"k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/record/util"
 	"path/filepath"
 )
 
@@ -28,35 +31,29 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
+	ui.Proceed("foo")
 	c := k8s.GetClient()
-	selector := "app=" + o.TargetName
-	pods, err := c.KubeClient.CoreV1().Pods(c.Namespace).List(metav1.ListOptions{
-		LabelSelector: selector,
-		Limit:         1,
-	})
+	component, err := c.DevexpClient.Components(c.Namespace).Get(o.TargetName, v1.GetOptions{})
 	if err != nil {
-		return err
-	}
+		// check error to see if it means that the component doesn't exist yet
+		if util.IsKeyNotFoundError(errors.Cause(err)) {
+			// the component was not found so we need to create it first and wait for it to be ready
+			descriptor := filepath.Join(o.TargetPath, "target", "classes", "META-INF", "ap4k", "component.yml")
 
-	var podName string
-	if len(pods.Items) == 0 {
-		// the pod doesn't exist, create it and wait for it to be ready
-		component := filepath.Join(o.TargetPath, "target", "classes", "META-INF", "ap4k", "component.yml")
+			err = k8s.Apply(descriptor, c.Namespace)
+			if err != nil {
+				return fmt.Errorf("error applying component CR: %v", err)
+			}
 
-		err := k8s.Apply(component, c.Namespace)
-		if err != nil {
-			return fmt.Errorf("error applying component CR: %v", err)
+			component, err = c.WaitForComponent(o.TargetName, v1alpha2.ComponentRunning, "Initializing component "+o.TargetName+". Waiting for it to be ready…")
+			if err != nil {
+				return fmt.Errorf("error waiting for component: %v", err)
+			}
+		} else {
+			return err
 		}
-
-		pod, err := c.WaitAndGetPod(selector, v1.PodRunning, "Component for "+o.TargetName+" initialized. Waiting for it to be ready…")
-		if err != nil {
-			return fmt.Errorf("error waiting for pod: %v", err)
-		}
-
-		podName = pod.Name
-	} else {
-		podName = pods.Items[0].Name
 	}
+	podName := component.Name
 
 	/*// todo: fix copy function
 	err = c.CopyFile(".", podName, "/deployments", []string{"target/" + app + "-0.0.1-SNAPSHOT.jar"}, nil)
