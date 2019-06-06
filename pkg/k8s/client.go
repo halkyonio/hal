@@ -282,19 +282,6 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
-	/*w, err := c.KubeClient.CoreV1().RESTClient().Get().
-		Namespace(c.Namespace).
-		Resource("components." +v1alpha2.GroupName).
-		Name(name).
-		VersionedParams(&metav1.ListOptions{
-			Watch: true,
-		}, scheme.ParameterCodec).
-		Timeout(30 * time.Second).
-		Watch()
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to watch for component %s", name)
-	}*/
-	//query := Query(c.Namespace, name)
 	var timeout int64 = 10
 	w, err := c.DevexpClient.
 		Components(c.Namespace).
