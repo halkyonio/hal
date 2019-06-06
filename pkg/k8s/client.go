@@ -282,7 +282,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
-	var timeout int64 = 10
+	var timeout int64 = 30
 	w, err := c.DevexpClient.
 		Components(c.Namespace).
 		Watch(metav1.ListOptions{
