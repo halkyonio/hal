@@ -45,7 +45,7 @@ func (o *options) Run() error {
 				return fmt.Errorf("error applying component CR: %v", err)
 			}
 
-			component, err = c.WaitForComponent(o.TargetName, v1alpha2.ComponentRunning, "Initializing component "+o.TargetName+". Waiting for it to be ready…")
+			component, err = c.WaitForComponent(o.TargetName, v1alpha2.ComponentReady, "Initializing component "+o.TargetName+". Waiting for it to be ready…")
 			if err != nil {
 				return fmt.Errorf("error waiting for component: %v", err)
 			}
