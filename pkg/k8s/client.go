@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	// waitForPodTimeOut controls how long we should wait for a pod before giving up
-	waitForPodTimeOut = 240 * time.Second
+	// watchTimeout controls how long we should watch a resource waiting for the expected result before giving up
+	watchTimeout = 240 * time.Second
 )
 
 type Client struct {
@@ -338,7 +338,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 		return val, nil
 	case err := <-watchErrorChannel:
 		return nil, err
-	case <-time.After(waitForPodTimeOut):
-		return nil, errors.Errorf("waited %s but couldn't find running component named '%s'", waitForPodTimeOut, name)
+	case <-time.After(watchTimeout):
+		return nil, errors.Errorf("waited %s but couldn't find running component named '%s'", watchTimeout, name)
 	}
 }
