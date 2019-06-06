@@ -53,7 +53,7 @@ func (o *options) Run() error {
 			return err
 		}
 	}
-	podName := component.Name
+	podName := component.Status.PodName
 
 	/*// todo: fix copy function
 	err = c.CopyFile(".", podName, "/deployments", []string{"target/" + app + "-0.0.1-SNAPSHOT.jar"}, nil)
