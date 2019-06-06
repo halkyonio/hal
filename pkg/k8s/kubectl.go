@@ -6,15 +6,15 @@ import (
 )
 
 func Copy(path, namespace, destination string) error {
-	return run("cp", []string{path, fmt.Sprintf("%s:/deployments/app.jar", destination), "-n", namespace}...)
+	return runKubectl([]string{"cp", path, fmt.Sprintf("%s:/deployments/app.jar", destination), "-n", namespace}...)
 }
 
 func Apply(path, namespace string) error {
-	return run("kubectl", []string{"apply", "-f", path, "-n", namespace}...)
+	return runKubectl([]string{"apply", "-f", path, "-n", namespace}...)
 }
 
-func run(cmdName string, args ...string) error {
-	command := exec.Command(cmdName, args...)
+func runKubectl(args ...string) error {
+	command := exec.Command("kubectl", args...)
 	err := command.Run()
 	if err != nil {
 		return err
