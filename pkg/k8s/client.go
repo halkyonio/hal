@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"time"
 )
 
@@ -300,13 +301,8 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 	go func() {
 	loop:
 		for {
-			val, ok := <-w.ResultChan()
+			val := <-w.ResultChan()
 			object := val.Object
-			fmt.Printf("received %#v", object)
-			if !ok {
-				watchErrorChannel <- errors.New("watch channel was closed")
-				break loop
-			}
 
 			if watch.Error == val.Type {
 				var msg string
@@ -329,7 +325,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 					break loop
 				}
 			} else {
-				watchErrorChannel <- errors.New("unable to convert event object to Component")
+				watchErrorChannel <- errors.Errorf("unable to convert event object to Component, got %v", reflect.TypeOf(object))
 				break loop
 			}
 		}
