@@ -8,7 +8,6 @@ import (
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
-	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
 	"io"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +30,6 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
-	ui.Proceed("foo")
 	c := k8s.GetClient()
 	component, err := c.DevexpClient.Components(c.Namespace).Get(o.TargetName, v1.GetOptions{})
 	if err != nil {
