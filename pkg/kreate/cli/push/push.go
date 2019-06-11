@@ -9,9 +9,12 @@ import (
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
 	"github.com/spf13/cobra"
+	"hash/crc64"
 	"io"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record/util"
+	"os"
 	"path/filepath"
 )
 
@@ -52,12 +55,37 @@ func (o *options) Run() error {
 		}
 	}
 
+	// check if the component revision is different
+	file, err := os.Open(o.getComponentBinaryPath())
+	input := bufio.NewReader(file)
+	hash := crc64.New(crc64.MakeTable(crc64.ECMA))
+	if _, err := io.Copy(hash, input); err != nil {
+		return err
+	}
+	revision := fmt.Sprintf("%x", hash.Sum(nil))
+	if revision == component.Spec.Revision {
+		log.Info("No local changes detected: nothing to push!")
+		return nil
+	}
+
 	// we got the component, we still need to check it's ready
 	component, err = o.waitUntilReady(component)
 	if err != nil {
 		return err
 	}
-	return o.push(component)
+	err = o.push(component)
+	if err != nil {
+		return err
+	}
+
+	// update the component revision
+	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
+	_, err = c.DevexpClient.Components(c.Namespace).
+		Patch(o.TargetName, types.MergePatchType, []byte(patch))
+	if err != nil {
+		return err
+	}
+	return nil
 
 }
 
@@ -95,7 +123,7 @@ func (o *options) push(component *v1alpha2.Component) error {
 	if err != nil {
 		return err
 	}*/
-	jar := filepath.Join(o.TargetPath, "target", o.TargetName+"-0.0.1-SNAPSHOT.jar")
+	jar := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + jar)
 	defer s.End(false)
 	err := k8s.Copy(jar, c.Namespace, podName)
@@ -124,6 +152,10 @@ func (o *options) push(component *v1alpha2.Component) error {
 		return err
 	}
 	return nil
+}
+
+func (o *options) getComponentBinaryPath() string {
+	return filepath.Join(o.TargetPath, "target", o.TargetName+"-0.0.1-SNAPSHOT.jar")
 }
 
 func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
