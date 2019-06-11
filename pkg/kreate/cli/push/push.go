@@ -43,7 +43,7 @@ func (o *options) Run() error {
 				return fmt.Errorf("error applying component CR: %v", err)
 			}
 
-			_, err = o.waitUntilReady(component)
+			component, err = o.waitUntilReady(component)
 			if err != nil {
 				return err
 			}
@@ -62,6 +62,10 @@ func (o *options) Run() error {
 }
 
 func (o *options) waitUntilReady(component *v1alpha2.Component) (*v1alpha2.Component, error) {
+	if v1alpha2.ComponentReady == component.Status.Phase || v1alpha2.ComponentRunning == component.Status.Phase {
+		return component, nil
+	}
+
 	c := k8s.GetClient()
 	cp, err := c.WaitForComponent(o.TargetName, v1alpha2.ComponentReady, "Waiting for component "+o.TargetName+" to be ready…")
 	if err != nil {
