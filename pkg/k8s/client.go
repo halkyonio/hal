@@ -29,8 +29,9 @@ import (
 )
 
 const (
+	timeoutDuration = 120
 	// watchTimeout controls how long we should watch a resource waiting for the expected result before giving up
-	watchTimeout = 240 * time.Second
+	watchTimeout = timeoutDuration * time.Second
 )
 
 type Client struct {
@@ -283,7 +284,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
-	var timeout int64 = 30
+	var timeout int64 = timeoutDuration
 	w, err := c.DevexpClient.
 		Components(c.Namespace).
 		Watch(metav1.ListOptions{
