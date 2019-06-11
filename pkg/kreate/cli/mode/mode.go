@@ -7,7 +7,7 @@ import (
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/spf13/cobra"
-	"os/exec"
+	"k8s.io/apimachinery/pkg/types"
 	"strings"
 )
 
@@ -48,21 +48,8 @@ func (o *options) Run() error {
 	client := k8s.GetClient()
 	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
-	// todo: fix
-	/*err := client.KubeClient.CoreV1().RESTClient().
-		Patch(types.MergePatchType).
-		Namespace(client.Namespace).
-		Resource("components").
-		Name(o.TargetName).
-		Body(patch).
-		Do().
-		Error()
-	if err != nil {
-		return err
-	}*/
-
-	command := exec.Command("kubectl", "patch", "cp", o.TargetName, "-p", patch, "--type=merge", "-n", client.Namespace)
-	err := command.Run()
+	component, err := client.DevexpClient.Components(client.Namespace).
+		Patch(o.TargetName, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
