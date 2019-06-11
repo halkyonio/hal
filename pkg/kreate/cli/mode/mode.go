@@ -3,17 +3,37 @@ package mode
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/spf13/cobra"
 	"os/exec"
+	"strings"
 )
 
 const commandName = "mode"
 
+var knownModes = map[string]bool{string(v1alpha2.Dev): true, string(v1alpha2.Build): true}
+var knownModesAsString = getKnownModesAsString()
+
 type options struct {
 	mode string
 	*cmdutil.TargetingOptions
+}
+
+func getKnownModesAsString() string {
+	modes := make([]string, 0, len(knownModes))
+	for mode := range knownModes {
+		modes = append(modes, mode)
+	}
+	return strings.Join(modes, ",")
+}
+
+func validate(mode string) error {
+	if !knownModes[mode] {
+		return fmt.Errorf("unknown mode: %s, valid modes are: %s", mode, knownModesAsString)
+	}
+	return nil
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -21,22 +41,12 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 }
 
 func (o *options) Validate() error {
-	return nil
+	return validate(o.mode)
 }
 
 func (o *options) Run() error {
 	client := k8s.GetClient()
-	var mode string
-	switch o.mode {
-	case "dev":
-		mode = "innerloop"
-	case "prod":
-		mode = "outerloop"
-	default:
-		return fmt.Errorf("unknown mode: %s, valid modes are: dev,prod", o.mode)
-	}
-
-	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, mode)
+	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
 	// todo: fix
 	/*err := client.KubeClient.CoreV1().RESTClient().
@@ -75,6 +85,6 @@ func NewCmdMode(parent string) *cobra.Command {
 		Args:    cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, mode)
-	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode ('dev' or 'prod') to switch to")
+	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode to switch to. Possible values: "+knownModesAsString)
 	return mode
 }
