@@ -36,42 +36,72 @@ func (o *options) Run() error {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
+			log.Infof("Component %s was not found, initializing it", o.TargetName)
 			descriptor := filepath.Join(o.TargetPath, "target", "classes", "META-INF", "ap4k", "component.yml")
-
 			err = k8s.Apply(descriptor, c.Namespace)
 			if err != nil {
 				return fmt.Errorf("error applying component CR: %v", err)
 			}
 
-			component, err = c.WaitForComponent(o.TargetName, v1alpha2.ComponentReady, "Initializing component "+o.TargetName+". Waiting for it to be ready…")
+			_, err = o.waitUntilReady(component)
 			if err != nil {
-				return fmt.Errorf("error waiting for component: %v", err)
+				return err
 			}
 		} else {
 			return err
 		}
 	}
-	podName := component.Status.PodName
 
+	// we got the component, we still need to check it's ready
+	component, err = o.waitUntilReady(component)
+	if err != nil {
+		return err
+	}
+	return o.push(component)
+
+}
+
+func (o *options) waitUntilReady(component *v1alpha2.Component) (*v1alpha2.Component, error) {
+	c := k8s.GetClient()
+	cp, err := c.WaitForComponent(o.TargetName, v1alpha2.ComponentReady, "Waiting for component "+o.TargetName+" to be ready…")
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for component: %v", err)
+	}
+	err = errorIfFailedOrUnknown(component)
+	if err != nil {
+		return nil, err
+	}
+	return cp, nil
+}
+
+func errorIfFailedOrUnknown(component *v1alpha2.Component) error {
+	switch component.Status.Phase {
+	case v1alpha2.ComponentFailed, v1alpha2.ComponentUnknown:
+		return errors.Errorf("status of component %s is %s: %s", component.Name, component.Status.Phase, component.Status.Message)
+	default:
+		return nil
+	}
+}
+
+func (o *options) push(component *v1alpha2.Component) error {
+	c := k8s.GetClient()
+	podName := component.Status.PodName
 	/*// todo: fix copy function
 	err = c.CopyFile(".", podName, "/deployments", []string{"target/" + app + "-0.0.1-SNAPSHOT.jar"}, nil)
 	if err != nil {
 		return err
 	}*/
-
 	jar := filepath.Join(o.TargetPath, "target", o.TargetName+"-0.0.1-SNAPSHOT.jar")
 	s := log.Spinner("Uploading " + jar)
 	defer s.End(false)
-	err = k8s.Copy(jar, c.Namespace, podName)
+	err := k8s.Copy(jar, c.Namespace, podName)
 	if err != nil {
 		return fmt.Errorf("error uploading jar: %v", err)
 	}
 	s.End(true)
-
 	// use pipes to write output from ExecCMDInContainer in yellow  to 'out' io.Writer
 	pipeReader, pipeWriter := io.Pipe()
 	var cmdOutput string
-
 	// This Go routine will automatically pipe the output from ExecCMDInContainer to
 	// our logger.
 	go func() {
@@ -81,17 +111,14 @@ func (o *options) Run() error {
 			cmdOutput += fmt.Sprintln(line)
 		}
 	}()
-
 	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run-java"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
-
 	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run-java"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
