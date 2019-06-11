@@ -13,7 +13,7 @@ import (
 
 const commandName = "mode"
 
-var knownModes = map[string]bool{string(v1alpha2.Dev): true, string(v1alpha2.Build): true}
+var knownModes = map[string]bool{v1alpha2.Dev.String(): true, v1alpha2.Build.String(): true}
 var knownModesAsString = getKnownModesAsString()
 
 type options struct {
@@ -67,7 +67,7 @@ func (o *options) Run() error {
 		return err
 	}
 
-	logrus.Info("Component for " + o.TargetName + " switched to " + o.mode)
+	logrus.Info("Component " + component.Name + " switched to " + component.Spec.DeploymentMode.String())
 	return nil
 }
 
