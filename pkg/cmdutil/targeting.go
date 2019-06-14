@@ -62,6 +62,7 @@ func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, ar
 	} else {
 		o.ComponentPath = currentDir
 		o.ComponentName = filepath.Base(o.ComponentPath)
+		return o.runnable.Complete(name, cmd, args)
 	}
 
 	return nil
