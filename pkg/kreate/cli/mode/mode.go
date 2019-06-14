@@ -13,7 +13,7 @@ import (
 
 const commandName = "mode"
 
-var knownModes = map[string]bool{v1alpha2.Dev.String(): true, v1alpha2.Build.String(): true}
+var knownModes = map[string]bool{v1alpha2.DevDeploymentMode.String(): true, v1alpha2.BuildDeploymentMode.String(): true}
 var knownModesAsString = getKnownModesAsString()
 
 type options struct {
