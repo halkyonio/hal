@@ -173,7 +173,9 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 
 		if p.UseAp4k && ui.Proceed("Create a service from service catalog") {
 			err := servicecatalog.GenerateAp4kAnnotations()
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	}
 
