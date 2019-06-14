@@ -18,7 +18,7 @@ var knownModesAsString = getKnownModesAsString()
 
 type options struct {
 	mode string
-	*cmdutil.TargetingOptions
+	*cmdutil.ComponentTargetingOptions
 }
 
 func getKnownModesAsString() string {
@@ -49,7 +49,7 @@ func (o *options) Run() error {
 	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
 	component, err := client.DevexpClient.Components(client.Namespace).
-		Patch(o.TargetName, types.MergePatchType, []byte(patch))
+		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -58,8 +58,8 @@ func (o *options) Run() error {
 	return nil
 }
 
-func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
-	o.TargetingOptions = options
+func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
+	o.ComponentTargetingOptions = options
 }
 
 func NewCmdMode(parent string) *cobra.Command {

@@ -9,15 +9,15 @@ import (
 	"reflect"
 )
 
-type TargetingOptions struct {
-	paths      []string
-	TargetPath string
-	TargetName string
-	runnable   Runnable
+type ComponentTargetingOptions struct {
+	paths         []string
+	ComponentPath string
+	ComponentName string
+	runnable      Runnable
 }
 
 type withTargeting interface {
-	SetTargetingOptions(options *TargetingOptions)
+	SetTargetingOptions(options *ComponentTargetingOptions)
 }
 
 func ConfigureRunnableAndCommandWithTargeting(runnable Runnable, cmd *cobra.Command) {
@@ -34,11 +34,12 @@ func ConfigureRunnableAndCommandWithTargeting(runnable Runnable, cmd *cobra.Comm
 	}
 }
 
-func NewTargetingOptions() *TargetingOptions {
-	return &TargetingOptions{}
+func NewTargetingOptions() *ComponentTargetingOptions {
+	return &ComponentTargetingOptions{}
 }
 
-func (o *TargetingOptions) Complete(name string, cmd *cobra.Command, args []string) error {
+func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, args []string) error {
+	// todo: separate component identification logic from path / directory
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -51,34 +52,34 @@ func (o *TargetingOptions) Complete(name string, cmd *cobra.Command, args []stri
 				return fmt.Errorf("%s doesn't exist", path)
 			}
 			o.paths[i] = path
-			o.TargetPath = path
-			o.TargetName = filepath.Base(o.TargetPath)
+			o.ComponentPath = path
+			o.ComponentName = filepath.Base(o.ComponentPath)
 			err := o.runnable.Complete(name, cmd, args)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
-		o.TargetPath = currentDir
-		o.TargetName = filepath.Base(o.TargetPath)
+		o.ComponentPath = currentDir
+		o.ComponentName = filepath.Base(o.ComponentPath)
 	}
 
 	return nil
 }
 
-func (o *TargetingOptions) Validate() error {
+func (o *ComponentTargetingOptions) Validate() error {
 	return o.runForEachPath(o.runnable.Validate)
 }
 
-func (o *TargetingOptions) Run() error {
+func (o *ComponentTargetingOptions) Run() error {
 	return o.runForEachPath(o.runnable.Run)
 }
 
-func (o *TargetingOptions) runForEachPath(fn func() error) error {
+func (o *ComponentTargetingOptions) runForEachPath(fn func() error) error {
 	if len(o.paths) > 0 {
 		for _, path := range o.paths {
-			o.TargetPath = path
-			o.TargetName = filepath.Base(o.TargetPath)
+			o.ComponentPath = path
+			o.ComponentName = filepath.Base(o.ComponentPath)
 			err := fn()
 			if err != nil {
 				return err
@@ -90,6 +91,6 @@ func (o *TargetingOptions) runForEachPath(fn func() error) error {
 	return nil
 }
 
-func (o *TargetingOptions) AttachFlagTo(cmd *cobra.Command) {
+func (o *ComponentTargetingOptions) AttachFlagTo(cmd *cobra.Command) {
 	cmd.Flags().StringSliceVarP(&o.paths, "target", "t", nil, "Execute the command on the target directories instead of the current one")
 }

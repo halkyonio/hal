@@ -21,7 +21,7 @@ import (
 const commandName = "push"
 
 type options struct {
-	*cmdutil.TargetingOptions
+	*cmdutil.ComponentTargetingOptions
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -34,13 +34,13 @@ func (o *options) Validate() error {
 
 func (o *options) Run() error {
 	c := k8s.GetClient()
-	component, err := c.DevexpClient.Components(c.Namespace).Get(o.TargetName, v1.GetOptions{})
+	component, err := c.DevexpClient.Components(c.Namespace).Get(o.ComponentName, v1.GetOptions{})
 	if err != nil {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
-			log.Infof("Component %s was not found, initializing it", o.TargetName)
-			descriptor := filepath.Join(o.TargetPath, "target", "classes", "META-INF", "ap4k", "component.yml")
+			log.Infof("Component %s was not found, initializing it", o.ComponentName)
+			descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "ap4k", "component.yml")
 			err = k8s.Apply(descriptor, c.Namespace)
 			if err != nil {
 				return fmt.Errorf("error applying component CR: %v", err)
@@ -81,7 +81,7 @@ func (o *options) Run() error {
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
 	_, err = c.DevexpClient.Components(c.Namespace).
-		Patch(o.TargetName, types.MergePatchType, []byte(patch))
+		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (o *options) waitUntilReady(component *v1alpha2.Component) (*v1alpha2.Compo
 	}
 
 	c := k8s.GetClient()
-	cp, err := c.WaitForComponent(o.TargetName, v1alpha2.ComponentReady, "Waiting for component "+o.TargetName+" to be ready…")
+	cp, err := c.WaitForComponent(o.ComponentName, v1alpha2.ComponentReady, "Waiting for component "+o.ComponentName+" to be ready…")
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for component: %v", err)
 	}
@@ -155,11 +155,11 @@ func (o *options) push(component *v1alpha2.Component) error {
 }
 
 func (o *options) getComponentBinaryPath() string {
-	return filepath.Join(o.TargetPath, "target", o.TargetName+"-0.0.1-SNAPSHOT.jar")
+	return filepath.Join(o.ComponentPath, "target", o.ComponentName+"-0.0.1-SNAPSHOT.jar")
 }
 
-func (o *options) SetTargetingOptions(options *cmdutil.TargetingOptions) {
-	o.TargetingOptions = options
+func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
+	o.ComponentTargetingOptions = options
 }
 
 func NewCmdPush(parent string) *cobra.Command {
