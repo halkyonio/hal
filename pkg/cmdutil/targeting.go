@@ -92,5 +92,5 @@ func (o *ComponentTargetingOptions) runForEachPath(fn func() error) error {
 }
 
 func (o *ComponentTargetingOptions) AttachFlagTo(cmd *cobra.Command) {
-	cmd.Flags().StringSliceVarP(&o.paths, "target", "t", nil, "Execute the command on the target directories instead of the current one")
+	cmd.Flags().StringSliceVarP(&o.paths, "components", "c", nil, "Execute the command on the target component(s) instead of the current one")
 }
