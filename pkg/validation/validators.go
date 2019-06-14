@@ -65,12 +65,20 @@ func NewEnumValue(valueName string, values ...fmt.Stringer) EnumValue {
 	panic(fmt.Errorf("a EnumValue must contain at least one possible value"))
 }
 func (e EnumValue) Contains(ans interface{}) error {
-	if s, ok := ans.(fmt.Stringer); ok {
-		if !e.values[s.String()] {
-			return fmt.Errorf("unknown %s: %s, valid %ss are: %s", e.valueName, s, e.valueName, e.knownValues)
-		}
+	var value string
+	switch v := ans.(type) {
+	case fmt.Stringer:
+		value = v.String()
+	case string:
+		value = v
+	default:
+		return fmt.Errorf("can only validate string or Stringer instances, was given: %v", ans)
 	}
-	return fmt.Errorf("can only validate Stringer instances, was given: %v", ans)
+
+	if !e.values[value] {
+		return fmt.Errorf("unknown %s: %s, valid %ss are: %s", e.valueName, value, e.valueName, e.knownValues)
+	}
+	return nil
 }
 func (e *EnumValue) GetKnownValues() string {
 	if len(e.knownValues) == 0 {
