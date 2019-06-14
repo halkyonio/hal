@@ -27,6 +27,7 @@ require (
 )
 
 replace (
+	github.com/snowdrop/component-operator => /Users/claprun/Dev/go/src/github.com/snowdrop/component-operator
 	k8s.io/api => k8s.io/api v0.0.0-20190516230258-a675ac48af67
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20190516231937-17bc0b7fcef5

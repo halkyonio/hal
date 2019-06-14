@@ -39,46 +39,48 @@ func IntegerValidator(ans interface{}) error {
 	return fmt.Errorf("don't know how to convert %v into an integer", ans)
 }
 
-type StringerSet struct {
+type EnumValue struct {
+	Value       string
 	values      map[string]bool
 	valueName   string
 	knownValues string
 }
 
-func NewStringerSet(valueName string, values ...interface{}) StringerSet {
+func (e EnumValue) String() string {
+	return e.Value
+}
+func NewEnumValue(valueName string, values ...fmt.Stringer) EnumValue {
 	if len(values) > 0 {
 		valueMap := make(map[string]bool, len(values))
 		for _, value := range values {
-			if s, ok := value.(fmt.Stringer); ok {
-				valueMap[s.String()] = true
-			}
+			valueMap[value.String()] = true
 		}
-		set := StringerSet{
+		set := EnumValue{
 			values:    valueMap,
 			valueName: valueName,
 		}
 		set.GetKnownValues() // initialize known values
 		return set
 	}
-	panic(fmt.Errorf("a StringerSet must contain at least one possible value"))
+	panic(fmt.Errorf("a EnumValue must contain at least one possible value"))
 }
-func (set StringerSet) Contains(ans interface{}) error {
+func (e EnumValue) Contains(ans interface{}) error {
 	if s, ok := ans.(fmt.Stringer); ok {
-		if !set.values[s.String()] {
-			return fmt.Errorf("unknown %s: %s, valid %ss are: %s", set.valueName, s, set.valueName, set.knownValues)
+		if !e.values[s.String()] {
+			return fmt.Errorf("unknown %s: %s, valid %ss are: %s", e.valueName, s, e.valueName, e.knownValues)
 		}
 	}
 	return fmt.Errorf("can only validate Stringer instances, was given: %v", ans)
 }
-func (set StringerSet) GetKnownValues() string {
-	if len(set.knownValues) == 0 {
-		values := make([]string, 0, len(set.values))
-		for value := range set.values {
+func (e *EnumValue) GetKnownValues() string {
+	if len(e.knownValues) == 0 {
+		values := make([]string, 0, len(e.values))
+		for value := range e.values {
 			values = append(values, value)
 		}
-		set.knownValues = strings.Join(values, ",")
+		e.knownValues = strings.Join(values, ",")
 	}
-	return set.knownValues
+	return e.knownValues
 }
 
 // GetValidatorFor retrieves a validator for the specified validatable, first validating its required state, then its value

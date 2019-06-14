@@ -13,10 +13,8 @@ import (
 
 const commandName = "mode"
 
-var knownModes = validation.NewStringerSet("mode", v1alpha2.DevDeploymentMode, v1alpha2.BuildDeploymentMode)
-
 type options struct {
-	mode string
+	mode validation.EnumValue
 	*cmdutil.ComponentTargetingOptions
 }
 
@@ -25,7 +23,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 }
 
 func (o *options) Validate() error {
-	return knownModes.Contains(o.mode)
+	return o.mode.Contains(o.mode)
 }
 
 func (o *options) Run() error {
@@ -47,7 +45,9 @@ func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions
 }
 
 func NewCmdMode(parent string) *cobra.Command {
-	o := &options{}
+	o := &options{
+		mode: validation.NewEnumValue("mode", v1alpha2.DevDeploymentMode, v1alpha2.BuildDeploymentMode),
+	}
 	mode := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", commandName),
 		Short:   "Switch the component to the provided mode",
@@ -56,6 +56,6 @@ func NewCmdMode(parent string) *cobra.Command {
 		Args:    cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, mode)
-	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode to switch to. Possible values: "+knownModes.GetKnownValues())
+	mode.Flags().StringVarP(&o.mode.Value, "mode", "m", "", "Mode to switch to. Possible values: "+o.mode.GetKnownValues())
 	return mode
 }
