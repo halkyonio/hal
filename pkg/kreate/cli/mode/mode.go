@@ -6,34 +6,18 @@ import (
 	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
+	"github.com/snowdrop/kreate/pkg/validation"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/types"
-	"strings"
 )
 
 const commandName = "mode"
 
-var knownModes = map[string]bool{v1alpha2.DevDeploymentMode.String(): true, v1alpha2.BuildDeploymentMode.String(): true}
-var knownModesAsString = getKnownModesAsString()
+var knownModes = validation.NewStringerSet("mode", v1alpha2.DevDeploymentMode, v1alpha2.BuildDeploymentMode)
 
 type options struct {
 	mode string
 	*cmdutil.ComponentTargetingOptions
-}
-
-func getKnownModesAsString() string {
-	modes := make([]string, 0, len(knownModes))
-	for mode := range knownModes {
-		modes = append(modes, mode)
-	}
-	return strings.Join(modes, ",")
-}
-
-func validate(mode string) error {
-	if !knownModes[mode] {
-		return fmt.Errorf("unknown mode: %s, valid modes are: %s", mode, knownModesAsString)
-	}
-	return nil
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -41,7 +25,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 }
 
 func (o *options) Validate() error {
-	return validate(o.mode)
+	return knownModes.Contains(o.mode)
 }
 
 func (o *options) Run() error {
@@ -72,6 +56,6 @@ func NewCmdMode(parent string) *cobra.Command {
 		Args:    cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, mode)
-	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode to switch to. Possible values: "+knownModesAsString)
+	mode.Flags().StringVarP(&o.mode, "mode", "m", "", "Mode to switch to. Possible values: "+knownModes.GetKnownValues())
 	return mode
 }
