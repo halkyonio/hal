@@ -52,14 +52,14 @@ func NewCmdProject(parent string) *cobra.Command {
 
 func getGeneratorServiceConfig(url string) *scaffold.Config {
 	c := &scaffold.Config{}
-	io.GetYamlFrom(url, "config", c)
+	io.UnmarshallYamlFromHttp(url, "config", c)
 
 	return c
 }
 
 func getCompatibleModuleNamesFor(p *project) []string {
 	modules := &[]scaffold.Module{}
-	io.GetYamlFrom(p.UrlService, "modules/"+p.SpringBootVersion, modules)
+	io.UnmarshallYamlFromHttp(p.UrlService, "modules/"+p.SpringBootVersion, modules)
 	return scaffold.GetModuleNamesFor(*modules)
 }
 

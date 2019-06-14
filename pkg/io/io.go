@@ -43,9 +43,12 @@ func HttpGet(url, endpoint string, values *url.Values) []byte {
 	return body
 }
 
-func GetYamlFrom(url, endpoint string, result interface{}) {
+func UnmarshallYamlFromHttp(url, endpoint string, result interface{}) {
 	body := HttpGet(url, endpoint, nil)
+	unmarshall(body, result)
+}
 
+func unmarshall(body []byte, result interface{}) {
 	err := yaml.Unmarshal(body, &result)
 	if err != nil {
 		LogErrorAndExit(err, "error unmarshalling")
