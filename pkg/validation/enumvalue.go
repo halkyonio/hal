@@ -36,7 +36,7 @@ func NewEnumValue(valueName string, values ...interface{}) EnumValue {
 }
 func (e EnumValue) Contains(ans interface{}) error {
 	if value, err := valueAsString(ans); err != nil || !e.values[value] {
-		return fmt.Errorf("unknown %s: %s, valid %ss are: %s", e.valueName, value, e.valueName, e.knownValues)
+		return fmt.Errorf("unknown %s: '%s', valid %ss are: %s", e.valueName, value, e.valueName, e.knownValues)
 	}
 	return nil
 }
