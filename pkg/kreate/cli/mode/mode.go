@@ -56,6 +56,6 @@ func NewCmdMode(parent string) *cobra.Command {
 		Args:    cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, mode)
-	mode.Flags().StringVarP(&o.mode.Value, "mode", "m", "", "Mode to switch to. Possible values: "+o.mode.GetKnownValues())
+	mode.Flags().StringVarP(&o.mode.Provided, "mode", "m", "", "Mode to switch to. Possible values: "+o.mode.GetKnownValues())
 	return mode
 }
