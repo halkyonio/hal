@@ -74,7 +74,12 @@ func LogErrorAndExit(err error, context string, a ...interface{}) {
 			reason := k8serrors.ReasonForError(err)
 			msg = fmt.Sprintf("error communicating with cluster: %s", reason)
 		default:
-			msg = fmt.Sprintf("%s: %s", reflect.TypeOf(t).Name(), msg)
+			errName := reflect.TypeOf(t).Name()
+			if len(errName) > 0 {
+				msg = fmt.Sprintf("%s: %s", errName, msg)
+			} else {
+				msg = fmt.Sprintf("%s", msg)
+			}
 		}
 
 		if len(context) == 0 {
