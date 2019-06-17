@@ -50,6 +50,10 @@ func NewEnumValue(valueName string, values ...interface{}) EnumValue {
 	panic(fmt.Errorf("an EnumValue must contain at least one possible value"))
 }
 
+func (e EnumValue) IsProvidedValid() bool {
+	return len(e.Provided) > 0 && e.values[e.Provided] != nil
+}
+
 func (e EnumValue) Contains(ans interface{}) error {
 	value, err := valueAsString(ans)
 	if err != nil {
