@@ -8,10 +8,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -66,10 +68,19 @@ func addClientHeader(req *http.Request) {
 // detected using errors.Cause(err)
 func LogErrorAndExit(err error, context string, a ...interface{}) {
 	if err != nil {
+		msg := errors.Cause(err).Error()
+		switch t := err.(type) {
+		case k8serrors.APIStatus:
+			reason := k8serrors.ReasonForError(err)
+			msg = fmt.Sprintf("error communicating with cluster: %s", reason)
+		default:
+			msg = fmt.Sprintf("%s: %s", reflect.TypeOf(t).Name(), msg)
+		}
+
 		if len(context) == 0 {
-			logrus.Fatal(errors.Cause(err))
+			logrus.Fatal(msg)
 		} else {
-			logrus.Fatalf(fmt.Sprintf("%s: %v", context, errors.Cause(err)), a...)
+			logrus.Fatalf(fmt.Sprintf("%s: %s", context, msg), a...)
 		}
 		os.Exit(1)
 	}
