@@ -15,15 +15,14 @@ require (
 	github.com/snowdrop/component-operator v0.0.3
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
+	github.com/spf13/viper v1.4.0
 	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284
 	golang.org/x/oauth2 v0.0.0-20190517181255-950ef44c6e07 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
 	k8s.io/api v0.0.0-20190515023547-db5a9d1c40eb
 	k8s.io/apimachinery v0.0.0-20190515023456-b74e4c97951f
-	k8s.io/cli-runtime v0.0.0-20190515024640-178667528169
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5 // indirect
-	sigs.k8s.io/kustomize v2.0.3+incompatible // indirect
 )
 
 replace (
