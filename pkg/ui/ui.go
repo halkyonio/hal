@@ -44,7 +44,7 @@ func Select(message string, options []string, defaultValue ...string) string {
 	if len(defaultValue) == 1 {
 		prompt.Default = defaultValue[0]
 	}
-	return askOne(prompt)
+	return askOne(prompt, survey.Required)
 }
 
 func MultiSelect(message string, options []string, defaultValues []string) []string {
@@ -58,6 +58,18 @@ func MultiSelect(message string, options []string, defaultValues []string) []str
 	err := survey.AskOne(prompt, &modules, survey.Required)
 	HandleError(err)
 	return modules
+}
+
+func AskOrReturnToExit(message string, defaultValue ...string) string {
+	input := &survey.Input{
+		Message: message,
+	}
+
+	if len(defaultValue) == 1 {
+		input.Default = defaultValue[0]
+	}
+
+	return askOne(input, validation.NilValidator)
 }
 
 func Ask(message, provided string, defaultValue ...string) string {
@@ -74,13 +86,13 @@ func Ask(message, provided string, defaultValue ...string) string {
 		OutputSelection("Selected "+message, provided)
 		return provided
 	}
-	return askOne(input)
+	return askOne(input, survey.Required)
 }
 
-func askOne(prompt survey.Prompt, stdio ...terminal.Stdio) string {
+func askOne(prompt survey.Prompt, validator survey.Validator, stdio ...terminal.Stdio) string {
 	var response string
 
-	err := survey.AskOne(prompt, &response, survey.Required)
+	err := survey.AskOne(prompt, &response, validator)
 	HandleError(err)
 
 	return response

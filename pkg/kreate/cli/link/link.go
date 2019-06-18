@@ -41,7 +41,6 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 	}
 
 	if !o.kind.IsProvidedValid() {
-		o.kind.MustSet(v1alpha2.EnvLinkKind)
 		if ui.Proceed("Use Secret") {
 			o.kind.MustSet(v1alpha2.SecretLinkKind)
 			secrets, valid, err := o.checkAndGetValidSecrets()
@@ -54,17 +53,36 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 			if !valid {
 				o.ref = ui.Select("Secret", secrets)
 			}
+		} else {
+			o.kind.MustSet(v1alpha2.EnvLinkKind)
+			for _, pair := range o.envPairs {
+				if _, e := o.addToEnv(pair); e != nil {
+					return e
+				}
+			}
+			for {
+				envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, press enter when done")
+				if len(envAsString) == 0 {
+					break
+				}
+				if _, e := o.addToEnv(envAsString); e != nil {
+					return e
+				}
+			}
 		}
-	}
-
-	for _, pair := range o.envPairs {
-		split := strings.Split(pair, "=")
-		if len(split) != 2 {
-			return fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
-		}
-		o.envs = append(o.envs, v1alpha2.Env{Name: split[0], Value: split[1]})
 	}
 	return nil
+}
+
+func (o *options) addToEnv(pair string) (v1alpha2.Env, error) {
+	split := strings.Split(pair, "=")
+	if len(split) != 2 {
+		return v1alpha2.Env{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
+	}
+	env := v1alpha2.Env{Name: split[0], Value: split[1]}
+	o.envs = append(o.envs, env)
+	ui.OutputSelection("Set env variable", fmt.Sprintf("%s=%s", env.Name, env.Value))
+	return env, nil
 }
 
 func (o *options) Validate() error {
@@ -91,7 +109,7 @@ func (o *options) Run() error {
 		return err
 	}
 
-	log.Infof("Created link %#v", link)
+	log.Successf("Created link %s", link.Name)
 	// todo:
 	//  - read existing application.yml using viper
 	//  - merge existing and new link
