@@ -72,18 +72,18 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
+	name := fmt.Sprintf("%s-link-%d", o.ComponentName, time.Now().UnixNano())
 	client := k8s.GetClient()
-
 	link, err := client.DevexpClient.Links(client.Namespace).Create(&v1alpha2.Link{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-link-%d", o.ComponentName, time.Now().UnixNano()),
+			Name:      name,
 			Namespace: client.Namespace,
 		},
 		Spec: v1alpha2.LinkSpec{
 			ComponentName: o.targetName,
 			Kind:          o.kind.Get().(v1alpha2.LinkKind),
-			Ref:           "",
-			Envs:          nil,
+			Ref:           o.ref,
+			Envs:          o.envs,
 		},
 	})
 
