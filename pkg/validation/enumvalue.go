@@ -96,6 +96,12 @@ func (e *EnumValue) Set(value interface{}) error {
 	return nil
 }
 
+func (e *EnumValue) MustSet(value interface{}) {
+	if err := e.Set(value); err != nil {
+		panic(err)
+	}
+}
+
 func (e *EnumValue) Get() interface{} {
 	if e.Value != nil {
 		return e.Value

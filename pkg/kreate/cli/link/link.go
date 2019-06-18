@@ -41,13 +41,9 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 	}
 
 	if !o.kind.IsProvidedValid() {
-		if err := o.kind.Set(v1alpha2.EnvLinkKind); err != nil {
-			return err
-		}
+		o.kind.MustSet(v1alpha2.EnvLinkKind)
 		if ui.Proceed("Use Secret") {
-			if err := o.kind.Set(v1alpha2.SecretLinkKind); err != nil {
-				return err
-			}
+			o.kind.MustSet(v1alpha2.SecretLinkKind)
 			secrets, valid, err := o.checkAndGetValidSecrets()
 			if err != nil {
 				return err
@@ -142,7 +138,6 @@ func (o *options) readCurrent() (*v1alpha2.LinkSpec, error) {
 		return link, nil
 	}
 
-	viper.Set("ap4k.link.name", "baz")
 	//viper.WriteConfig()
 	return nil, nil
 }
