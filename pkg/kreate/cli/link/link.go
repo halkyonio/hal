@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const commandName = "link"
@@ -40,13 +41,11 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 	}
 
 	if !o.kind.IsProvidedValid() {
-		err := o.kind.Set(v1alpha2.EnvLinkKind)
-		if err != nil {
+		if err := o.kind.Set(v1alpha2.EnvLinkKind); err != nil {
 			return err
 		}
 		if ui.Proceed("Use Secret") {
-			err := o.kind.Set(v1alpha2.SecretLinkKind)
-			if err != nil {
+			if err := o.kind.Set(v1alpha2.SecretLinkKind); err != nil {
 				return err
 			}
 			secrets, valid, err := o.checkAndGetValidSecrets()
@@ -81,11 +80,10 @@ func (o *options) Run() error {
 
 	link, err := client.DevexpClient.Links(client.Namespace).Create(&v1alpha2.Link{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      o.ComponentName + "-link",
+			Name:      fmt.Sprintf("%s-link-%d", o.ComponentName, time.Now().UnixNano()),
 			Namespace: client.Namespace,
 		},
 		Spec: v1alpha2.LinkSpec{
-			Name:          o.ComponentName + "-link",
 			ComponentName: o.targetName,
 			Kind:          o.kind.Get().(v1alpha2.LinkKind),
 			Ref:           "",
