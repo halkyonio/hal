@@ -40,7 +40,7 @@ func (o *options) Run() error {
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
 			log.Infof("Component %s was not found, initializing it", o.ComponentName)
-			descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "ap4k", "component.yml")
+			descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "dekorate", "component.yml")
 			err = k8s.Apply(descriptor, c.Namespace)
 			if err != nil {
 				return fmt.Errorf("error applying component CR: %v", err)

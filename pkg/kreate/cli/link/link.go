@@ -146,10 +146,10 @@ func (o *options) readCurrent() (*v1alpha2.LinkSpec, error) {
 	if err != nil {                                                                 // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
-	present := viper.Get("ap4k.link")
+	present := viper.Get("dekorate.link")
 	if present != nil {
 		link := &v1alpha2.LinkSpec{}
-		err = viper.UnmarshalKey("ap4k.link", link)
+		err = viper.UnmarshalKey("dekorate.link", link)
 		if err != nil {
 			return nil, err
 		}

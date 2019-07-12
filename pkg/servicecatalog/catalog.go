@@ -32,7 +32,7 @@ type svcInstance struct {
 	Name       string
 }
 
-func GenerateAp4kAnnotations() error {
+func GenerateDekorateAnnotations() error {
 	classesByCategory, svcatClient, err := getServiceClassesByCategory()
 	if err != nil {
 		return fmt.Errorf("unable to retrieve service classes: %v", err)
@@ -79,7 +79,7 @@ func GenerateAp4kAnnotations() error {
 	if e != nil {
 		panic(e) // shouldn't happen
 	}
-	logrus.Infof("ap4k annotation:\n%s", strings.TrimSpace(tpl.String()))
+	logrus.Infof("dekorate annotation:\n%s", strings.TrimSpace(tpl.String()))
 
 	return nil
 }

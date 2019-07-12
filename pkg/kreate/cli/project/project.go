@@ -44,7 +44,7 @@ func NewCmdProject(parent string) *cobra.Command {
 	createCmd.Flags().StringVarP(&p.Version, "version", "v", "", "Version: 0.0.1-SNAPSHOT")
 	createCmd.Flags().StringVarP(&p.PackageName, "packagename", "p", "", "Package Name: com.example.demo")
 	createCmd.Flags().StringVarP(&p.SpringBootVersion, "springbootversion", "s", "", "Spring Boot Version")
-	createCmd.Flags().BoolVarP(&p.UseAp4k, "ap4k", "a", false, "Use ap4k when possible")
+	createCmd.Flags().BoolVarP(&p.UseDekorate, "dekorate", "a", false, "Use dekorate when possible")
 	createCmd.Flags().BoolVarP(&p.UseSupported, "supported", "o", false, "Use supported version")
 
 	return createCmd
@@ -166,13 +166,13 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 
 	// if we're using a template, ask additional information
 	if useTemplate {
-		// only ask about ap4k if the user didn't specify the flag
-		if !cmd.Flag("ap4k").Changed {
-			p.UseAp4k = ui.Proceed("Use ap4k to generate OpenShift / Kubernetes resources")
+		// only ask about dekorate if the user didn't specify the flag
+		if !cmd.Flag("dekorate").Changed {
+			p.UseDekorate = ui.Proceed("Use Dekorate to generate OpenShift / Kubernetes resources")
 		}
 
-		if p.UseAp4k && ui.Proceed("Create a service from service catalog") {
-			err := servicecatalog.GenerateAp4kAnnotations()
+		if p.UseDekorate && ui.Proceed("Create a service from service catalog") {
+			err := servicecatalog.GenerateDekorateAnnotations()
 			if err != nil {
 				return err
 			}
@@ -207,7 +207,7 @@ func (p *project) Run() error {
 	form.Add("snowdropbom", p.SnowdropBomVersion)
 	form.Add("springbootversion", p.SpringBootVersion)
 	form.Add("outdir", p.fileName)
-	form.Add("ap4k", strconv.FormatBool(p.UseAp4k))
+	form.Add("dekorate", strconv.FormatBool(p.UseDekorate))
 	for _, v := range p.Modules {
 		if v != "" {
 			form.Add("module", v)
@@ -247,6 +247,6 @@ type project struct {
 	Modules            []string
 
 	UrlService   string
-	UseAp4k      bool
+	UseDekorate      bool
 	UseSupported bool
 }
