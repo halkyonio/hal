@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/snowdrop/component-operator/pkg/apis/component/v1alpha2"
+	"github.com/snowdrop/component-api/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
