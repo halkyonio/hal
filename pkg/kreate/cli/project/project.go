@@ -44,7 +44,6 @@ func NewCmdProject(parent string) *cobra.Command {
 	createCmd.Flags().StringVarP(&p.Version, "version", "v", "", "Version: 0.0.1-SNAPSHOT")
 	createCmd.Flags().StringVarP(&p.PackageName, "packagename", "p", "", "Package Name: com.example.demo")
 	createCmd.Flags().StringVarP(&p.SpringBootVersion, "springbootversion", "s", "", "Spring Boot Version")
-	createCmd.Flags().BoolVarP(&p.UseDekorate, "dekorate", "a", false, "Use dekorate when possible")
 	createCmd.Flags().BoolVarP(&p.UseSupported, "supported", "o", false, "Use supported version")
 
 	return createCmd
@@ -159,23 +158,15 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 			p.Template = ui.Select("Available templates", templateNames)
 			useTemplate = true
 		} else {
-			p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core"})
+			p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core", "dekorate"})
 			useModules = true
 		}
 	}
 
-	// if we're using a template, ask additional information
-	if useTemplate {
-		// only ask about dekorate if the user didn't specify the flag
-		if !cmd.Flag("dekorate").Changed {
-			p.UseDekorate = ui.Proceed("Use Dekorate to generate OpenShift / Kubernetes resources")
-		}
-
-		if p.UseDekorate && ui.Proceed("Create a service from service catalog") {
-			err := servicecatalog.GenerateDekorateAnnotations()
-			if err != nil {
-				return err
-			}
+	if ui.Proceed("Create a service from service catalog") {
+		err := servicecatalog.GenerateDekorateAnnotations()
+		if err != nil {
+			return err
 		}
 	}
 
@@ -207,7 +198,7 @@ func (p *project) Run() error {
 	form.Add("snowdropbom", p.SnowdropBomVersion)
 	form.Add("springbootversion", p.SpringBootVersion)
 	form.Add("outdir", p.fileName)
-	form.Add("dekorate", strconv.FormatBool(p.UseDekorate))
+	form.Add("dekorate", strconv.FormatBool(true))
 	for _, v := range p.Modules {
 		if v != "" {
 			form.Add("module", v)
@@ -247,6 +238,5 @@ type project struct {
 	Modules            []string
 
 	UrlService   string
-	UseDekorate      bool
 	UseSupported bool
 }
