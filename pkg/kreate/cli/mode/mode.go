@@ -3,11 +3,11 @@ package mode
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/snowdrop/component-api/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/validation"
 	"github.com/spf13/cobra"
+	component "halkyon.io/api/component/v1beta1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -30,7 +30,7 @@ func (o *options) Run() error {
 	client := k8s.GetClient()
 	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
-	component, err := client.DevexpClient.Components(client.Namespace).
+	component, err := client.HalkyonComponentClient.Components(client.Namespace).
 		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions
 
 func NewCmdMode(parent string) *cobra.Command {
 	o := &options{
-		mode: validation.NewEnumValue("mode", v1alpha2.DevDeploymentMode, v1alpha2.BuildDeploymentMode),
+		mode: validation.NewEnumValue("mode", component.DevDeploymentMode, component.BuildDeploymentMode),
 	}
 	mode := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", commandName),

@@ -2,7 +2,6 @@ package link
 
 import (
 	"fmt"
-	"github.com/snowdrop/component-api/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
@@ -10,6 +9,8 @@ import (
 	"github.com/snowdrop/kreate/pkg/validation"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	link "halkyon.io/api/link/v1beta1"
+	halkyon "halkyon.io/api/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,7 @@ type options struct {
 	ref        string
 	kind       validation.EnumValue
 	envPairs   []string
-	envs       []v1alpha2.Env
+	envs       []halkyon.Env
 	*cmdutil.ComponentTargetingOptions
 }
 
@@ -42,7 +43,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 
 	if !o.kind.IsProvidedValid() {
 		if ui.Proceed("Use Secret") {
-			o.kind.MustSet(v1alpha2.SecretLinkKind)
+			o.kind.MustSet(link.SecretLinkType)
 			secrets, valid, err := o.checkAndGetValidSecrets()
 			if err != nil {
 				return err
@@ -54,7 +55,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 				o.ref = ui.Select("Secret", secrets)
 			}
 		} else {
-			o.kind.MustSet(v1alpha2.EnvLinkKind)
+			o.kind.MustSet(link.EnvLinkType)
 			for _, pair := range o.envPairs {
 				if _, e := o.addToEnv(pair); e != nil {
 					return e
@@ -74,12 +75,12 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 	return nil
 }
 
-func (o *options) addToEnv(pair string) (v1alpha2.Env, error) {
+func (o *options) addToEnv(pair string) (halkyon.Env, error) {
 	split := strings.Split(pair, "=")
 	if len(split) != 2 {
-		return v1alpha2.Env{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
+		return halkyon.Env{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
 	}
-	env := v1alpha2.Env{Name: split[0], Value: split[1]}
+	env := halkyon.Env{Name: split[0], Value: split[1]}
 	o.envs = append(o.envs, env)
 	ui.OutputSelection("Set env variable", fmt.Sprintf("%s=%s", env.Name, env.Value))
 	return env, nil
@@ -92,14 +93,14 @@ func (o *options) Validate() error {
 func (o *options) Run() error {
 	name := fmt.Sprintf("%s-link-%d", o.ComponentName, time.Now().UnixNano())
 	client := k8s.GetClient()
-	link, err := client.DevexpClient.Links(client.Namespace).Create(&v1alpha2.Link{
+	link, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      name,
 			Namespace: client.Namespace,
 		},
-		Spec: v1alpha2.LinkSpec{
+		Spec: link.LinkSpec{
 			ComponentName: o.targetName,
-			Kind:          o.kind.Get().(v1alpha2.LinkKind),
+			Type:          o.kind.Get().(link.LinkType),
 			Ref:           o.ref,
 			Envs:          o.envs,
 		},
@@ -123,7 +124,7 @@ func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions
 
 func NewCmdLink(parent string) *cobra.Command {
 	o := &options{
-		kind: validation.NewEnumValue("kind", v1alpha2.EnvLinkKind, v1alpha2.SecretLinkKind),
+		kind: validation.NewEnumValue("kind", link.EnvLinkType, link.SecretLinkType),
 	}
 	link := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
@@ -139,7 +140,7 @@ func NewCmdLink(parent string) *cobra.Command {
 	return link
 }
 
-func (o *options) readCurrent() (*v1alpha2.LinkSpec, error) {
+func (o *options) readCurrent() (*link.LinkSpec, error) {
 	viper.SetConfigName("application")                                              // name of config file (without extension)
 	viper.AddConfigPath(filepath.Join(o.ComponentPath, "src", "main", "resources")) // path to look for the config file in
 	err := viper.ReadInConfig()                                                     // Find and read the config file
@@ -148,7 +149,7 @@ func (o *options) readCurrent() (*v1alpha2.LinkSpec, error) {
 	}
 	present := viper.Get("dekorate.link")
 	if present != nil {
-		link := &v1alpha2.LinkSpec{}
+		link := &link.LinkSpec{}
 		err = viper.UnmarshalKey("dekorate.link", link)
 		if err != nil {
 			return nil, err
@@ -167,7 +168,7 @@ func (o *options) checkAndGetValidTargets() ([]string, bool, error) {
 	givenIsValid := false
 
 	client := k8s.GetClient()
-	capabilities, err := client.DevexpClient.Capabilities(client.Namespace).List(v1.ListOptions{})
+	capabilities, err := client.HalkyonCapabilityClient.Capabilities(client.Namespace).List(v1.ListOptions{})
 	if err != nil {
 		return nil, false, err
 	}
@@ -178,7 +179,7 @@ func (o *options) checkAndGetValidTargets() ([]string, bool, error) {
 		}
 	}
 
-	components, err := client.DevexpClient.Components(client.Namespace).List(v1.ListOptions{})
+	components, err := client.HalkyonComponentClient.Components(client.Namespace).List(v1.ListOptions{})
 	if err != nil {
 		return nil, false, err
 	}

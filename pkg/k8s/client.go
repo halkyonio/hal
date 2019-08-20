@@ -6,11 +6,13 @@ import (
 	"github.com/gobwas/glob"
 	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/pkg/errors"
-	devexp "github.com/snowdrop/component-api/pkg/apis/clientset/versioned/typed/component/v1alpha2"
-	"github.com/snowdrop/component-api/pkg/apis/component/v1alpha2"
 	io2 "github.com/snowdrop/kreate/pkg/io"
 	log2 "github.com/snowdrop/kreate/pkg/log"
 	"github.com/snowdrop/kreate/pkg/validation"
+	capability "halkyon.io/api/capability/clientset/versioned/typed/capability/v1beta1"
+	component "halkyon.io/api/component/clientset/versioned/typed/component/v1beta1"
+	"halkyon.io/api/component/v1beta1"
+	link "halkyon.io/api/link/clientset/versioned/typed/link/v1beta1"
 	"io"
 	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
@@ -35,11 +37,13 @@ const (
 )
 
 type Client struct {
-	KubeClient           kubernetes.Interface
-	ServiceCatalogClient *servicecatalogclienset.ServicecatalogV1beta1Client
-	DevexpClient         devexp.DevexpV1alpha2Interface
-	KubeConfig           clientcmd.ClientConfig
-	Namespace            string
+	KubeClient              kubernetes.Interface
+	ServiceCatalogClient    *servicecatalogclienset.ServicecatalogV1beta1Client
+	HalkyonComponentClient  *component.HalkyonV1beta1Client
+	HalkyonLinkClient       *link.HalkyonV1beta1Client
+	HalkyonCapabilityClient *capability.HalkyonV1beta1Client
+	KubeConfig              clientcmd.ClientConfig
+	Namespace               string
 }
 
 var client *Client
@@ -63,8 +67,14 @@ func GetClient() *Client {
 		io2.LogErrorAndExit(err, "error creating k8s service catalog client")
 		client.ServiceCatalogClient = serviceCatalogClient
 
-		client.DevexpClient, err = devexp.NewForConfig(config)
-		io2.LogErrorAndExit(err, "error creating devexp client")
+		client.HalkyonComponentClient, err = component.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating halkyon component client")
+
+		client.HalkyonLinkClient, err = link.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating halkyon link client")
+
+		client.HalkyonCapabilityClient, err = capability.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating halkyon capability client")
 
 		namespace, _, err := client.KubeConfig.Namespace()
 		io2.LogErrorAndExit(err, "error retrieving namespace")
@@ -280,12 +290,12 @@ func (c *Client) ExecCMDInContainer(podName string, cmd []string, stdout io.Writ
 	return nil
 }
 
-func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPhase, waitMessage string) (*v1alpha2.Component, error) {
+func (c *Client) WaitForComponent(name string, desiredPhase v1beta1.ComponentPhase, waitMessage string) (*v1beta1.Component, error) {
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
 	var timeout int64 = timeoutDuration
-	w, err := c.DevexpClient.
+	w, err := c.HalkyonComponentClient.
 		Components(c.Namespace).
 		Watch(metav1.ListOptions{
 			TimeoutSeconds: &timeout,
@@ -296,7 +306,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 	}
 	defer w.Stop()
 
-	podChannel := make(chan *v1alpha2.Component)
+	podChannel := make(chan *v1beta1.Component)
 	watchErrorChannel := make(chan error)
 
 	go func() {
@@ -315,13 +325,13 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1alpha2.ComponentPh
 				watchErrorChannel <- errors.New(msg)
 				break loop
 			}
-			if e, ok := object.(*v1alpha2.Component); ok {
+			if e, ok := object.(*v1beta1.Component); ok {
 				switch e.Status.Phase {
 				case desiredPhase:
 					s.End(true)
 					podChannel <- e
 					break loop
-				case v1alpha2.ComponentFailed, v1alpha2.ComponentUnknown:
+				case v1beta1.ComponentFailed, v1beta1.ComponentUnknown:
 					watchErrorChannel <- errors.Errorf("component %s status %s", e.Name, e.Status.Phase)
 					break loop
 				}

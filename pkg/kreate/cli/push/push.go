@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
-	"github.com/snowdrop/component-api/pkg/apis/component/v1alpha2"
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/k8s"
 	"github.com/snowdrop/kreate/pkg/log"
 	"github.com/spf13/cobra"
+	component "halkyon.io/api/component/v1beta1"
 	"hash/crc64"
 	"io"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +34,7 @@ func (o *options) Validate() error {
 
 func (o *options) Run() error {
 	c := k8s.GetClient()
-	component, err := c.DevexpClient.Components(c.Namespace).Get(o.ComponentName, v1.GetOptions{})
+	component, err := c.HalkyonComponentClient.Components(c.Namespace).Get(o.ComponentName, v1.GetOptions{})
 	if err != nil {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
@@ -84,7 +84,7 @@ func (o *options) Run() error {
 
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
-	_, err = c.DevexpClient.Components(c.Namespace).
+	_, err = c.HalkyonComponentClient.Components(c.Namespace).
 		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
@@ -93,33 +93,33 @@ func (o *options) Run() error {
 
 }
 
-func (o *options) waitUntilReady(component *v1alpha2.Component) (*v1alpha2.Component, error) {
-	if v1alpha2.ComponentReady == component.Status.Phase || v1alpha2.ComponentRunning == component.Status.Phase {
-		return component, nil
+func (o *options) waitUntilReady(c *component.Component) (*component.Component, error) {
+	if component.ComponentReady == c.Status.Phase || component.ComponentRunning == c.Status.Phase {
+		return c, nil
 	}
 
-	c := k8s.GetClient()
-	cp, err := c.WaitForComponent(o.ComponentName, v1alpha2.ComponentReady, "Waiting for component "+o.ComponentName+" to be ready…")
+	client := k8s.GetClient()
+	cp, err := client.WaitForComponent(o.ComponentName, component.ComponentReady, "Waiting for component "+o.ComponentName+" to be ready…")
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for component: %v", err)
 	}
-	err = errorIfFailedOrUnknown(component)
+	err = errorIfFailedOrUnknown(c)
 	if err != nil {
 		return nil, err
 	}
 	return cp, nil
 }
 
-func errorIfFailedOrUnknown(component *v1alpha2.Component) error {
-	switch component.Status.Phase {
-	case v1alpha2.ComponentFailed, v1alpha2.ComponentUnknown:
-		return errors.Errorf("status of component %s is %s: %s", component.Name, component.Status.Phase, component.Status.Message)
+func errorIfFailedOrUnknown(c *component.Component) error {
+	switch c.Status.Phase {
+	case component.ComponentFailed, component.ComponentUnknown:
+		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Phase, c.Status.Message)
 	default:
 		return nil
 	}
 }
 
-func (o *options) push(component *v1alpha2.Component) error {
+func (o *options) push(component *component.Component) error {
 	c := k8s.GetClient()
 	podName := component.Status.PodName
 	/*// todo: fix copy function
