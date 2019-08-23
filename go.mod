@@ -19,13 +19,14 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.4.0
-	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284
+	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
 	google.golang.org/appengine v1.5.0 // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
-	halkyon.io/api v1.0.0-beta.2
+	halkyon.io/api v1.0.0-beta.3
 	k8s.io/api v0.0.0-20190725062911-6607c48751ae
 	k8s.io/apimachinery v0.0.0-20190719140911-bfcf53abc9f8
 	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/code-generator v0.0.0-20190823012242-8d610453bd27 // indirect
 )
 
 replace (
