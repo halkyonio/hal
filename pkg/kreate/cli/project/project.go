@@ -145,6 +145,9 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 		if !isContained("core", valid) {
 			valid = append(valid, "core")
 		}
+		if !isContained("halkyon", valid) {
+			valid = append(valid, "halkyon")
+		}
 		ui.OutputSelection("Selected modules", strings.Join(valid, ","))
 
 		if len(unknown) > 0 {
@@ -158,7 +161,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 			p.Template = ui.Select("Available templates", templateNames)
 			useTemplate = true
 		} else {
-			p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core", "dekorate"})
+			p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core", "halkyon"})
 			useModules = true
 		}
 	}
