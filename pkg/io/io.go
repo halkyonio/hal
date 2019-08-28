@@ -58,7 +58,7 @@ func unmarshall(body []byte, result interface{}) {
 }
 
 func addClientHeader(req *http.Request) {
-	userAgent := "snowdrop-kreate/1.0"
+	userAgent := "halkyon-kreate/1.0"
 	req.Header.Set("User-Agent", userAgent)
 }
 
