@@ -33,9 +33,20 @@ func HttpGet(url, endpoint string, values *url.Values) []byte {
 	addClientHeader(req)
 
 	res, err := client.Do(req)
-	LogErrorAndExit(err, fmt.Sprintf("error performing request %v", req))
+	if err == nil && res.StatusCode >= 400 {
+		msg := fmt.Sprintf("server returned a '%s' error", res.Status)
+		if res.Body != nil {
+			if bytes, err := ioutil.ReadAll(res.Body); err == nil {
+				msg = msg + ": " + string(bytes)
+			}
+		}
+
+		err = fmt.Errorf(msg)
+	}
+	LogErrorAndExit(err, fmt.Sprintf("error performing request to %v", req.URL))
 
 	body, err := ioutil.ReadAll(res.Body)
+	defer res.Body.Close()
 	LogErrorAndExit(err, fmt.Sprintf("error reading response body %v", res))
 
 	if strings.Contains(string(body), "Application is not available") {
