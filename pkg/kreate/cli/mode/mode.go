@@ -3,11 +3,11 @@ package mode
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/snowdrop/kreate/pkg/cmdutil"
-	"github.com/snowdrop/kreate/pkg/k8s"
-	"github.com/snowdrop/kreate/pkg/validation"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
+	"halkyon.io/kreate/pkg/cmdutil"
+	"halkyon.io/kreate/pkg/k8s"
+	"halkyon.io/kreate/pkg/validation"
 	"k8s.io/apimachinery/pkg/types"
 )
 

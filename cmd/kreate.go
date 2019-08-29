@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/snowdrop/kreate/pkg/kreate/cli"
+	"halkyon.io/kreate/pkg/kreate/cli"
 )
 
 func main() {

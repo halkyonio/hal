@@ -2,11 +2,11 @@ package cli
 
 import (
 	"fmt"
-	"github.com/snowdrop/kreate/pkg/kreate/cli/link"
-	"github.com/snowdrop/kreate/pkg/kreate/cli/mode"
-	"github.com/snowdrop/kreate/pkg/kreate/cli/project"
-	"github.com/snowdrop/kreate/pkg/kreate/cli/push"
 	"github.com/spf13/cobra"
+	"halkyon.io/kreate/pkg/kreate/cli/link"
+	"halkyon.io/kreate/pkg/kreate/cli/mode"
+	"halkyon.io/kreate/pkg/kreate/cli/project"
+	"halkyon.io/kreate/pkg/kreate/cli/push"
 )
 
 const commandName = "kreate"

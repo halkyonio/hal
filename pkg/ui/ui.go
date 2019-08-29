@@ -3,9 +3,9 @@ package ui
 import (
 	"fmt"
 	"github.com/mgutz/ansi"
-	"github.com/snowdrop/kreate/pkg/validation"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
+	"halkyon.io/kreate/pkg/validation"
 	"os"
 	"sort"
 )

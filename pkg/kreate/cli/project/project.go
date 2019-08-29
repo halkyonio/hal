@@ -2,11 +2,11 @@ package project
 
 import (
 	"fmt"
-	"github.com/snowdrop/kreate/pkg/cmdutil"
-	"github.com/snowdrop/kreate/pkg/io"
-	"github.com/snowdrop/kreate/pkg/scaffold"
-	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
+	"halkyon.io/kreate/pkg/cmdutil"
+	"halkyon.io/kreate/pkg/io"
+	"halkyon.io/kreate/pkg/scaffold"
+	"halkyon.io/kreate/pkg/ui"
 	"io/ioutil"
 	"net/url"
 	"os"

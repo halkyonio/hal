@@ -24,7 +24,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/snowdrop/kreate/pkg/log/fidget"
+	"halkyon.io/kreate/pkg/log/fidget"
 	"io"
 	"os"
 	"runtime"
