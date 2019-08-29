@@ -40,10 +40,10 @@ func (o *options) Run() error {
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
 			log.Infof("Component %s was not found, initializing it", o.ComponentName)
-			descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "dekorate", "component.yml")
+			descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
 			_, err := os.Stat(descriptor)
 			if err != nil {
-				return fmt.Errorf("component descriptor was not found: %v", err)
+				return fmt.Errorf("halkyon descriptor was not found: %v", err)
 			}
 			err = k8s.Apply(descriptor, c.Namespace)
 			if err != nil {
