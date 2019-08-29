@@ -5,7 +5,6 @@ import (
 	"github.com/snowdrop/kreate/pkg/cmdutil"
 	"github.com/snowdrop/kreate/pkg/io"
 	"github.com/snowdrop/kreate/pkg/scaffold"
-	"github.com/snowdrop/kreate/pkg/servicecatalog"
 	"github.com/snowdrop/kreate/pkg/ui"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -162,13 +161,6 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 		} else {
 			p.Modules = ui.MultiSelect("Select modules", getCompatibleModuleNamesFor(p), []string{"core", "halkyon"})
 			useModules = true
-		}
-	}
-
-	if ui.Proceed("Create a service from service catalog") {
-		err := servicecatalog.GenerateDekorateAnnotations()
-		if err != nil {
-			return err
 		}
 	}
 

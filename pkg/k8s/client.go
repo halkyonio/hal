@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"fmt"
 	"github.com/gobwas/glob"
-	servicecatalogclienset "github.com/kubernetes-incubator/service-catalog/pkg/client/clientset_generated/clientset/typed/servicecatalog/v1beta1"
 	"github.com/pkg/errors"
 	io2 "github.com/snowdrop/kreate/pkg/io"
 	log2 "github.com/snowdrop/kreate/pkg/log"
@@ -38,7 +37,6 @@ const (
 
 type Client struct {
 	KubeClient              kubernetes.Interface
-	ServiceCatalogClient    *servicecatalogclienset.ServicecatalogV1beta1Client
 	HalkyonComponentClient  *component.HalkyonV1beta1Client
 	HalkyonLinkClient       *link.HalkyonV1beta1Client
 	HalkyonCapabilityClient *capability.HalkyonV1beta1Client
@@ -62,10 +60,6 @@ func GetClient() *Client {
 		kubeClient, err := kubernetes.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating k8s client")
 		client.KubeClient = kubeClient
-
-		serviceCatalogClient, err := servicecatalogclienset.NewForConfig(config)
-		io2.LogErrorAndExit(err, "error creating k8s service catalog client")
-		client.ServiceCatalogClient = serviceCatalogClient
 
 		client.HalkyonComponentClient, err = component.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating halkyon component client")
