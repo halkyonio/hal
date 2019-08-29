@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -201,7 +200,6 @@ func (p *project) Run() error {
 	form.Add("snowdropbom", p.SnowdropBomVersion)
 	form.Add("springbootversion", p.SpringBootVersion)
 	form.Add("outdir", p.fileName)
-	form.Add("dekorate", strconv.FormatBool(true))
 	for _, v := range p.Modules {
 		if v != "" {
 			form.Add("module", v)
