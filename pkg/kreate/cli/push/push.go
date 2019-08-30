@@ -61,6 +61,9 @@ func (o *options) Run() error {
 
 	// check if the component revision is different
 	file, err := os.Open(o.getComponentBinaryPath())
+	if err != nil {
+		return err
+	}
 	input := bufio.NewReader(file)
 	hash := crc64.New(crc64.MakeTable(crc64.ECMA))
 	if _, err := io.Copy(hash, input); err != nil {
