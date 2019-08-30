@@ -17,7 +17,10 @@ import (
 	"time"
 )
 
-const commandName = "link"
+const (
+	commandName     = "link"
+	targetSeparator = ": "
+)
 
 type options struct {
 	targetName string
@@ -38,7 +41,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 		return fmt.Errorf("no valid capabilities or components currently exist on the cluster")
 	}
 	if !validTarget {
-		o.targetName = ui.Select("Target", capabilitiesAndComponents)
+		o.targetName = o.extractTargetName(ui.Select("Target", capabilitiesAndComponents))
 	}
 
 	if !o.kind.IsProvidedValid() {
@@ -91,7 +94,6 @@ func (o *options) Validate() error {
 }
 
 func (o *options) Run() error {
-	name := fmt.Sprintf("%s-link-%d", o.ComponentName, time.Now().UnixNano())
 	client := k8s.GetClient()
 	link, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
 		ObjectMeta: v1.ObjectMeta{
@@ -173,7 +175,7 @@ func (o *options) checkAndGetValidTargets() ([]string, bool, error) {
 		return nil, false, err
 	}
 	for _, c := range capabilities.Items {
-		known = append(known, fmt.Sprintf("%s: %s", capabilityPrefix, c.Name))
+		known = append(known, fmt.Sprintf("%s%s%s", capabilityPrefix, targetSeparator, c.Name))
 		if !givenIsValid && c.Name == o.targetName {
 			givenIsValid = true
 		}
@@ -184,13 +186,18 @@ func (o *options) checkAndGetValidTargets() ([]string, bool, error) {
 		return nil, false, err
 	}
 	for _, c := range components.Items {
-		known = append(known, fmt.Sprintf("%s: %s", componentPrefix, c.Name))
+		known = append(known, fmt.Sprintf("%s%s%s", componentPrefix, targetSeparator, c.Name))
 		if !givenIsValid && c.Name == o.targetName {
 			givenIsValid = true
 		}
 	}
 
 	return known, givenIsValid, nil
+}
+
+func (options) extractTargetName(typeAndTarget string) string {
+	index := strings.Index(typeAndTarget, targetSeparator)
+	return typeAndTarget[index+len(targetSeparator):]
 }
 
 func (o *options) checkAndGetValidSecrets() ([]string, bool, error) {
