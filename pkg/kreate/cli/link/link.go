@@ -135,7 +135,7 @@ func NewCmdLink(parent string) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 	link.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
-	link.Flags().StringVarP(&o.kind.Provided, "kind", "k", "", "Kind of link. Possible values: "+o.kind.GetKnownValues())
+	link.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
 	link.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
 
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, link)
