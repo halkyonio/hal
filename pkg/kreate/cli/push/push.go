@@ -11,11 +11,13 @@ import (
 	"halkyon.io/kreate/pkg/log"
 	"hash/crc64"
 	"io"
+	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record/util"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const commandName = "push"
@@ -60,7 +62,11 @@ func (o *options) Run() error {
 	}
 
 	// check if the component revision is different
-	file, err := os.Open(o.getComponentBinaryPath())
+	binaryPath, err := o.getComponentBinaryPath()
+	if err != nil {
+		return fmt.Errorf("couldn't find binary to push: %s", binaryPath)
+	}
+	file, err := os.Open(binaryPath)
 	if err != nil {
 		return err
 	}
@@ -130,7 +136,7 @@ func (o *options) push(component *component.Component) error {
 	if err != nil {
 		return err
 	}*/
-	jar := o.getComponentBinaryPath()
+	jar, _ := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + jar)
 	defer s.End(false)
 	err := k8s.Copy(jar, c.Namespace, podName)
@@ -161,8 +167,20 @@ func (o *options) push(component *component.Component) error {
 	return nil
 }
 
-func (o *options) getComponentBinaryPath() string {
-	return filepath.Join(o.ComponentPath, "target", o.ComponentName+"-0.0.1-SNAPSHOT.jar")
+func (o *options) getComponentBinaryPath() (string, error) {
+	target := filepath.Join(o.ComponentPath, "target")
+	files, err := ioutil.ReadDir(target)
+	if err != nil {
+		return target + " directory not found or unreadable", err
+	}
+
+	for _, file := range files {
+		name := file.Name()
+		if strings.HasSuffix(name, ".jar") {
+			return filepath.Join(target, name), nil
+		}
+	}
+	return "no jar file found in " + target, nil
 }
 
 func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
