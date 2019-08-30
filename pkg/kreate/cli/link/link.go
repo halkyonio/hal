@@ -25,6 +25,7 @@ const (
 type options struct {
 	targetName string
 	ref        string
+	name       string
 	kind       validation.EnumValue
 	envPairs   []string
 	envs       []halkyon.Env
@@ -75,6 +76,10 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 			}
 		}
 	}
+
+	generated := fmt.Sprintf("%s-link-%d", o.targetName, time.Now().UnixNano())
+	o.name = ui.Ask("Change default name", o.name, generated)
+
 	return nil
 }
 
@@ -90,6 +95,7 @@ func (o *options) addToEnv(pair string) (halkyon.Env, error) {
 }
 
 func (o *options) Validate() error {
+	// todo: validate selected link name
 	return o.kind.Contains(o.kind)
 }
 
@@ -97,7 +103,7 @@ func (o *options) Run() error {
 	client := k8s.GetClient()
 	link, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      name,
+			Name:      o.name,
 			Namespace: client.Namespace,
 		},
 		Spec: link.LinkSpec{
@@ -136,6 +142,7 @@ func NewCmdLink(parent string) *cobra.Command {
 	}
 	link.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
 	link.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
+	link.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
 	link.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
 
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, link)
