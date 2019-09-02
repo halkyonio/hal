@@ -3,7 +3,6 @@ package link
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	link "halkyon.io/api/link/v1beta1"
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/kreate/pkg/cmdutil"
@@ -12,7 +11,6 @@ import (
 	"halkyon.io/kreate/pkg/ui"
 	"halkyon.io/kreate/pkg/validation"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -147,27 +145,6 @@ func NewCmdLink(parent string) *cobra.Command {
 
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, link)
 	return link
-}
-
-func (o *options) readCurrent() (*link.LinkSpec, error) {
-	viper.SetConfigName("application")                                              // name of config file (without extension)
-	viper.AddConfigPath(filepath.Join(o.ComponentPath, "src", "main", "resources")) // path to look for the config file in
-	err := viper.ReadInConfig()                                                     // Find and read the config file
-	if err != nil {                                                                 // Handle errors reading the config file
-		panic(fmt.Errorf("Fatal error config file: %s \n", err))
-	}
-	present := viper.Get("dekorate.link")
-	if present != nil {
-		link := &link.LinkSpec{}
-		err = viper.UnmarshalKey("dekorate.link", link)
-		if err != nil {
-			return nil, err
-		}
-		return link, nil
-	}
-
-	//viper.WriteConfig()
-	return nil, nil
 }
 
 func (o *options) checkAndGetValidTargets() ([]string, bool, error) {

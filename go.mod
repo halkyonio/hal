@@ -15,7 +15,6 @@ require (
 	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.4.0
 	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
 	halkyon.io/api v1.0.0-beta.4
