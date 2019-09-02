@@ -3,17 +3,25 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	halkyon "halkyon.io/api"
+	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/kreate/pkg/validation"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	k8yml "k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
 	"reflect"
 )
 
 type ComponentTargetingOptions struct {
-	paths         []string
-	ComponentPath string
-	ComponentName string
-	runnable      Runnable
+	paths          []string
+	ComponentPath  string
+	ComponentName  string
+	DescriptorPath string
+	runnable       Runnable
+	deserializer   runtime.Decoder
 }
 
 type withTargeting interface {
@@ -35,7 +43,14 @@ func ConfigureRunnableAndCommandWithTargeting(runnable Runnable, cmd *cobra.Comm
 }
 
 func NewTargetingOptions() *ComponentTargetingOptions {
-	return &ComponentTargetingOptions{}
+	s := scheme.Scheme
+	if err := halkyon.AddToScheme(s); err != nil {
+		panic(err)
+	}
+
+	deserializer := scheme.Codecs.UniversalDeserializer()
+
+	return &ComponentTargetingOptions{deserializer: deserializer}
 }
 
 func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -53,7 +68,12 @@ func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, ar
 			}
 			o.paths[i] = path
 			o.ComponentPath = path
-			o.ComponentName = filepath.Base(o.ComponentPath)
+			if err := o.initDescriptorPath(); err != nil {
+				return err
+			}
+			if err := o.initComponentName(); err != nil {
+				return err
+			}
 			err := o.runnable.Complete(name, cmd, args)
 			if err != nil {
 				return err
@@ -61,7 +81,12 @@ func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, ar
 		}
 	} else {
 		o.ComponentPath = currentDir
-		o.ComponentName = filepath.Base(o.ComponentPath)
+		if err := o.initDescriptorPath(); err != nil {
+			return err
+		}
+		if err := o.initComponentName(); err != nil {
+			return err
+		}
 		return o.runnable.Complete(name, cmd, args)
 	}
 
@@ -90,6 +115,41 @@ func (o *ComponentTargetingOptions) runForEachPath(fn func() error) error {
 		return fn()
 	}
 	return nil
+}
+
+func (o *ComponentTargetingOptions) initDescriptorPath() error {
+	descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
+	_, err := os.Stat(descriptor)
+	if err != nil {
+		return fmt.Errorf("halkyon descriptor was not found: %v", err)
+	}
+	o.DescriptorPath = descriptor
+	return nil
+}
+
+func (o *ComponentTargetingOptions) initComponentName() error {
+	file, err := os.Open(o.DescriptorPath)
+	if err != nil {
+		return err
+	}
+
+	decoder := k8yml.NewYAMLToJSONDecoder(file)
+	list := &v1.List{}
+	err = decoder.Decode(list)
+	for _, value := range list.Items {
+		object := value.Object
+		if object == nil {
+			object, _, err = o.deserializer.Decode(value.Raw, nil, nil)
+			if err != nil {
+				return err
+			}
+		}
+		if c, ok := object.(*v1beta1.Component); ok {
+			o.ComponentName = c.Name
+			return nil
+		}
+	}
+	return fmt.Errorf("no component configuration found in %s", o.DescriptorPath)
 }
 
 func (o *ComponentTargetingOptions) AttachFlagTo(cmd *cobra.Command) {
