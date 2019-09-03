@@ -7,6 +7,7 @@ import (
 	"halkyon.io/kreate/pkg/io"
 	"halkyon.io/kreate/pkg/scaffold"
 	"halkyon.io/kreate/pkg/ui"
+	"halkyon.io/kreate/pkg/validation"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -24,11 +25,12 @@ const (
 func NewCmdProject(parent string) *cobra.Command {
 	p := &project{}
 
+	currentDir, _ := os.Getwd()
 	createCmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags]", commandName),
+		Use:   fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", commandName, currentDir),
 		Short: "Create a Spring Boot maven project",
 		Long:  `Create a Spring Boot maven project.`,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(p, cmd, args)
 		},
@@ -173,13 +175,17 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	p.fileName = ui.Ask(fmt.Sprintf("Project location (immediate child directory of %s)", currentDir), "")
+	p.fileName = args[0]
 	p.zipFile = filepath.Join(currentDir, p.fileName+".zip")
 
 	return nil
 }
 
 func (p *project) Validate() error {
+	if validation.CheckFileExist(p.fileName) {
+		currentDir, _ := os.Getwd()
+		return fmt.Errorf("a file named %s already exists in %s", p.fileName, currentDir)
+	}
 	return nil
 }
 func (p *project) Run() error {

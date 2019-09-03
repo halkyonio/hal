@@ -119,9 +119,8 @@ func (o *ComponentTargetingOptions) runForEachPath(fn func() error) error {
 
 func (o *ComponentTargetingOptions) initDescriptorPath() error {
 	descriptor := filepath.Join(o.ComponentPath, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
-	_, err := os.Stat(descriptor)
-	if err != nil {
-		return fmt.Errorf("halkyon descriptor was not found: %v", err)
+	if !validation.CheckFileExist(descriptor) {
+		return fmt.Errorf("halkyon descriptor was not found at %s", descriptor)
 	}
 	o.DescriptorPath = descriptor
 	return nil
