@@ -5,8 +5,14 @@ import (
 	"halkyon.io/kreate/pkg/kreate/cli"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
-	createCmd := cli.NewCmdKreate()
+	createCmd := cli.NewCmdKreate(version, commit, date)
 
 	err := createCmd.Execute()
 	if err != nil {

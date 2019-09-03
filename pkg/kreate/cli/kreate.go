@@ -11,11 +11,12 @@ import (
 
 const commandName = "kreate"
 
-func NewCmdKreate() *cobra.Command {
+func NewCmdKreate(version, commit, date string) *cobra.Command {
 	kreate := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Easily create Kubernetes applications",
-		Long:  `Easily create and manage Kubernetes applications using the Component operator created by the Snowdrop team.`,
+		Long: fmt.Sprintf(`kreate %s built '%s' (commit: %s)
+Easily create and manage Kubernetes applications using the Component operator created by the Snowdrop team.`, version, date, commit),
 	}
 
 	kreate.AddCommand(
