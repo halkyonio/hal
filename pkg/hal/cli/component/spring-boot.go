@@ -19,7 +19,7 @@ import (
 const (
 	serviceEndpoint    = "https://generator.snowdrop.me"
 	releaseSuffix      = ".RELEASE"
-	projectCommandName = "project"
+	projectCommandName = "spring-boot"
 )
 
 func NewCmdProject(parent string) *cobra.Command {
