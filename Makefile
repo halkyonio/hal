@@ -5,7 +5,7 @@ BUILD_FLAGS := -ldflags="-w -X main.commit=$(GITCOMMIT) -X main.version=$(VERSIO
 
 build:
 	@echo "> Build go application"
-	go build $(BUILD_FLAGS) ./cmd/kreate.go
+	go build $(BUILD_FLAGS) ./cmd/hal.go
 
 version:
 	@echo $(VERSION)

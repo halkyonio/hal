@@ -9,14 +9,14 @@ import (
 	"halkyon.io/kreate/pkg/kreate/cli/push"
 )
 
-const commandName = "kreate"
+const commandName = "hal"
 
 func NewCmdKreate(version, commit, date string) *cobra.Command {
 	kreate := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Easily create Kubernetes applications",
-		Long: fmt.Sprintf(`kreate %s built '%s' (commit: %s)
-Easily create and manage Kubernetes applications using the Component operator created by the Snowdrop team.`, version, date, commit),
+		Long: fmt.Sprintf(`%s %s built on '%s' (commit: %s)
+Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator, made with ❤️ by the Snowdrop team.`, commandName, version, date, commit),
 	}
 
 	kreate.AddCommand(
