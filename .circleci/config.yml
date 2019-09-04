@@ -12,6 +12,7 @@ jobs:
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash -s -- --snapshot
+      - run: ./dist/hal_linux_386/hal
       - store_artifacts:
           path: ./dist
 workflows:
