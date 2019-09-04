@@ -12,6 +12,8 @@ jobs:
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash -s -- --snapshot
+      - store_artifacts:
+          path: ./dist
 workflows:
   version: 2
   release:
