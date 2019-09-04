@@ -12,7 +12,7 @@ import (
 
 const commandName = "hal"
 
-func NewCmdKreate() *cobra.Command {
+func NewCmdHal() *cobra.Command {
 	hal := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Easily create Kubernetes applications",

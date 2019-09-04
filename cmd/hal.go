@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	createCmd := cli.NewCmdKreate()
+	createCmd := cli.NewCmdHal()
 
 	err := createCmd.Execute()
 	if err != nil {
