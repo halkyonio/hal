@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"halkyon.io/kreate/pkg/kreate/cli"
+	"halkyon.io/hal/pkg/hal/cli"
 )
 
 var (

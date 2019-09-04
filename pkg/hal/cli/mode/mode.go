@@ -5,9 +5,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
-	"halkyon.io/kreate/pkg/cmdutil"
-	"halkyon.io/kreate/pkg/k8s"
-	"halkyon.io/kreate/pkg/validation"
+	"halkyon.io/hal/pkg/cmdutil"
+	"halkyon.io/hal/pkg/k8s"
+	"halkyon.io/hal/pkg/validation"
 	"k8s.io/apimachinery/pkg/types"
 )
 

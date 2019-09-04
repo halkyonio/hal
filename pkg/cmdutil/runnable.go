@@ -3,7 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"halkyon.io/kreate/pkg/io"
+	"halkyon.io/hal/pkg/io"
 )
 
 type Runnable interface {

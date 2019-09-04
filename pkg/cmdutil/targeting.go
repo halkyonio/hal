@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	halkyon "halkyon.io/api"
 	"halkyon.io/api/component/v1beta1"
-	"halkyon.io/kreate/pkg/validation"
+	"halkyon.io/hal/pkg/validation"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8yml "k8s.io/apimachinery/pkg/util/yaml"

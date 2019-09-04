@@ -17,3 +17,6 @@
 # ignore build artifacts
 dist
 hal
+
+# do not ignore hal package
+!/pkg/hal/

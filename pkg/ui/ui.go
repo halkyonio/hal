@@ -5,7 +5,7 @@ import (
 	"github.com/mgutz/ansi"
 	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
-	"halkyon.io/kreate/pkg/validation"
+	"halkyon.io/hal/pkg/validation"
 	"os"
 	"sort"
 )

@@ -24,7 +24,7 @@ package log
 
 import (
 	"fmt"
-	"halkyon.io/kreate/pkg/log/fidget"
+	"halkyon.io/hal/pkg/log/fidget"
 	"io"
 	"os"
 	"runtime"
