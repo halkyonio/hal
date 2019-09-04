@@ -1,4 +1,4 @@
-package push
+package component
 
 import (
 	"bufio"
@@ -20,21 +20,21 @@ import (
 	"strings"
 )
 
-const commandName = "push"
+const pushCommandName = "push"
 
-type options struct {
+type pushOptions struct {
 	*cmdutil.ComponentTargetingOptions
 }
 
-func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
+func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *options) Validate() error {
+func (o *pushOptions) Validate() error {
 	return nil
 }
 
-func (o *options) Run() error {
+func (o *pushOptions) Run() error {
 	c := k8s.GetClient()
 	component, err := c.HalkyonComponentClient.Components(c.Namespace).Get(o.ComponentName, v1.GetOptions{})
 	if err != nil {
@@ -97,7 +97,7 @@ func (o *options) Run() error {
 
 }
 
-func (o *options) waitUntilReady(c *component.Component) (*component.Component, error) {
+func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Component, error) {
 	if component.ComponentReady == c.Status.Phase || component.ComponentRunning == c.Status.Phase {
 		return c, nil
 	}
@@ -123,7 +123,7 @@ func errorIfFailedOrUnknown(c *component.Component) error {
 	}
 }
 
-func (o *options) push(component *component.Component) error {
+func (o *pushOptions) push(component *component.Component) error {
 	c := k8s.GetClient()
 	podName := component.Status.PodName
 	/*// todo: fix copy function
@@ -162,7 +162,7 @@ func (o *options) push(component *component.Component) error {
 	return nil
 }
 
-func (o *options) getComponentBinaryPath() (string, error) {
+func (o *pushOptions) getComponentBinaryPath() (string, error) {
 	target := filepath.Join(o.ComponentPath, "target")
 	files, err := ioutil.ReadDir(target)
 	if err != nil {
@@ -178,17 +178,17 @@ func (o *options) getComponentBinaryPath() (string, error) {
 	return "no jar file found in " + target, nil
 }
 
-func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
+func (o *pushOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
 	o.ComponentTargetingOptions = options
 }
 
 func NewCmdPush(parent string) *cobra.Command {
 	push := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags]", commandName),
+		Use:   fmt.Sprintf("%s [flags]", pushCommandName),
 		Short: "Push a local project to the remote cluster you're connected to",
 		Long:  `Push a local project to the remote cluster you're connected to.`,
 		Args:  cobra.NoArgs,
 	}
-	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options{}, push)
+	cmdutil.ConfigureRunnableAndCommandWithTargeting(&pushOptions{}, push)
 	return push
 }

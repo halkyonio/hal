@@ -1,4 +1,4 @@
-package project
+package component
 
 import (
 	"fmt"
@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	serviceEndpoint = "https://generator.snowdrop.me"
-	releaseSuffix   = ".RELEASE"
-	commandName     = "project"
+	serviceEndpoint    = "https://generator.snowdrop.me"
+	releaseSuffix      = ".RELEASE"
+	projectCommandName = "project"
 )
 
 func NewCmdProject(parent string) *cobra.Command {
@@ -27,7 +27,7 @@ func NewCmdProject(parent string) *cobra.Command {
 
 	currentDir, _ := os.Getwd()
 	createCmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", commandName, currentDir),
+		Use:   fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", projectCommandName, currentDir),
 		Short: "Create a Spring Boot maven project",
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.ExactArgs(1),

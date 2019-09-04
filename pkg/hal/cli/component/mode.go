@@ -1,4 +1,4 @@
-package mode
+package component
 
 import (
 	"fmt"
@@ -11,22 +11,22 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const commandName = "mode"
+const modeCommandName = "mode"
 
-type options struct {
+type modeOptions struct {
 	mode validation.EnumValue
 	*cmdutil.ComponentTargetingOptions
 }
 
-func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
+func (o *modeOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (o *options) Validate() error {
+func (o *modeOptions) Validate() error {
 	return o.mode.Contains(o.mode)
 }
 
-func (o *options) Run() error {
+func (o *modeOptions) Run() error {
 	client := k8s.GetClient()
 	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
@@ -40,16 +40,16 @@ func (o *options) Run() error {
 	return nil
 }
 
-func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
+func (o *modeOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
 	o.ComponentTargetingOptions = options
 }
 
 func NewCmdMode(parent string) *cobra.Command {
-	o := &options{
+	o := &modeOptions{
 		mode: validation.NewEnumValue("mode", component.DevDeploymentMode, component.BuildDeploymentMode),
 	}
 	mode := &cobra.Command{
-		Use:     fmt.Sprintf("%s [flags]", commandName),
+		Use:     fmt.Sprintf("%s [flags]", modeCommandName),
 		Short:   "Switch the component to the provided mode",
 		Long:    `Switch the component to the provided mode.`,
 		Aliases: []string{"switch"},
