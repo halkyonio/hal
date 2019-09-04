@@ -5,14 +5,8 @@ import (
 	"halkyon.io/hal/pkg/hal/cli"
 )
 
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
-)
-
 func main() {
-	createCmd := cli.NewCmdKreate(version, commit, date)
+	createCmd := cli.NewCmdKreate()
 
 	err := createCmd.Execute()
 	if err != nil {

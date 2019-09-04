@@ -7,16 +7,17 @@ import (
 	"halkyon.io/hal/pkg/hal/cli/mode"
 	"halkyon.io/hal/pkg/hal/cli/project"
 	"halkyon.io/hal/pkg/hal/cli/push"
+	"halkyon.io/hal/pkg/hal/cli/version"
 )
 
 const commandName = "hal"
 
-func NewCmdKreate(version, commit, date string) *cobra.Command {
+func NewCmdKreate() *cobra.Command {
 	hal := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Easily create Kubernetes applications",
-		Long: fmt.Sprintf(`%s %s built on '%s' (commit: %s)
-Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator, made with ❤️ by the Snowdrop team.`, commandName, version, date, commit),
+		Long: fmt.Sprintf(`%s
+Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.`, version.Version()),
 	}
 
 	hal.AddCommand(
@@ -24,6 +25,7 @@ Easily create and manage Kubernetes applications using Dekorate and the Halkyon 
 		push.NewCmdPush(commandName),
 		mode.NewCmdMode(commandName),
 		link.NewCmdLink(commandName),
+		version.NewCmdVersion(commandName),
 	)
 
 	return hal

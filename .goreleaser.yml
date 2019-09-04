@@ -9,6 +9,8 @@ builds:
 - env:
   - CGO_ENABLED=0
   main: ./cmd/hal.go
+  ldflags:
+    - '-w -X halkyon.io/hal/pkg/hal/cli/version.commit={{.ShortCommit}} -X halkyon.io/hal/pkg/hal/cli/version.version={{.Version}} -X halkyon.io/hal/pkg/hal/cli/version.date={{.Date}}'
   goos:
     - darwin
     - linux
