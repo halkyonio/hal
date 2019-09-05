@@ -94,7 +94,7 @@ func (o *capabilityOptions) Run() error {
 			Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
 			Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
 			Version:    o.version,
-			Parameters: []halkyon.Parameter{}, // todo: fill
+			Parameters: o.parameters,
 		},
 	})
 
