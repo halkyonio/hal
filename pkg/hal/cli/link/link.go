@@ -27,7 +27,6 @@ type options struct {
 	kind       validation.EnumValue
 	envPairs   []string
 	envs       []halkyon.Env
-	*cmdutil.ComponentTargetingOptions
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -125,10 +124,6 @@ func (o *options) Run() error {
 	return nil
 }
 
-func (o *options) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
-	o.ComponentTargetingOptions = options
-}
-
 func NewCmdLink(parent string) *cobra.Command {
 	o := &options{
 		kind: validation.NewEnumValue("kind", link.EnvLinkType, link.SecretLinkType),
@@ -138,13 +133,15 @@ func NewCmdLink(parent string) *cobra.Command {
 		Short: "Link the current (or target) component to the specified capability or component",
 		Long:  `Link the current (or target) component to the specified capability or component`,
 		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmdutil.GenericRun(o, cmd, args)
+		},
 	}
 	link.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
 	link.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
 	link.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
 	link.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
 
-	cmdutil.ConfigureRunnableAndCommandWithTargeting(o, link)
 	return link
 }
 
