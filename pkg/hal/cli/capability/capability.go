@@ -23,7 +23,7 @@ type capabilityOptions struct {
 	subCategory string
 	version     string
 	paramPairs  []string
-	parameters  []halkyon.Parameter
+	parameters  []halkyon.NameValuePair
 
 	name string
 }
@@ -53,7 +53,7 @@ func (o *capabilityOptions) Validate() error {
 		params[v.name] = v
 	}
 
-	o.parameters = make([]halkyon.Parameter, len(params))
+	o.parameters = make([]halkyon.NameValuePair, len(params))
 
 	// first deal with required params
 	for _, info := range infos {
@@ -171,7 +171,7 @@ func (o *capabilityOptions) addToParams(pair string) error {
 	if len(split) != 2 {
 		return fmt.Errorf("invalid parameter: %s, format must be 'name=value'", pair)
 	}
-	parameter := halkyon.Parameter{Name: split[0], Value: split[1]}
+	parameter := halkyon.NameValuePair{Name: split[0], Value: split[1]}
 	o.parameters = append(o.parameters, parameter)
 	ui.OutputSelection("Set parameter", fmt.Sprintf("%s=%s", parameter.Name, parameter.Value))
 	return nil
@@ -212,7 +212,7 @@ func (o *capabilityOptions) addValueFor(prop parameterInfo) {
 
 	err := survey.AskOne(prompt, &result, ui.GetValidatorFor(prop.AsValidatable()))
 	ui.HandleError(err)
-	o.parameters = append(o.parameters, halkyon.Parameter{
+	o.parameters = append(o.parameters, halkyon.NameValuePair{
 		Name:  prop.name,
 		Value: result,
 	})

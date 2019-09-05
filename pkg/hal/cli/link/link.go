@@ -26,7 +26,7 @@ type options struct {
 	name       string
 	kind       validation.EnumValue
 	envPairs   []string
-	envs       []halkyon.Env
+	envs       []halkyon.NameValuePair
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -80,13 +80,13 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 	return nil
 }
 
-func (o *options) addToEnv(pair string) (halkyon.Env, error) {
-	// todo: extract as generic version to be used for Envs and Parameters
+func (o *options) addToEnv(pair string) (halkyon.NameValuePair, error) {
+	// todo: extract as generic version
 	split := strings.Split(pair, "=")
 	if len(split) != 2 {
-		return halkyon.Env{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
+		return halkyon.NameValuePair{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
 	}
-	env := halkyon.Env{Name: split[0], Value: split[1]}
+	env := halkyon.NameValuePair{Name: split[0], Value: split[1]}
 	o.envs = append(o.envs, env)
 	ui.OutputSelection("Set env variable", fmt.Sprintf("%s=%s", env.Name, env.Value))
 	return env, nil
