@@ -82,6 +82,7 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 }
 
 func (o *options) addToEnv(pair string) (halkyon.Env, error) {
+	// todo: extract as generic version to be used for Envs and Parameters
 	split := strings.Split(pair, "=")
 	if len(split) != 2 {
 		return halkyon.Env{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
