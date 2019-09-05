@@ -5,8 +5,14 @@ import (
 	"os/exec"
 )
 
+const jarPathInContainer = "/deployments/app.jar"
+
 func Copy(path, namespace, destination string) error {
-	return runKubectl([]string{"cp", path, fmt.Sprintf("%s:/deployments/app.jar", destination), "-n", namespace}...)
+	return runKubectl([]string{"cp", path, fmt.Sprintf("%s:%s", destination, jarPathInContainer), "-n", namespace}...)
+}
+
+func IsJarPresent(podName string) bool {
+	return runKubectl([]string{"exec", podName, "--", "ls", jarPathInContainer}...) == nil
 }
 
 func Apply(path, namespace string) error {

@@ -71,7 +71,7 @@ func (o *pushOptions) Run() error {
 		return err
 	}
 	revision := fmt.Sprintf("%x", hash.Sum(nil))
-	if revision == component.Spec.Revision {
+	if !o.needsPush(revision, component) {
 		log.Info("No local changes detected: nothing to push!")
 		return nil
 	}
@@ -95,6 +95,16 @@ func (o *pushOptions) Run() error {
 	}
 	return nil
 
+}
+
+func (o *pushOptions) needsPush(revision string, c *component.Component) bool {
+	sameRevision := revision == c.Spec.Revision
+	if !sameRevision {
+		return true
+	}
+
+	podName := c.Status.PodName
+	return len(podName) > 0 && !k8s.IsJarPresent(podName)
 }
 
 func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Component, error) {
