@@ -31,7 +31,7 @@ func (o *modeOptions) Run() error {
 	patch := fmt.Sprintf(`{"spec":{"deploymentMode":"%s"}}`, o.mode)
 
 	component, err := client.HalkyonComponentClient.Components(client.Namespace).
-		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
+		Patch(o.GetTargetedComponentName(), types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}

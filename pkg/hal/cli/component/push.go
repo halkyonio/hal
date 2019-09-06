@@ -36,18 +36,19 @@ func (o *pushOptions) Validate() error {
 
 func (o *pushOptions) Run() error {
 	c := k8s.GetClient()
-	component, err := c.HalkyonComponentClient.Components(c.Namespace).Get(o.ComponentName, v1.GetOptions{})
+	name := o.GetTargetedComponentName()
+	comp, err := c.HalkyonComponentClient.Components(c.Namespace).Get(name, v1.GetOptions{})
 	if err != nil {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
-			log.Infof("Component %s was not found, initializing it", o.ComponentName)
-			err = k8s.Apply(o.DescriptorPath, c.Namespace)
+			log.Infof("Component %s was not found, initializing it", name)
+			err = k8s.Apply(o.GetTargetedComponentDescriptor(), c.Namespace)
 			if err != nil {
 				return fmt.Errorf("error applying component CR: %v", err)
 			}
 
-			component, err = o.waitUntilReady(component)
+			comp, err = o.waitUntilReady(comp)
 			if err != nil {
 				return err
 			}
@@ -71,25 +72,24 @@ func (o *pushOptions) Run() error {
 		return err
 	}
 	revision := fmt.Sprintf("%x", hash.Sum(nil))
-	if !o.needsPush(revision, component) {
+	if !o.needsPush(revision, comp) {
 		log.Info("No local changes detected: nothing to push!")
 		return nil
 	}
 
 	// we got the component, we still need to check it's ready
-	component, err = o.waitUntilReady(component)
+	comp, err = o.waitUntilReady(comp)
 	if err != nil {
 		return err
 	}
-	err = o.push(component)
+	err = o.push(comp)
 	if err != nil {
 		return err
 	}
 
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
-	_, err = c.HalkyonComponentClient.Components(c.Namespace).
-		Patch(o.ComponentName, types.MergePatchType, []byte(patch))
+	_, err = c.HalkyonComponentClient.Components(c.Namespace).Patch(name, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -112,8 +112,9 @@ func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Compone
 		return c, nil
 	}
 
+	name := o.GetTargetedComponentName()
 	client := k8s.GetClient()
-	cp, err := client.WaitForComponent(o.ComponentName, component.ComponentReady, "Waiting for component "+o.ComponentName+" to be ready…")
+	cp, err := client.WaitForComponent(name, component.ComponentReady, "Waiting for component "+name+" to be ready…")
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for component: %v", err)
 	}
@@ -173,7 +174,7 @@ func (o *pushOptions) push(component *component.Component) error {
 }
 
 func (o *pushOptions) getComponentBinaryPath() (string, error) {
-	target := filepath.Join(o.ComponentPath, "target")
+	target := filepath.Join(o.GetTargetedComponentPath(), "target")
 	files, err := ioutil.ReadDir(target)
 	if err != nil {
 		return target + " directory not found or unreadable", err
