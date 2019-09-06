@@ -42,7 +42,7 @@ func (o *pushOptions) Run() error {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
 			// the component was not found so we need to create it first and wait for it to be ready
-			log.Infof("Component %s was not found, initializing it", name)
+			log.Infof("'%s' component was not found, initializing it", name)
 			err = k8s.Apply(o.GetTargetedComponentDescriptor(), c.Namespace)
 			if err != nil {
 				return fmt.Errorf("error applying component CR: %v", err)
@@ -73,7 +73,7 @@ func (o *pushOptions) Run() error {
 	}
 	revision := fmt.Sprintf("%x", hash.Sum(nil))
 	if !o.needsPush(revision, comp) {
-		log.Info("No local changes detected: nothing to push!")
+		log.Infof("No local changes detected for '%s' component: nothing to push!", name)
 		return nil
 	}
 
