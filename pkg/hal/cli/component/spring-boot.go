@@ -38,13 +38,13 @@ func NewCmdProject(parent string) *cobra.Command {
 
 	createCmd.Flags().StringVarP(&p.Template, "template", "t", "", "Template name used to select the project to be created")
 	createCmd.Flags().StringVarP(&p.UrlService, "urlservice", "u", serviceEndpoint, "URL of the HTTP Server exposing the spring boot service")
-	createCmd.Flags().StringSliceVarP(&p.Modules, "module", "m", []string{}, "Spring Boot modules/starters")
-	createCmd.Flags().StringVarP(&p.GroupId, "groupid", "g", "", "GroupId : com.example")
-	createCmd.Flags().StringVarP(&p.ArtifactId, "artifactid", "i", "", "ArtifactId: demo")
-	createCmd.Flags().StringVarP(&p.Version, "version", "v", "", "Version: 0.0.1-SNAPSHOT")
-	createCmd.Flags().StringVarP(&p.PackageName, "packagename", "p", "", "Package Name: com.example.demo")
+	createCmd.Flags().StringSliceVarP(&p.Modules, "module", "m", []string{}, "Comma-separated list of Spring Boot modules/starters to add to the project")
+	createCmd.Flags().StringVarP(&p.GroupId, "groupid", "g", "", "Maven group id e.g. com.example")
+	createCmd.Flags().StringVarP(&p.ArtifactId, "artifactid", "i", "", "Maven artifact id e.g. demo")
+	createCmd.Flags().StringVarP(&p.Version, "version", "v", "", "Maven version e.g. 0.0.1-SNAPSHOT")
+	createCmd.Flags().StringVarP(&p.PackageName, "packagename", "p", "", "Package name (defaults to <group id>.<artifact id>)")
 	createCmd.Flags().StringVarP(&p.SpringBootVersion, "springbootversion", "s", "", "Spring Boot Version")
-	createCmd.Flags().BoolVarP(&p.UseSupported, "supported", "o", false, "Use supported version")
+	createCmd.Flags().BoolVarP(&p.UseSupported, "supported", "o", false, "Use Snowdrop supported version of Spring Boot")
 
 	return createCmd
 }
