@@ -1,4 +1,4 @@
-FROM frolvlad/alpine-glibc:3.10
+FROM frolvlad/alpine-glibc:alpine-3.10
 
 RUN apk add curl
 
