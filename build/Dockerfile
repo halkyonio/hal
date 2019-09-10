@@ -11,8 +11,11 @@ RUN tar -xzf oc.tar.gz && \
     mv oc /usr/local/bin/ && \
     rm -rf oc.tar.gz
 
+# Create non-root user (with a randomly chosen UID/GUI).
+RUN adduser hal -Du 2342 -h /home && \
+
 RUN mkdir $HOME/.kube && touch $HOME/.kube/config
 
-USER nobody
+USER hal
 
 ADD ./dist/hal_linux_amd64/hal /usr/local/bin/hal
