@@ -12,8 +12,9 @@ RUN tar -xzf oc.tar.gz && \
     rm -rf oc.tar.gz
 
 # Create non-root user (with a randomly chosen UID/GUI).
-RUN adduser hal -Du 2342 -h /home && \
+RUN adduser hal -Du 2342 -h /home
 
+# Create kube home dir
 RUN mkdir $HOME/.kube && touch $HOME/.kube/config
 
 USER hal
