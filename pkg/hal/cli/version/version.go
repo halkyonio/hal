@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/cmdutil"
+	"halkyon.io/hal/pkg/k8s"
 )
 
 const commandName = "version"
@@ -46,5 +47,5 @@ func NewCmdVersion(parentCmdName string) *cobra.Command {
 }
 
 func Version() string {
-	return fmt.Sprintf("%s %s built with ❤️  by the Snowdrop team on '%s' (commit: %s)", parent, version, date, commit)
+	return fmt.Sprintf("%s %s built with ❤️ by the Snowdrop team on '%s' (commit: %s) running on top of '%s'", parent, version, date, commit, k8s.GetK8SClientFlavor())
 }
