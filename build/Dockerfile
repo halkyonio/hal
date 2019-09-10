@@ -11,11 +11,15 @@ RUN tar -xzf oc.tar.gz && \
     mv oc /usr/local/bin/ && \
     rm -rf oc.tar.gz
 
+ENV HOME=/home/hal
+
 # Create non-root user (with a randomly chosen UID/GUI).
 RUN adduser hal -Du 2342 -h /home
 
 # Create kube home dir
 RUN mkdir $HOME/.kube && touch $HOME/.kube/config
+# Change permissions
+RUN chmod 775 -R /home/hal
 
 USER hal
 
