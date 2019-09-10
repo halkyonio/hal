@@ -3,7 +3,7 @@ FROM frolvlad/alpine-glibc:alpine-3.10
 RUN apk add \
     curl \
     bash \
-    busybox-suid
+    'musl>1.1.22-r3'
 
 ADD https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.1/linux/oc.tar.gz ./
 RUN tar -xzf oc.tar.gz && \
