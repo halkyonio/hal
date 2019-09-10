@@ -1,9 +1,14 @@
-FROM frolvlad/alpine-glibc:alpine-3.10
+FROM alpine:3.10
 
 RUN apk add \
     curl \
-    bash \
-    'musl>1.1.22-r3'
+    bash
+
+# Add glibc which is needed for oc client
+RUN apk --no-cache add ca-certificates wget && \
+    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
+    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.30-r0/glibc-2.30-r0.apk && \
+    apk add glibc-2.30-r0.apk
 
 ADD https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.1/linux/oc.tar.gz ./
 RUN tar -xzf oc.tar.gz && \
