@@ -23,7 +23,6 @@ jobs:
             docker tag ${TAG_ID} quay.io/halkyonio/hal:${VERSION}
             docker login quay.io -u="${QUAY_ROBOT_USER}" -p="${QUAY_ROBOT_TOKEN}"
             docker push quay.io/halkyonio/hal:${VERSION}
-      - run: ./dist/hal_linux_386/hal
       - store_artifacts:
           path: ./dist
 workflows:
