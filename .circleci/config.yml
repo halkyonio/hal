@@ -11,6 +11,8 @@ jobs:
       - image: circleci/golang:1.12
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Build container image of hal and publish it on quay under halkyonio org
           command: |
