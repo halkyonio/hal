@@ -53,7 +53,7 @@ func (o *capabilityOptions) Validate() error {
 		params[v.name] = v
 	}
 
-	o.parameters = make([]halkyon.NameValuePair, len(params))
+	o.parameters = make([]halkyon.NameValuePair, 0, len(params))
 
 	// first deal with required params
 	for _, info := range infos {
