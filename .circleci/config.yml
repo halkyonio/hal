@@ -6,6 +6,16 @@ jobs:
     steps:
       - checkout
       - run: curl -sL https://git.io/goreleaser | bash
+      - run:
+        name: Build hal container image and publish it on quay under halkyonio org
+        command: |
+          VERSION=${CIRCLE_TAG}
+          docker build -t hal:${VERSION} -f build/Dockerfile .
+          TAG_ID=$(docker images -q hal:${VERSION})
+          docker tag ${TAG_ID} quay.io/halkyonio/hal:${VERSION}
+          docker tag ${TAG_ID} quay.io/halkyonio/hal:latest
+          docker login quay.io -u="${QUAY_ROBOT_USER}" -p="${QUAY_ROBOT_TOKEN}"
+          docker push quay.io/halkyonio/hal:${VERSION}
   snapshot:
     docker:
       - image: circleci/golang:1.12
@@ -15,7 +25,7 @@ jobs:
           docker_layer_caching: true
       - run: curl -sL https://git.io/goreleaser | bash -s -- --snapshot
       - run:
-          name: Build container image of hal and publish it on quay under halkyonio org
+          name: Build hal container image and publish it on quay under halkyonio org
           command: |
             VERSION=master
             docker build -t hal:${VERSION} -f build/Dockerfile .
