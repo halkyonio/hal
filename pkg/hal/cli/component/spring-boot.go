@@ -14,12 +14,26 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const (
 	serviceEndpoint    = "https://generator.snowdrop.me"
 	releaseSuffix      = ".RELEASE"
 	projectCommandName = "spring-boot"
+)
+
+var (
+	projectExample = ktemplates.Examples(`  # Creates a Spring Boot maven project project using the REST HTTP client template
+  %[1]s  \
+            -i client-sb \
+            -g me.myspringboot \
+            -p me.myspringboot.demo \
+            -s 2.1.6.RELEASE \
+            -t client \
+            -v 1.0.0-SNAPSHOT \
+            --supported=false  \
+           client-sb`)
 )
 
 func NewCmdProject(parent string) *cobra.Command {
@@ -31,6 +45,7 @@ func NewCmdProject(parent string) *cobra.Command {
 		Short: "Create a Spring Boot maven project",
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.ExactArgs(1),
+		Example: fmt.Sprintf(projectExample, "hal component spring-boot"),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(p, cmd, args)
 		},

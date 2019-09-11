@@ -9,6 +9,7 @@ import (
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/validation"
 	"k8s.io/apimachinery/pkg/types"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const modeCommandName = "mode"
@@ -17,6 +18,11 @@ type modeOptions struct {
 	mode validation.EnumValue
 	*cmdutil.ComponentTargetingOptions
 }
+
+var (
+	modeExample = ktemplates.Examples(`  # Switch the component backend to the provided mode
+  %[1]s -c backend-sb -m dev`)
+)
 
 func (o *modeOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return nil
@@ -52,6 +58,7 @@ func NewCmdMode(parent string) *cobra.Command {
 		Use:     fmt.Sprintf("%s [flags]", modeCommandName),
 		Short:   "Switch the component to the provided mode",
 		Long:    `Switch the component to the provided mode.`,
+		Example: fmt.Sprintf(modeExample, "hal component mode"),
 		Aliases: []string{"switch"},
 		Args:    cobra.NoArgs,
 	}
