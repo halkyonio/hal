@@ -126,7 +126,7 @@ func (o *options) Run() error {
 
 func NewCmdLink(parent string) *cobra.Command {
 	o := &options{
-		kind: validation.NewEnumValue("kind", link.EnvLinkType, link.SecretLinkType),
+		kind: validation.NewEnumValue("link type", link.EnvLinkType, link.SecretLinkType),
 	}
 	l := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
