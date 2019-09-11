@@ -9,7 +9,6 @@ import (
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
-	"halkyon.io/hal/pkg/validation"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"time"
@@ -22,14 +21,21 @@ const (
 
 type options struct {
 	targetName string
-	ref        string
+	secret     string
 	name       string
-	kind       validation.EnumValue
 	envPairs   []string
 	envs       []halkyon.NameValuePair
+	linkType   link.LinkType
 }
 
 func (o *options) Complete(name string, cmd *cobra.Command, args []string) error {
+	// first check if proper parameters combination are provided
+	useSecret := len(o.secret) > 0
+	useEnv := len(o.envPairs) > 0
+	if useSecret && useEnv {
+		return fmt.Errorf("invalid parameter combination: either pass a secret name or environment variables, not both")
+	}
+
 	// retrieve and build list of available targets
 	capabilitiesAndComponents, validTarget, err := o.checkAndGetValidTargets()
 	if err != nil {
@@ -42,34 +48,34 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 		o.targetName = o.extractTargetName(ui.Select("Target", capabilitiesAndComponents))
 	}
 
-	if !o.kind.IsProvidedValid() {
-		if ui.Proceed("Use Secret") {
-			o.kind.MustSet(link.SecretLinkType)
-			secrets, valid, err := o.checkAndGetValidSecrets()
-			if err != nil {
-				return err
+	if useSecret {
+		o.linkType = link.SecretLinkType
+		ui.OutputSelection("Selected link type", o.linkType.String())
+		secrets, valid, err := o.checkAndGetValidSecrets()
+		if err != nil {
+			return err
+		}
+		if len(secrets) == 0 {
+			return fmt.Errorf("no valid secrets currently exist on the cluster")
+		}
+		if !valid {
+			o.secret = ui.Select("Secret", secrets)
+		}
+	} else {
+		o.linkType = link.EnvLinkType
+		ui.OutputSelection("Selected link type", o.linkType.String())
+		for _, pair := range o.envPairs {
+			if _, e := o.addToEnv(pair); e != nil {
+				return e
 			}
-			if len(secrets) == 0 {
-				return fmt.Errorf("no valid secrets currently exist on the cluster")
+		}
+		for {
+			envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, press enter when done")
+			if len(envAsString) == 0 {
+				break
 			}
-			if !valid {
-				o.ref = ui.Select("Secret", secrets)
-			}
-		} else {
-			o.kind.MustSet(link.EnvLinkType)
-			for _, pair := range o.envPairs {
-				if _, e := o.addToEnv(pair); e != nil {
-					return e
-				}
-			}
-			for {
-				envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, press enter when done")
-				if len(envAsString) == 0 {
-					break
-				}
-				if _, e := o.addToEnv(envAsString); e != nil {
-					return e
-				}
+			if _, e := o.addToEnv(envAsString); e != nil {
+				return e
 			}
 		}
 	}
@@ -94,7 +100,7 @@ func (o *options) addToEnv(pair string) (halkyon.NameValuePair, error) {
 
 func (o *options) Validate() error {
 	// todo: validate selected link name
-	return o.kind.Contains(o.kind)
+	return nil
 }
 
 func (o *options) Run() error {
@@ -106,8 +112,8 @@ func (o *options) Run() error {
 		},
 		Spec: link.LinkSpec{
 			ComponentName: o.targetName,
-			Type:          o.kind.Get().(link.LinkType),
-			Ref:           o.ref,
+			Type:          o.linkType,
+			Ref:           o.secret,
 			Envs:          o.envs,
 		},
 	})
@@ -125,9 +131,7 @@ func (o *options) Run() error {
 }
 
 func NewCmdLink(parent string) *cobra.Command {
-	o := &options{
-		kind: validation.NewEnumValue("link type", link.EnvLinkType, link.SecretLinkType),
-	}
+	o := &options{}
 	l := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Link the current (or target) component to the specified capability or component",
@@ -138,8 +142,8 @@ func NewCmdLink(parent string) *cobra.Command {
 		},
 	}
 	l.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
-	l.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
 	l.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
+	l.Flags().StringVarP(&o.secret, "secret", "s", "", "Secret name to reference if using Secret type")
 	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Environment variables as 'name=value' pairs")
 
 	return l
@@ -192,7 +196,7 @@ func (o *options) checkAndGetValidSecrets() ([]string, bool, error) {
 	givenIsValid := false
 	for _, secret := range secrets.Items {
 		known = append(known, secret.Name)
-		if secret.Name == o.ref {
+		if secret.Name == o.secret {
 			givenIsValid = true
 		}
 	}
