@@ -48,6 +48,10 @@ func (o *options) Complete(name string, cmd *cobra.Command, args []string) error
 		o.targetName = o.extractTargetName(ui.Select("Target", capabilitiesAndComponents))
 	}
 
+	if !useSecret && !useEnv {
+		useSecret = ui.Proceed("Use Secret")
+	}
+
 	if useSecret {
 		o.linkType = link.SecretLinkType
 		ui.OutputSelection("Selected link type", o.linkType.String())
