@@ -166,7 +166,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 		}
 	}
 
-	p.GroupId = ui.Ask("Group Id", p.GroupId, "me.snowdrop")
+	p.GroupId = ui.Ask("Group Id", p.GroupId, "dev.snowdrop")
 	p.ArtifactId = ui.Ask("Artifact Id", p.ArtifactId, "myproject")
 	p.Version = ui.Ask("Version", p.Version, "1.0.0-SNAPSHOT")
 	p.PackageName = ui.Ask("Package name", p.PackageName, p.GroupId+"."+p.ArtifactId)
