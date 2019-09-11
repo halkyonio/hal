@@ -24,8 +24,7 @@ type capabilityOptions struct {
 	version     string
 	paramPairs  []string
 	parameters  []halkyon.NameValuePair
-
-	name string
+	name        string
 }
 
 func (o *capabilityOptions) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -40,7 +39,7 @@ func (o *capabilityOptions) Complete(name string, cmd *cobra.Command, args []str
 	}
 
 	generated := fmt.Sprintf("%s-capability-%d", o.subCategory, time.Now().UnixNano())
-	o.name = ui.Ask("Change default name", o.name, generated)
+	o.name = ui.Ask("Name", o.name, generated)
 
 	return nil
 }
@@ -231,6 +230,7 @@ func NewCmdCapability(parent string) *cobra.Command {
 	}
 
 	capability.Flags().StringVarP(&o.category, "category", "g", "", "Capability category e.g. 'database'")
+	capability.Flags().StringVarP(&o.name, "name", "n", "", "Capability name")
 	capability.Flags().StringVarP(&o.subCategory, "type", "t", "", "Capability type e.g. 'postgres'")
 	capability.Flags().StringVarP(&o.version, "version", "v", "", "Capability version")
 	capability.Flags().StringSliceVarP(&o.paramPairs, "parameters", "p", []string{}, "Capability-specific parameters")
