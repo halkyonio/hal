@@ -1,0 +1,137 @@
+= Overview of the Odo (OpenShift Do) CLI Structure
+
+___________________
+Example application
+___________________
+
+[source,sh]
+----
+ 
+----
+
+hal v0.1.4-9-g78596d8 built with ❤️ by the Snowdrop team on 'Wed Sep 11 13:43:01 CEST 2019' (commit: 78596d8) running on top of 'oc'
+Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.
+
+[[syntax]]
+Syntax
+------
+
+
+.List of Commands
+[width="100%",cols="21%,79%",options="header",]
+|===
+| Name | Description
+
+| link:#capability[capability]
+| Create a new capability
+
+| link:#component[component]
+| Manage components
+
+| link:#link[link]
+| Link the current (or target) component to the specified capability or component
+
+| link:#version[version]
+| Displays this tool's version
+
+|===
+
+[[cli-structure]]
+CLI Structure
++++++++++++++
+
+[source,sh]
+----
+hal : Easily create Kubernetes applications
+    capability --category --name --parameters --type --version : Create a new capability
+    component : Manage components
+        mode --components --mode : Switch the component to the provided mode
+        push --components : Push a local project to the remote cluster you're connected to
+        spring-boot --artifactid --groupid --module --packagename --springbootversion --supported --template --urlservice --version : Create a Spring Boot maven project
+    link --env --name --secret --target : Link the current (or target) component to the specified capability or component
+    version : Displays this tool's version
+
+----
+
+[[capability]]
+capability
+~~~~~~~~~~
+
+[source,sh]
+----
+capability [flags]
+----
+
+_________________
+Example using capability
+_________________
+
+[source,sh]
+----
+
+----
+
+Create a new capability
+
+[[component]]
+component
+~~~~~~~~~
+
+[source,sh]
+----
+component [flags]
+----
+
+_________________
+Example using component
+_________________
+
+[source,sh]
+----
+
+----
+
+Manage components
+
+[[link]]
+link
+~~~~
+
+[source,sh]
+----
+link [flags]
+----
+
+_________________
+Example using link
+_________________
+
+[source,sh]
+----
+
+----
+
+Link the current (or target) component to the specified capability or component
+
+[[version]]
+version
+~~~~~~~
+
+[source,sh]
+----
+version
+----
+
+_________________
+Example using version
+_________________
+
+[source,sh]
+----
+
+----
+
+
+
+
+
