@@ -99,7 +99,7 @@ func (o *options) Validate() error {
 
 func (o *options) Run() error {
 	client := k8s.GetClient()
-	link, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
+	l, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      o.name,
 			Namespace: client.Namespace,
@@ -116,7 +116,7 @@ func (o *options) Run() error {
 		return err
 	}
 
-	log.Successf("Created link %s", link.Name)
+	log.Successf("Created link %s", l.Name)
 	// todo:
 	//  - read existing application.yml using viper
 	//  - merge existing and new link
@@ -128,7 +128,7 @@ func NewCmdLink(parent string) *cobra.Command {
 	o := &options{
 		kind: validation.NewEnumValue("kind", link.EnvLinkType, link.SecretLinkType),
 	}
-	link := &cobra.Command{
+	l := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Link the current (or target) component to the specified capability or component",
 		Long:  `Link the current (or target) component to the specified capability or component`,
@@ -137,12 +137,12 @@ func NewCmdLink(parent string) *cobra.Command {
 			cmdutil.GenericRun(o, cmd, args)
 		},
 	}
-	link.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
-	link.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
-	link.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
-	link.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
+	l.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
+	l.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
+	l.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
+	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
 
-	return link
+	return l
 }
 
 func (o *options) checkAndGetValidTargets() ([]string, bool, error) {
