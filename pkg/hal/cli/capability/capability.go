@@ -113,7 +113,7 @@ func (o *capabilityOptions) selectOrCheckExisting(parameterValue *string, capita
 	} else {
 		lowerCaseParameterName := strings.ToLower(capitalizedParameterName)
 		if !validator() {
-			s := ui.ErrorMessage("Unknown "+lowerCaseParameterName, *parameterValue)
+			s := ui.SelectFromOtherErrorMessage("Unknown "+lowerCaseParameterName, *parameterValue)
 			ui.Select(s, validValues)
 		} else {
 			ui.OutputSelection("Selected "+lowerCaseParameterName, *parameterValue)

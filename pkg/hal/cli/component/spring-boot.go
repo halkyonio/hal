@@ -97,7 +97,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 	// check that the given SB version yields a known BOM, if not ask the user for a supported SB version
 	bom, ok := versions[p.SpringBootVersion]
 	if !ok {
-		s := ui.ErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
+		s := ui.SelectFromOtherErrorMessage("Unknown Spring Boot version", p.SpringBootVersion)
 		p.SpringBootVersion = ui.Select(s, scaffold.GetSpringBootVersions(versions), defaultVersion)
 	} else if hasSB {
 		// if we provided an SB version and it yields a valid BOM, display it
@@ -121,7 +121,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 	if useTemplate {
 		if !isContained(p.Template, templateNames) {
 			// provided template doesn't exist, select one from available
-			p.Template = ui.Select(ui.ErrorMessage("Unknown template", p.Template), templateNames)
+			p.Template = ui.Select(ui.SelectFromOtherErrorMessage("Unknown template", p.Template), templateNames)
 		} else {
 			ui.OutputSelection("Selected template", p.Template)
 		}
@@ -151,7 +151,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 		ui.OutputSelection("Selected modules", strings.Join(valid, ","))
 
 		if len(unknown) > 0 {
-			p.Modules = ui.MultiSelect(ui.ErrorMessage("Unknown modules", strings.Join(unknown, ",")), moduleNames, valid)
+			p.Modules = ui.MultiSelect(ui.SelectFromOtherErrorMessage("Unknown modules", strings.Join(unknown, ",")), moduleNames, valid)
 		}
 	}
 

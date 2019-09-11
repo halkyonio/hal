@@ -108,6 +108,6 @@ func OutputSelection(msg, choice string) {
 	fmt.Println(ansi.Green + ansi.ColorCode("default+hb") + msg + ": " + ansi.Cyan + choice + ansi.Reset)
 }
 
-func ErrorMessage(msg, wrong string) string {
+func SelectFromOtherErrorMessage(msg, wrong string) string {
 	return fmt.Sprintf("%s%s: %s%s\nSelect other(s) from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
 }
