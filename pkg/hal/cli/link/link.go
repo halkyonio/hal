@@ -141,6 +141,7 @@ func NewCmdLink(parent string) *cobra.Command {
 		Short: "Link the current (or target) component to the specified capability or component",
 		Long:  `Link the current (or target) component to the specified capability or component`,
 		Args:  cobra.NoArgs,
+		Example: fmt.Sprintf("  # links the client-sb to the backend-sb component\n %s -n client-to-backend -t client-sb", "hal link"),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(o, cmd, args)
 		},

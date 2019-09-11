@@ -39,6 +39,7 @@ func NewCmdVersion(parentCmdName string) *cobra.Command {
 		Use:   fmt.Sprintf("%s", commandName),
 		Short: "Displays this tool's version",
 		Args:  cobra.NoArgs,
+		Example: "hal version",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(o, cmd, args)
 		},

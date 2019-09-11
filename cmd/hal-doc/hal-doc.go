@@ -17,7 +17,7 @@ func main() {
 		Example: `  # Generate a markdown-formatted CLI reference page for hal 
   hal-doc reference > cli-reference.adoc`,
 		Args:      cobra.OnlyValidArgs,
-		ValidArgs: []string{"help", "reference"},
+		ValidArgs: []string{"help", "reference", "structure"},
 
 		Run: func(command *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -26,6 +26,8 @@ func main() {
 				switch args[0] {
 				case "reference":
 					fmt.Println(referencePrinter(cli.NewCmdHal(), 0))
+				case "structure":
+                	fmt.Print(commandPrinter(cli.NewCmdHal(), 0))
 				default:
 					fmt.Print(command.Usage())
 				}

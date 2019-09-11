@@ -14,6 +14,10 @@ debug:
 	@echo "> Build hal with debugging symbols"
 	go build $(DEBUG_FLAGS) ./cmd/hal/hal.go
 
+structure:
+	@echo "> Generate hal command structure"
+	go run $(BUILD_FLAGS) ./cmd/hal-doc/hal-doc.go structure
+
 reference:
 	@echo "> Generate hal command reference"
 	go run $(BUILD_FLAGS) ./cmd/hal-doc/hal-doc.go reference >cli-reference.adoc

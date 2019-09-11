@@ -12,6 +12,7 @@ import (
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"strings"
 	"time"
 )
@@ -26,6 +27,11 @@ type capabilityOptions struct {
 	parameters  []halkyon.NameValuePair
 	name        string
 }
+
+var (
+	capabilityExample = ktemplates.Examples(`  # Create a new database capability de type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
+  %[1]s -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin`)
+)
 
 func (o *capabilityOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	o.selectOrCheckExisting(&o.category, "Category", o.getCategories(), o.isValidCategory)
@@ -224,6 +230,7 @@ func NewCmdCapability(parent string) *cobra.Command {
 		Short: "Create a new capability",
 		Long:  `Create a new capability`,
 		Args:  cobra.NoArgs,
+		Example: fmt.Sprintf(capabilityExample, "hal capability"),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(o, cmd, args)
 		},

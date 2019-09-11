@@ -1,4 +1,4 @@
-= Overview of the Odo (OpenShift Do) CLI Structure
+= Overview of the hal CLI Structure
 
 ___________________
 Example application
@@ -9,7 +9,7 @@ ___________________
  
 ----
 
-hal v0.1.4-9-g78596d8 built with ❤️ by the Snowdrop team on 'Wed Sep 11 13:43:01 CEST 2019' (commit: 78596d8) running on top of 'oc'
+hal v0.1.5-4-g1bf08ce built with ❤️ by the Snowdrop team on 'Wed Sep 11 21:48:09 CEST 2019' (commit: 1bf08ce) running on top of 'oc'
 Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.
 
 [[syntax]]
@@ -68,7 +68,8 @@ _________________
 
 [source,sh]
 ----
-
+  # Create a new database capability de type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
+  hal capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin
 ----
 
 Create a new capability
@@ -88,7 +89,22 @@ _________________
 
 [source,sh]
 ----
+  # Creates a Spring Boot maven project project using the REST HTTP client template
+  hal component spring-boot  \
+  -i client-sb \
+  -g me.myspringboot \
+  -p me.myspringboot.demo \
+  -s 2.1.6.RELEASE \
+  -t client \
+  -v 1.0.0-SNAPSHOT \
+  --supported=false  \
+  client-sb
 
+  # Deploy the components client-sb, backend-sb
+  hal component push -c client-sb,backend-sb
+
+  # Switch the component backend to the provided mode
+  hal component mode -c backend-sb -m dev
 ----
 
 Manage components
@@ -108,7 +124,8 @@ _________________
 
 [source,sh]
 ----
-
+  # links the client-sb to the backend-sb component
+ hal link -n client-to-backend -t client-sb
 ----
 
 Link the current (or target) component to the specified capability or component
@@ -128,7 +145,7 @@ _________________
 
 [source,sh]
 ----
-
+hal version
 ----
 
 

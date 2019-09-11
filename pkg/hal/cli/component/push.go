@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const pushCommandName = "push"
@@ -25,6 +26,12 @@ const pushCommandName = "push"
 type pushOptions struct {
 	*cmdutil.ComponentTargetingOptions
 }
+
+var (
+	pushExample = ktemplates.Examples(`  # Deploy the components client-sb, backend-sb
+  %[1]s -c client-sb,backend-sb`)
+)
+
 
 func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return nil
@@ -198,6 +205,7 @@ func NewCmdPush(parent string) *cobra.Command {
 		Use:   fmt.Sprintf("%s [flags]", pushCommandName),
 		Short: "Push a local project to the remote cluster you're connected to",
 		Long:  `Push a local project to the remote cluster you're connected to.`,
+		Example: fmt.Sprintf(pushExample, "hal component push"),
 		Args:  cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&pushOptions{}, push)
