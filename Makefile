@@ -8,11 +8,15 @@ DEBUG_FLAGS := -ldflags="$(VERSION_FLAGS)"
 .PHONY: build
 build:
 	@echo "> Build hal"
-	go build $(BUILD_FLAGS) ./cmd/hal.go
+	go build $(BUILD_FLAGS) ./cmd/hal/hal.go
 
 debug:
 	@echo "> Build hal with debugging symbols"
-	go build $(DEBUG_FLAGS) ./cmd/hal.go
+	go build $(DEBUG_FLAGS) ./cmd/hal/hal.go
+
+reference:
+	@echo "> Generate hal command reference"
+	go run $(BUILD_FLAGS) ./cmd/hal-doc/hal-doc.go reference >cli-reference.adoc
 
 version:
 	@echo $(VERSION)
