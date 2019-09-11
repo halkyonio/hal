@@ -140,7 +140,7 @@ func NewCmdLink(parent string) *cobra.Command {
 	l.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
 	l.Flags().StringVarP(&o.kind.Provided, "type", "k", "", "Link type. Possible values: "+o.kind.GetKnownValues())
 	l.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
-	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Additional environment variables as 'name=value' pairs")
+	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Environment variables as 'name=value' pairs")
 
 	return l
 }
