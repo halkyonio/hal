@@ -2,6 +2,7 @@ package component
 
 import (
 	"bufio"
+	"crypto/sha1"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -9,7 +10,6 @@ import (
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
-	"hash/crc64"
 	"io"
 	"io/ioutil"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,7 +74,7 @@ func (o *pushOptions) Run() error {
 		return err
 	}
 	input := bufio.NewReader(file)
-	hash := crc64.New(crc64.MakeTable(crc64.ECMA))
+	hash := sha1.New()
 	if _, err := io.Copy(hash, input); err != nil {
 		return err
 	}
