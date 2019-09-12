@@ -36,16 +36,16 @@ var (
            client-sb`)
 )
 
-func NewCmdProject(parent string) *cobra.Command {
+func NewCmdProject(parent, fullNameParent string) *cobra.Command {
 	p := &project{}
-
+    fullName := fullNameParent + " " + projectCommandName
 	currentDir, _ := os.Getwd()
 	createCmd := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", projectCommandName, currentDir),
 		Short: "Create a Spring Boot maven project",
 		Long:  `Create a Spring Boot maven project.`,
 		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(projectExample, "hal component spring-boot"),
+		Example: fmt.Sprintf(projectExample, fullName),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(p, cmd, args)
 		},

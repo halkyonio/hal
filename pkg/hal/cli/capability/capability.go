@@ -225,12 +225,13 @@ func (o *capabilityOptions) addValueFor(prop parameterInfo) {
 
 func NewCmdCapability(parent string) *cobra.Command {
 	o := &capabilityOptions{}
+	fullNameCmd := parent + " " + capabilityCommandName
 	capability := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", capabilityCommandName),
 		Short: "Create a new capability",
 		Long:  `Create a new capability`,
 		Args:  cobra.NoArgs,
-		Example: fmt.Sprintf(capabilityExample, "hal capability"),
+		Example: fmt.Sprintf(capabilityExample, fullNameCmd),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(o, cmd, args)
 		},

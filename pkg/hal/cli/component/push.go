@@ -200,12 +200,13 @@ func (o *pushOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOpt
 	o.ComponentTargetingOptions = options
 }
 
-func NewCmdPush(parent string) *cobra.Command {
+func NewCmdPush(parent, fullNameParent string) *cobra.Command {
+    fullName := fullNameParent + " " + pushCommandName
 	push := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", pushCommandName),
 		Short: "Push a local project to the remote cluster you're connected to",
 		Long:  `Push a local project to the remote cluster you're connected to.`,
-		Example: fmt.Sprintf(pushExample, "hal component push"),
+		Example: fmt.Sprintf(pushExample, fullName),
 		Args:  cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&pushOptions{}, push)

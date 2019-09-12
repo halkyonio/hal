@@ -10,9 +10,10 @@ const commandName = "component"
 
 
 func NewCmdComponent(parent string) *cobra.Command {
-    project := NewCmdProject(commandName)
-    push := NewCmdPush(commandName)
-    mode := NewCmdMode(commandName)
+    fullName := parent + " " + commandName
+    project := NewCmdProject(commandName, fullName)
+    push := NewCmdPush(commandName, fullName)
+    mode := NewCmdMode(commandName, fullName)
 
 
 	hal := &cobra.Command{

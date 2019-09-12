@@ -9,7 +9,7 @@ ___________________
  
 ----
 
-hal v0.1.5-4-g1bf08ce built with ❤️ by the Snowdrop team on 'Wed Sep 11 21:48:09 CEST 2019' (commit: 1bf08ce) running on top of 'oc'
+hal v0.1.5-6-gae39d85 built with ❤️ by the Snowdrop team on 'Thu Sep 12 12:46:12 CEST 2019' (commit: ae39d85) running on top of 'oc'
 Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.
 
 [[syntax]]
@@ -69,7 +69,7 @@ _________________
 [source,sh]
 ----
   # Create a new database capability de type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
-  hal capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin
+  hal capability -n db-capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin
 ----
 
 Create a new capability
