@@ -15,10 +15,10 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record/util"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"os"
 	"path/filepath"
 	"strings"
-	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const pushCommandName = "push"
@@ -31,7 +31,6 @@ var (
 	pushExample = ktemplates.Examples(`  # Deploy the components client-sb, backend-sb
   %[1]s -c client-sb,backend-sb`)
 )
-
 
 func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return nil
@@ -200,14 +199,13 @@ func (o *pushOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOpt
 	o.ComponentTargetingOptions = options
 }
 
-func NewCmdPush(parent, fullNameParent string) *cobra.Command {
-    fullName := fullNameParent + " " + pushCommandName
+func NewCmdPush(fullParentName string) *cobra.Command {
 	push := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags]", pushCommandName),
-		Short: "Push a local project to the remote cluster you're connected to",
-		Long:  `Push a local project to the remote cluster you're connected to.`,
-		Example: fmt.Sprintf(pushExample, fullName),
-		Args:  cobra.NoArgs,
+		Use:     fmt.Sprintf("%s [flags]", pushCommandName),
+		Short:   "Push a local project to the remote cluster you're connected to",
+		Long:    `Push a local project to the remote cluster you're connected to.`,
+		Example: fmt.Sprintf(pushExample, cmdutil.CommandName(pushCommandName, fullParentName)),
+		Args:    cobra.NoArgs,
 	}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&pushOptions{}, push)
 	return push

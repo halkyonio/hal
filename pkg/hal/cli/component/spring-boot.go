@@ -9,12 +9,12 @@ import (
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
 	"io/ioutil"
+	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const (
@@ -36,16 +36,15 @@ var (
            client-sb`)
 )
 
-func NewCmdProject(parent, fullNameParent string) *cobra.Command {
+func NewCmdProject(fullParentName string) *cobra.Command {
 	p := &project{}
-    fullName := fullNameParent + " " + projectCommandName
 	currentDir, _ := os.Getwd()
 	createCmd := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", projectCommandName, currentDir),
-		Short: "Create a Spring Boot maven project",
-		Long:  `Create a Spring Boot maven project.`,
-		Args:  cobra.ExactArgs(1),
-		Example: fmt.Sprintf(projectExample, fullName),
+		Use:     fmt.Sprintf("%s [flags] <project location (immediate child directory of %s)>", projectCommandName, currentDir),
+		Short:   "Create a Spring Boot maven project",
+		Long:    `Create a Spring Boot maven project.`,
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf(projectExample, cmdutil.CommandName(projectCommandName, fullParentName)),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(p, cmd, args)
 		},

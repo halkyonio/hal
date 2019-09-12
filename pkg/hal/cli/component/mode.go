@@ -50,16 +50,15 @@ func (o *modeOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOpt
 	o.ComponentTargetingOptions = options
 }
 
-func NewCmdMode(parent, fullNameParent string) *cobra.Command {
+func NewCmdMode(fullParentName string) *cobra.Command {
 	o := &modeOptions{
 		mode: validation.NewEnumValue("mode", component.DevDeploymentMode, component.BuildDeploymentMode),
 	}
-	fullName := fullNameParent + " " + modeCommandName
 	mode := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", modeCommandName),
 		Short:   "Switch the component to the provided mode",
 		Long:    `Switch the component to the provided mode.`,
-		Example: fmt.Sprintf(modeExample, fullName),
+		Example: fmt.Sprintf(modeExample, cmdutil.CommandName(modeCommandName, fullParentName)),
 		Aliases: []string{"switch"},
 		Args:    cobra.NoArgs,
 	}

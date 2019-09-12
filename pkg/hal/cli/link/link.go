@@ -136,13 +136,12 @@ func (o *options) Run() error {
 
 func NewCmdLink(parent string) *cobra.Command {
 	o := &options{}
-	fullNameCmd := parent + " " + commandName
 	l := &cobra.Command{
-		Use:   fmt.Sprintf("%s [flags]", commandName),
-		Short: "Link the current (or target) component to the specified capability or component",
-		Long:  `Link the current (or target) component to the specified capability or component`,
-		Args:  cobra.NoArgs,
-		Example: fmt.Sprintf("  # links the client-sb to the backend-sb component\n %s -n client-to-backend -t client-sb", fullNameCmd),
+		Use:     fmt.Sprintf("%s [flags]", commandName),
+		Short:   "Link the current (or target) component to the specified capability or component",
+		Long:    `Link the current (or target) component to the specified capability or component`,
+		Args:    cobra.NoArgs,
+		Example: fmt.Sprintf("  # links the client-sb to the backend-sb component\n %s -n client-to-backend -t client-sb", cmdutil.CommandName(commandName, parent)),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutil.GenericRun(o, cmd, args)
 		},
