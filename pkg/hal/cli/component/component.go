@@ -14,13 +14,15 @@ func NewCmdComponent(parent string) *cobra.Command {
 	push := NewCmdPush(fullName)
 	mode := NewCmdMode(fullName)
 	create := NewCmdCreate(fullName)
+	del := NewCmdDelete(fullName)
 
 	hal := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Manage components",
 		Long:  `Manage components`,
-		Example: fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s",
+		Example: fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n\n%s",
 			create.Example,
+			del.Example,
 			project.Example,
 			push.Example,
 			mode.Example),
@@ -28,6 +30,7 @@ func NewCmdComponent(parent string) *cobra.Command {
 
 	hal.AddCommand(
 		create,
+		del,
 		project,
 		push,
 		mode,
