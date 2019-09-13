@@ -1,15 +1,27 @@
 # hal
 
+## Table of Contents
+- [Overview](#overview)
+- [Key features](#key-features)
+- [Building hal](#building-hal)
+- [Downloading a snapshot](#downloading-a-snapshot)
+- [Deploying a component using `hal`](#deploying-a-component-using-hal)
+  * [1 Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
+  * [2 Deploy the Component](#2-deploy-the-component)
+  * [3 Connect to the rest services](#3-connect-to-the-rest-services)
+- [Demonstration](#demonstration)
+- [Additional documentation](additional-documentation)
+
 ## Overview
-`hal` is a CLI tool for developers to create and manage Spring Boot applications. Simplify the deployment of applications on OpenShift and Kubernetes using Dekorate and Halkyon Component Operator. Made with ❤️ by the Snowdrop team.
+Hal is a CLI tool for developers to simplify the deployment of applications such as Spring Boot on OpenShift and Kubernetes using Dekorate and Halkyon Component Operator. Made with ❤️ by the Snowdrop team.
 
 [![CircleCI](https://circleci.com/gh/halkyonio/hal.svg?style=svg)](https://circleci.com/gh/halkyonio/hal)
 
 ## Key features
 `hal` is capable of doing the following tasks
 - Scaffold Spring Boot applications
-- Deploy Spring Boot applications as components
-- Switch the component between `dev` and `build` modes
+- Deploy Microservices applications as Components
+- Switch the component from the `dev` to the `build` mode
 - Compose & link microservices
 
 ## Building hal
@@ -27,12 +39,12 @@ that succeeded! 😁)
 After installing `hal`, the following steps allows to create and deploy a project to a cluster.
 **Note**: this assumes that you are connected to a Halkyon-enabled OpenShift/Kubernetes cluster.
 
-###1 Scaffold the Spring Boot applications 
+### 1 Scaffold the Spring Boot applications 
 
  - Create a development folder on your laptop
 `mkdir haldemo && cd haldemo`
 
-Create a new project using the REST HTTP `rest` template proposed by the scaffolding tool:
+Create a new project using the HTTP `rest` template proposed by the scaffolding tool:
 
 ```
 hal component spring-boot \
@@ -46,9 +58,9 @@ hal component spring-boot \
     hello-world
 ```
 
-###2 Deploy the Component
+### 2 Deploy the Component
 
-A component represents a micro-service, i.e. part of an application to be deployed. The Component custom resource provides a simpler to fathom abstraction over what's actually required at the Kubernetes level to deploy and optionally expose the micro-service outside of the cluster. In fact, when a component is deployed to a [Halkyon](https://github.com/halkyonio)-enabled cluster, the [Halkyon operator](https://github.com/halkyonio/operator) will create these OpenShift/Kubernetes resources.
+A component represents a micro-service, i.e. part of an application to be deployed. The Component custom resource provides a simpler to fathom abstraction over what's actually required at the Kubernetes level to deploy and optionally expose the micro-service outside of the cluster. In fact, when a component is deployed to a [Halkyon](https://github.com/halkyonio)-enabled cluster, the [Halkyon operator](https://github.com/halkyonio/operator) will create these OpenShift/Kubernetes resources such as `Deployment`, `Service`, `PersistentVolumeClaim`, `Ingress` or `Route` on OpenShift if the component is exposed.
 
 `hal component push -c hello-world`
 
@@ -60,7 +72,7 @@ NAME               RUNTIME       VERSION         AGE       MODE      STATUS    M
 hello-world        spring-boot   2.1.6.RELEASE   7m17s     dev       Ready     Ready     6aadfc1a982fcd68
 ```
 
-###3 Connect to the rest services
+### 3 Connect to the rest services
 
 Try the rest service to see if it works. To do so, get the route address of the microservice using this command `oc get routes/hello-world --template={{.spec.host}}`
 Copy/paste the address displayed within the terminal in a browser and say Hello world ;-)
@@ -75,5 +87,3 @@ TO DO : put here the recording embedded
 
 Additional documentation can be found below:
 - [CLI Reference](https://github.com/halkyonio/hal/blob/master/cli-reference.adoc)
-
-
