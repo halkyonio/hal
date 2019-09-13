@@ -11,16 +11,22 @@ const (
 )
 
 func NewCmdLink(parent string) *cobra.Command {
-	create := NewCmdCreate(cmdutil.CommandName(commandName, parent))
+	fullName := cmdutil.CommandName(commandName, parent)
+	create := NewCmdCreate(fullName)
+	del := NewCmdDelete(fullName)
 	l := &cobra.Command{
-		Use:     fmt.Sprintf("%s [flags]", commandName),
-		Short:   "Manage links",
-		Long:    `Manage links`,
-		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf("%s", create.Example),
+		Use:   fmt.Sprintf("%s [flags]", commandName),
+		Short: "Manage links",
+		Long:  `Manage links`,
+		Args:  cobra.NoArgs,
+		Example: fmt.Sprintf("%s\n\n%s",
+			create.Example, del.Example),
 	}
 
-	l.AddCommand(create)
+	l.AddCommand(
+		create,
+		del,
+	)
 
 	return l
 }
