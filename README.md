@@ -21,7 +21,7 @@ Hal is a CLI tool for developers to simplify the deployment of applications such
 `hal` is capable of doing the following tasks
 - Scaffold Spring Boot applications
 - Deploy Microservices applications as Components
-- Switch the component from the `dev` to the `build` mode
+- Switch the `DeploymentMode` of the component from `Dev` to `Build` mode
 - Compose & link microservices
 
 ## Building hal
