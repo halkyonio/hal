@@ -6,10 +6,11 @@ ___________________
 
 [source,sh]
 ----
- 
+  # Displays hal help
+  hal  --help 
 ----
 
-hal v0.1.5-6-gae39d85 built with ❤️ by the Snowdrop team on 'Thu Sep 12 12:46:12 CEST 2019' (commit: ae39d85) running on top of 'oc'
+hal v0.1.5-10-g8ec1839 built with ❤️ by the Snowdrop team on 'Fri Sep 13 12:41:17 CEST 2019' (commit: 8ec1839) running on top of 'oc'
 Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.
 
 [[syntax]]
