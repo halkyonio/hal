@@ -39,7 +39,7 @@ func NewCmdCreate(fullParentName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", createCommandName),
 		Short:   "Create a new Halkyon component",
-		Long:    `Create a new Halkyon component by sending a dekorate-generated Halkyon descriptor to the remote cluster you're connected to'`,
+		Long:    `Create a new Halkyon component by sending a dekorate-generated Halkyon descriptor to the remote cluster you're connected to`,
 		Example: fmt.Sprintf(createExample, cmdutil.CommandName(createCommandName, fullParentName)),
 		Args:    cobra.NoArgs,
 	}
