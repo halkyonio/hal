@@ -6,7 +6,7 @@
 [![CircleCI](https://circleci.com/gh/halkyonio/hal.svg?style=svg)](https://circleci.com/gh/halkyonio/hal)
 
 ## Key features
-`hal` is of doing the following key features
+`hal` is capable of doing the following tasks
 - Scaffold Spring Boot applications
 - Deploy Spring Boot applications as components
 - Switch the component between `dev` and `build` modes
@@ -24,8 +24,8 @@ that succeeded! 😁)
 - Select the `Artifacts` tab and navigate the hierarchy to find the artifact you are interested in.
 
 ## Deploying a component using `hal`
-After installing `hal`, the following steps allows you to create and deploy a project to a cluster.
-**Note**: this assumes that you are connected to a OpenShift/Kubernetes cluster.
+After installing `hal`, the following steps allows to create and deploy a project to a cluster.
+**Note**: this assumes that you are connected to a Halkyon-enabled OpenShift/Kubernetes cluster.
 
 ###1 Scaffold the Spring Boot applications 
 
