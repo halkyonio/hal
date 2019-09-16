@@ -9,7 +9,9 @@ import (
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
+	k8score "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"strings"
 	"time"
 )
@@ -63,7 +65,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 			return fmt.Errorf("no valid secrets currently exist on the cluster")
 		}
 		if !valid {
-			o.secret = ui.Select("Secret", secrets)
+			o.secret = ui.Select("Secret (only potential matches shown)", secrets)
 		}
 	} else {
 		o.linkType = link.EnvLinkType
@@ -193,7 +195,9 @@ func (createOptions) extractTargetName(typeAndTarget string) string {
 
 func (o *createOptions) checkAndGetValidSecrets() ([]string, bool, error) {
 	client := k8s.GetClient()
-	secrets, err := client.KubeClient.CoreV1().Secrets(client.Namespace).List(v1.ListOptions{})
+	secrets, err := client.KubeClient.CoreV1().Secrets(client.Namespace).List(v1.ListOptions{
+		FieldSelector: fields.OneTermEqualSelector("type", string(k8score.SecretTypeOpaque)).String(),
+	})
 	if err != nil {
 		return nil, false, err
 	}
