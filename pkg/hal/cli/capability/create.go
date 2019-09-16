@@ -29,7 +29,7 @@ type createOptions struct {
 }
 
 var (
-	capabilityExample = ktemplates.Examples(`  # Create a new database capability de type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
+	capabilityExample = ktemplates.Examples(`  # Create a new database capability of type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
   %[1]s -n db-capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin`)
 )
 
