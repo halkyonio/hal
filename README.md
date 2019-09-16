@@ -18,7 +18,7 @@ Hal is a CLI tool for developers to simplify the deployment of applications such
 [![CircleCI](https://circleci.com/gh/halkyonio/hal.svg?style=svg)](https://circleci.com/gh/halkyonio/hal)
 
 ## Key features
-`hal` is capable of doing the following tasks
+`hal` is part of the [Halkyon project](https://github.com/halkyonio/operator) which aims to simplify the deployment of modern micro-services applications on Kubernetes. We encourage you to take a look to the [documentation](https://github.com/halkyonio/operator#introduction) of Halkyon in order to understand better the context of `hal`. `hal` is a tool capable of communicating with the cluster doing the following tasks
 - Scaffold Spring Boot applications
 - Deploy Microservices applications as Components
 - Switch the `DeploymentMode` of the component from `Dev` to `Build` mode
