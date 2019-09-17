@@ -17,12 +17,14 @@ type DeleteOptions struct {
 }
 
 func NewDeleteOptions(resourceType string, client HalkyonEntity) *DeleteOptions {
-	return &DeleteOptions{
-		HalkyonEntityOptions: &HalkyonEntityOptions{
-			ResourceType: resourceType,
-			Client:       client,
-		},
+	d := &DeleteOptions{}
+	d.HalkyonEntityOptions = &HalkyonEntityOptions{
+		ResourceType:  resourceType,
+		Client:        client,
+		operationName: deleteCommandName,
+		delegate:      d,
 	}
+	return d
 }
 
 func (o *DeleteOptions) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -75,15 +77,5 @@ func (o *DeleteOptions) Run() error {
 }
 
 func NewGenericDelete(fullParentName string, o *DeleteOptions) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     fmt.Sprintf("%s <name of %s to delete>", deleteCommandName, o.ResourceType),
-		Short:   fmt.Sprintf("Delete the named %s", o.ResourceType),
-		Long:    fmt.Sprintf("Delete the named %s if it exists", o.ResourceType),
-		Example: o.genericExample(deleteCommandName, fullParentName),
-		Args:    cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			GenericRun(o, cmd, args)
-		},
-	}
-	return cmd
+	return NewGenericOperation(fullParentName, o.HalkyonEntityOptions)
 }
