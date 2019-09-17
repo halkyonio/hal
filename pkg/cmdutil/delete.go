@@ -8,21 +8,22 @@ import (
 	"halkyon.io/hal/pkg/ui"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record/util"
-	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
 
 const deleteCommandName = "delete"
 
 type DeleteOptions struct {
-	ResourceType string
-	Name         string
-	Client       HalkyonEntity
+	*HalkyonEntityOptions
 }
 
-var (
-	Example = ktemplates.Examples(`  # Delete the %[2]s named 'foo'
-  %[1]s foo`)
-)
+func NewDeleteOptions(resourceType string, client HalkyonEntity) *DeleteOptions {
+	return &DeleteOptions{
+		HalkyonEntityOptions: &HalkyonEntityOptions{
+			ResourceType: resourceType,
+			Client:       client,
+		},
+	}
+}
 
 func (o *DeleteOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
@@ -78,7 +79,7 @@ func NewGenericDelete(fullParentName string, o *DeleteOptions) *cobra.Command {
 		Use:     fmt.Sprintf("%s <name of %s to delete>", deleteCommandName, o.ResourceType),
 		Short:   fmt.Sprintf("Delete the named %s", o.ResourceType),
 		Long:    fmt.Sprintf("Delete the named %s if it exists", o.ResourceType),
-		Example: fmt.Sprintf(Example, CommandName(deleteCommandName, fullParentName), o.ResourceType),
+		Example: o.genericExample(deleteCommandName, fullParentName),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			GenericRun(o, cmd, args)

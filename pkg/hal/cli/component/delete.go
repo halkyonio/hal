@@ -8,12 +8,9 @@ import (
 
 func NewCmdDelete(fullParentName string) *cobra.Command {
 	c := k8s.GetClient()
-	generic := &cmdutil.DeleteOptions{
-		ResourceType: "component",
-		Client: client{
-			client: c.HalkyonComponentClient.Components(c.Namespace),
-			ns:     c.Namespace,
-		},
-	}
+	generic := cmdutil.NewDeleteOptions("component", client{
+		client: c.HalkyonComponentClient.Components(c.Namespace),
+		ns:     c.Namespace,
+	})
 	return cmdutil.NewGenericDelete(fullParentName, generic)
 }
