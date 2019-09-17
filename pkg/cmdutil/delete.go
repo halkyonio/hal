@@ -19,13 +19,6 @@ type DeleteOptions struct {
 	Client       HalkyonEntity
 }
 
-type HalkyonEntity interface {
-	Get(string, v1.GetOptions) error
-	Delete(string, *v1.DeleteOptions) error
-	GetKnown() []string
-	GetNamespace() string
-}
-
 var (
 	Example = ktemplates.Examples(`  # Delete the %[2]s named 'foo'
   %[1]s foo`)
