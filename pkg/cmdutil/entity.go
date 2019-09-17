@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type HalkyonEntityOptions struct {
+type GenericOperationOptions struct {
 	ResourceType  string
 	Name          string
 	Client        HalkyonEntity
@@ -16,37 +16,37 @@ type HalkyonEntityOptions struct {
 	delegate      Runnable
 }
 
-func (o *HalkyonEntityOptions) Complete(name string, cmd *cobra.Command, args []string) error {
+func (o *GenericOperationOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	return o.delegate.Complete(name, cmd, args)
 }
 
-func (o *HalkyonEntityOptions) Validate() error {
+func (o *GenericOperationOptions) Validate() error {
 	return o.delegate.Validate()
 }
 
-func (o *HalkyonEntityOptions) Run() error {
+func (o *GenericOperationOptions) Run() error {
 	return o.delegate.Run()
 }
 
-func (o *HalkyonEntityOptions) genericExample(fullParentName string) string {
+func (o *GenericOperationOptions) example(fullParentName string) string {
 	tmpl := ktemplates.Examples(`  # %[1]s the %[2]s named 'foo'
   %[3]s foo`)
 	return fmt.Sprintf(tmpl, strings.Title(o.operationName), o.ResourceType, CommandName(o.operationName, fullParentName))
 }
 
-func (o *HalkyonEntityOptions) genericUse() string {
+func (o *GenericOperationOptions) use() string {
 	return fmt.Sprintf("%s <name of the %s to %s>", o.operationName, o.ResourceType, o.operationName)
 }
 
-func (o *HalkyonEntityOptions) genericShort() string {
+func (o *GenericOperationOptions) short() string {
 	return fmt.Sprintf("%s the named %s", strings.Title(o.operationName), o.ResourceType)
 }
 
-func NewGenericOperation(fullParentName string, o *HalkyonEntityOptions) *cobra.Command {
+func NewGenericOperation(fullParentName string, o *GenericOperationOptions) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     o.genericUse(),
-		Short:   o.genericUse(),
-		Example: o.genericExample(fullParentName),
+		Use:     o.use(),
+		Short:   o.short(),
+		Example: o.example(fullParentName),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			GenericRun(o, cmd, args)

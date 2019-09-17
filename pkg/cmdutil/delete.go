@@ -13,12 +13,12 @@ import (
 const deleteCommandName = "delete"
 
 type DeleteOptions struct {
-	*HalkyonEntityOptions
+	*GenericOperationOptions
 }
 
 func NewDeleteOptions(resourceType string, client HalkyonEntity) *DeleteOptions {
 	d := &DeleteOptions{}
-	d.HalkyonEntityOptions = &HalkyonEntityOptions{
+	d.GenericOperationOptions = &GenericOperationOptions{
 		ResourceType:  resourceType,
 		Client:        client,
 		operationName: deleteCommandName,
@@ -77,5 +77,5 @@ func (o *DeleteOptions) Run() error {
 }
 
 func NewGenericDelete(fullParentName string, o *DeleteOptions) *cobra.Command {
-	return NewGenericOperation(fullParentName, o.HalkyonEntityOptions)
+	return NewGenericOperation(fullParentName, o.GenericOperationOptions)
 }
