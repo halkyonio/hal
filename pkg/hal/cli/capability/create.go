@@ -122,16 +122,7 @@ func (o *createOptions) getCategories() []string {
 }
 
 func (o *createOptions) isValidCategory() bool {
-	return isValid(o.category, o.getCategories())
-}
-
-func isValid(value string, validValues []string) bool {
-	for _, v := range validValues {
-		if value == v {
-			return true
-		}
-	}
-	return false
+	return validation.IsValid(o.category, o.getCategories())
 }
 
 func (o *createOptions) getTypesFor(category string) []string {
@@ -144,7 +135,7 @@ func (o *createOptions) isValidTypeGivenCategory() bool {
 }
 
 func (o *createOptions) isValidTypeFor(category string) bool {
-	return isValid(o.subCategory, o.getTypesFor(category))
+	return validation.IsValid(o.subCategory, o.getTypesFor(category))
 }
 
 func (o *createOptions) getVersionsFor(category, subCategory string) []string {
@@ -153,7 +144,7 @@ func (o *createOptions) getVersionsFor(category, subCategory string) []string {
 }
 
 func (o *createOptions) isValidVersionFor(category, subCategory string) bool {
-	return isValid(o.version, o.getVersionsFor(category, subCategory))
+	return validation.IsValid(o.version, o.getVersionsFor(category, subCategory))
 }
 
 func (o *createOptions) isValidVersionGivenCategoryAndType() bool {
