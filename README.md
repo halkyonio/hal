@@ -98,6 +98,11 @@ kubectl get ingress/hello-world
 
 Copy/paste the address displayed within the terminal in a browser and say Hello world 😉
 
+## Demonstration
+
+The following demonstration provides an overview of `hal`:
+
+[![asciicast](https://asciinema.org/a/TuqtFWyLA3YL97NxQEpk2qwvI.png)](https://asciinema.org/a/TuqtFWyLA3YL97NxQEpk2qwvI)
 
 ## Additional documentation
 
