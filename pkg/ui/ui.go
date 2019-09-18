@@ -91,7 +91,7 @@ func Ask(message, provided string, defaultValue ...string) string {
 		input.Default = defaultValue[0]
 	}
 
-	if len(provided) > 0 {
+	if len(provided) > 0 && provided != "0" {
 		// todo: validate provided and ask if value is invalid
 		OutputSelection("Selected "+message, provided)
 		return provided
