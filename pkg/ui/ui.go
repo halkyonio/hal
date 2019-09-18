@@ -9,6 +9,7 @@ import (
 	"halkyon.io/hal/pkg/validation"
 	"os"
 	"sort"
+	"strings"
 )
 
 // HandleError handles UI-related errors, in particular useful to gracefully handle ctrl-c interrupts gracefully
@@ -123,6 +124,20 @@ func OutputError(msg string) {
 
 func SelectFromOtherErrorMessage(msg, wrong string) string {
 	return fmt.Sprintf("%s%s: %s%s\nSelect other(s) from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
+}
+
+func SelectOrCheckExisting(parameterValue *string, capitalizedParameterName string, validValues []string, validator func() bool) {
+	if len(*parameterValue) == 0 {
+		*parameterValue = Select(capitalizedParameterName, validValues)
+	} else {
+		lowerCaseParameterName := strings.ToLower(capitalizedParameterName)
+		if !validator() {
+			s := SelectFromOtherErrorMessage("Unknown "+lowerCaseParameterName, *parameterValue)
+			Select(s, validValues)
+		} else {
+			OutputSelection("Selected "+lowerCaseParameterName, *parameterValue)
+		}
+	}
 }
 
 func init() {
