@@ -29,7 +29,7 @@ jobs:
       - run:
           name: Build hal container image and publish it on quay under halkyonio org
           command: |
-            VERSION=master
+            VERSION=${CIRCLE_BRANCH}
             docker build -t hal:${VERSION} -f build/Dockerfile .
             TAG_ID=$(docker images -q hal:${VERSION})
             docker tag ${TAG_ID} quay.io/halkyonio/hal:${VERSION}
