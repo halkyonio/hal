@@ -49,9 +49,9 @@ func (o *createOptions) Build() runtime.Object {
 }
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
-	o.selectOrCheckExisting(&o.category, "Category", o.getCategories(), o.isValidCategory)
-	o.selectOrCheckExisting(&o.subCategory, "Type", o.getTypesFor(o.category), o.isValidTypeGivenCategory)
-	o.selectOrCheckExisting(&o.version, "Version", o.getVersionsFor(o.category, o.subCategory), o.isValidVersionGivenCategoryAndType)
+	ui.SelectOrCheckExisting(&o.category, "Category", o.getCategories(), o.isValidCategory)
+	ui.SelectOrCheckExisting(&o.subCategory, "Type", o.getTypesFor(o.category), o.isValidTypeGivenCategory)
+	ui.SelectOrCheckExisting(&o.version, "Version", o.getVersionsFor(o.category, o.subCategory), o.isValidVersionGivenCategoryAndType)
 
 	for _, pair := range o.paramPairs {
 		if e := o.addToParams(pair); e != nil {
@@ -100,20 +100,6 @@ type parameterInfo struct {
 
 func (p parameterInfo) AsValidatable() validation.Validatable {
 	return p.Validatable
-}
-
-func (o *createOptions) selectOrCheckExisting(parameterValue *string, capitalizedParameterName string, validValues []string, validator func() bool) {
-	if len(*parameterValue) == 0 {
-		*parameterValue = ui.Select(capitalizedParameterName, validValues)
-	} else {
-		lowerCaseParameterName := strings.ToLower(capitalizedParameterName)
-		if !validator() {
-			s := ui.SelectFromOtherErrorMessage("Unknown "+lowerCaseParameterName, *parameterValue)
-			ui.Select(s, validValues)
-		} else {
-			ui.OutputSelection("Selected "+lowerCaseParameterName, *parameterValue)
-		}
-	}
 }
 
 func (o *createOptions) getCategories() []string {
