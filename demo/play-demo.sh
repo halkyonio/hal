@@ -178,5 +178,3 @@ sleep 3
 clear && sleep 1
 echo "# curl the service within your terminal, you should get the fruits created in the previous step."|pv -qL 20
 exec curl "http://$(oc get routes/fruit-client-sb --template={{.spec.host}})/api/client"
-
-# https://asciinema.org/a/TuqtFWyLA3YL97NxQEpk2qwvI
