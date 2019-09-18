@@ -25,8 +25,8 @@ type pushOptions struct {
 }
 
 var (
-	pushExample = ktemplates.Examples(`  # Deploy the 'foo' component
-  %[1]s -c foo`)
+	pushExample = ktemplates.Examples(`  # Deploy the components client-sb, backend-sb
+  %[1]s -c client-sb,backend-sb`)
 )
 
 func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) error {
