@@ -31,6 +31,14 @@ func CheckFileExist(fileName string) bool {
 	return true
 }
 
+func IsValidDir(fileName string) bool {
+	info, err := os.Stat(fileName)
+	if os.IsNotExist(err) || !info.IsDir() {
+		return false
+	}
+	return true
+}
+
 func IsValid(value string, validValues []string) bool {
 	for _, v := range validValues {
 		if value == v {
