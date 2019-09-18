@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"strings"
 )
@@ -57,6 +58,7 @@ func NewGenericOperation(fullParentName string, o *GenericOperationOptions) *cob
 
 type HalkyonEntity interface {
 	Get(string, v1.GetOptions) error
+	Create(runtime.Object) error
 	Delete(string, *v1.DeleteOptions) error
 	GetKnown() []string
 	GetNamespace() string

@@ -7,28 +7,26 @@ import (
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
-	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	k8score "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/runtime"
 	"strings"
-	"time"
 )
 
 const (
-	createCommandName = "create"
-	targetSeparator   = ": "
+	targetSeparator = ": "
 )
 
 type createOptions struct {
 	targetName string
 	secret     string
-	name       string
 	envPairs   []string
 	envs       []halkyon.NameValuePair
 	linkType   link.LinkType
+	*cmdutil.CreateOptions
 }
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -95,21 +93,19 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		}
 	}
 
-	generated := fmt.Sprintf("%s-link-%d", o.targetName, time.Now().UnixNano())
-
 	client := k8s.GetClient()
 	links := client.HalkyonLinkClient.Links(client.Namespace)
 	for {
-		o.name = ui.Ask("Name", o.name, generated)
-		_, err := links.Get(o.name, v1.GetOptions{})
+		o.Name = ui.Ask("Name", o.Name, o.GeneratePrefix())
+		_, err := links.Get(o.Name, v1.GetOptions{})
 		if err != nil {
 			if errors.IsNotFound(err) {
 				break // link was not found which is what we want
 			}
 			return err
 		} else {
-			ui.OutputError(fmt.Sprintf("A link named '%s' already exist, please choose a different name", o.name))
-			o.name = "" // reset name and try again!
+			ui.OutputError(fmt.Sprintf("A link named '%s' already exist, please choose a different name", o.Name))
+			o.Name = "" // reset name and try again!
 		}
 	}
 
@@ -128,16 +124,11 @@ func (o *createOptions) addToEnv(pair string) (halkyon.NameValuePair, error) {
 	return env, nil
 }
 
-func (o *createOptions) Validate() error {
-	return nil
-}
-
-func (o *createOptions) Run() error {
-	client := k8s.GetClient()
-	l, err := client.HalkyonLinkClient.Links(client.Namespace).Create(&link.Link{
+func (o *createOptions) Build() runtime.Object {
+	return &link.Link{
 		ObjectMeta: v1.ObjectMeta{
-			Name:      o.name,
-			Namespace: client.Namespace,
+			Name:      o.Name,
+			Namespace: o.CreateOptions.Client.GetNamespace(),
 		},
 		Spec: link.LinkSpec{
 			ComponentName: o.targetName,
@@ -145,34 +136,27 @@ func (o *createOptions) Run() error {
 			Ref:           o.secret,
 			Envs:          o.envs,
 		},
-	})
-
-	if err != nil {
-		return err
 	}
+}
 
-	log.Successf("Successfully created '%s' link", l.Name)
-	// todo:
-	//  - read existing application.yml using viper
-	//  - merge existing and new link
-	//  - write updated application.yml
-	return nil
+func (o *createOptions) GeneratePrefix() string {
+	return o.targetName
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
+	c := k8s.GetClient()
 	o := &createOptions{}
-	l := &cobra.Command{
-		Use:     fmt.Sprintf("%s [flags]", createCommandName),
-		Short:   "Link the current (or target) component to the specified capability or component",
-		Long:    `Link the current (or target) component to the specified capability or component`,
-		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf("  # links the client-sb to the backend-sb component\n %s -n client-to-backend -t client-sb", cmdutil.CommandName(createCommandName, parent)),
-		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.GenericRun(o, cmd, args)
-		},
-	}
+	generic := cmdutil.NewCreateOptions("link", client{
+		client: c.HalkyonLinkClient.Links(c.Namespace),
+		ns:     c.Namespace,
+	})
+	generic.Delegate = o
+	o.CreateOptions = generic
+	l := cmdutil.NewGenericCreate(parent, generic)
+	l.Long = `Link the current (or target) component to the specified capability or component`
+	l.Example = fmt.Sprintf("  # links the client-sb to the backend-sb component\n %s -n client-to-backend -t client-sb", cmdutil.CommandName(l.Name(), parent))
+
 	l.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
-	l.Flags().StringVarP(&o.name, "name", "n", "", "Link name")
 	l.Flags().StringVarP(&o.secret, "secret", "s", "", "Secret name to reference if using Secret type")
 	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Environment variables as 'name=value' pairs")
 

@@ -7,16 +7,13 @@ import (
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
-	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"strings"
-	"time"
 )
-
-const createCommandeName = "create"
 
 type createOptions struct {
 	category    string
@@ -24,13 +21,32 @@ type createOptions struct {
 	version     string
 	paramPairs  []string
 	parameters  []halkyon.NameValuePair
-	name        string
+	*cmdutil.CreateOptions
 }
 
 var (
 	capabilityExample = ktemplates.Examples(`  # Create a new database capability of type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
   %[1]s -n db-capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin`)
 )
+
+func (o *createOptions) GeneratePrefix() string {
+	return o.subCategory
+}
+
+func (o *createOptions) Build() runtime.Object {
+	return &v1beta1.Capability{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      o.Name,
+			Namespace: o.CreateOptions.Client.GetNamespace(),
+		},
+		Spec: v1beta1.CapabilitySpec{
+			Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
+			Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
+			Version:    o.version,
+			Parameters: o.parameters,
+		},
+	}
+}
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	o.selectOrCheckExisting(&o.category, "Category", o.getCategories(), o.isValidCategory)
@@ -42,9 +58,6 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 			return e
 		}
 	}
-
-	generated := fmt.Sprintf("%s-capability-%d", o.subCategory, time.Now().UnixNano())
-	o.name = ui.Ask("Name", o.name, generated)
 
 	return nil
 }
@@ -87,30 +100,6 @@ type parameterInfo struct {
 
 func (p parameterInfo) AsValidatable() validation.Validatable {
 	return p.Validatable
-}
-
-func (o *createOptions) Run() error {
-	client := k8s.GetClient()
-	c, err := client.HalkyonCapabilityClient.Capabilities(client.Namespace).Create(&v1beta1.Capability{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      o.name,
-			Namespace: client.Namespace,
-		},
-		Spec: v1beta1.CapabilitySpec{
-			Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
-			Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
-			Version:    o.version,
-			Parameters: o.parameters,
-		},
-	})
-
-	if err != nil {
-		return err
-	}
-
-	log.Successf("Created capability %s", c.Name)
-
-	return nil
 }
 
 func (o *createOptions) selectOrCheckExisting(parameterValue *string, capitalizedParameterName string, validValues []string, validator func() bool) {
@@ -227,20 +216,18 @@ func (o *createOptions) addValueFor(prop parameterInfo) {
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
+	c := k8s.GetClient()
 	o := &createOptions{}
-	capability := &cobra.Command{
-		Use:     fmt.Sprintf("%s [flags]", createCommandeName),
-		Short:   "Create a new capability",
-		Long:    `Create a new capability`,
-		Args:    cobra.NoArgs,
-		Example: fmt.Sprintf(capabilityExample, cmdutil.CommandName(createCommandeName, parent)),
-		Run: func(cmd *cobra.Command, args []string) {
-			cmdutil.GenericRun(o, cmd, args)
-		},
-	}
+	generic := cmdutil.NewCreateOptions("capability", client{
+		client: c.HalkyonCapabilityClient.Capabilities(c.Namespace),
+		ns:     c.Namespace,
+	})
+	generic.Delegate = o
+	o.CreateOptions = generic
+	capability := cmdutil.NewGenericCreate(parent, generic)
+	capability.Example = fmt.Sprintf(capabilityExample, cmdutil.CommandName(capability.Name(), parent))
 
 	capability.Flags().StringVarP(&o.category, "category", "g", "", "Capability category e.g. 'database'")
-	capability.Flags().StringVarP(&o.name, "name", "n", "", "Capability name")
 	capability.Flags().StringVarP(&o.subCategory, "type", "t", "", "Capability type e.g. 'postgres'")
 	capability.Flags().StringVarP(&o.version, "version", "v", "", "Capability version")
 	capability.Flags().StringSliceVarP(&o.paramPairs, "parameters", "p", []string{}, "Capability-specific parameters")
