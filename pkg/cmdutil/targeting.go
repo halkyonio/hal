@@ -42,6 +42,15 @@ type targetComponent struct {
 func initTargetComponent(path string) (tc targetComponent, err error) {
 	// check that we have an halkyon descriptor
 	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
+	tc.name = filepath.Base(path)
+	tc.path = path
+	tc.descriptor = descriptor
+	return tc, nil
+}
+
+func initTargetComponentFromDekorate(path string) (tc targetComponent, err error) {
+	// check that we have an halkyon descriptor
+	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
 	if !validation.CheckFileExist(descriptor) {
 		return tc, fmt.Errorf("halkyon descriptor was not found at %s", descriptor)
 	}
@@ -119,7 +128,7 @@ func (o *ComponentTargetingOptions) Complete(name string, cmd *cobra.Command, ar
 		o.targets = make([]targetComponent, 0, targetNb)
 		for _, path := range o.paths {
 			path = filepath.Join(currentDir, path)
-			if !validation.CheckFileExist(path) {
+			if !validation.IsValidDir(path) {
 				return fmt.Errorf("%s doesn't exist", path)
 			}
 			// set current target

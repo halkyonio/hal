@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/mholt/archiver"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
@@ -12,10 +13,9 @@ import (
 	"halkyon.io/hal/pkg/log"
 	"io"
 	"io/ioutil"
-	k8score "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/record/util"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"os"
 	"path/filepath"
@@ -25,8 +25,13 @@ import (
 const pushCommandName = "push"
 
 type pushOptions struct {
-	*commonOptions
-	binary bool
+	*cmdutil.ComponentTargetingOptions
+	component *component.Component
+	binary    bool
+}
+
+func (o *pushOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
+	o.ComponentTargetingOptions = options
 }
 
 var (
@@ -44,17 +49,22 @@ func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) e
 	return nil
 }
 
-func (o *pushOptions) Validate() error {
+func (o *pushOptions) Validate() (err error) {
+	c := k8s.GetClient()
+	name := o.GetTargetedComponentName()
+	o.component, err = c.HalkyonComponentClient.Components(c.Namespace).Get(name, v1.GetOptions{})
+	if err != nil {
+		// check error to see if it means that the component doesn't exist yet
+		if util.IsKeyNotFoundError(errors.Cause(err)) {
+			return fmt.Errorf("no component named '%s' exists, please create it first", name)
+		} else {
+			return err
+		}
+	}
 	return nil
 }
 
 func (o *pushOptions) Run() error {
-	comp, err := o.createIfNeeded()
-	if err != nil {
-		return err
-	}
-	name := comp.Name
-
 	// check if the component revision is different
 	binaryPath, err := o.getComponentBinaryPath()
 	if err != nil {
@@ -92,17 +102,17 @@ func (o *pushOptions) Run() error {
 		return err
 	}
 	revision := fmt.Sprintf("%x", hash.Sum(nil))
-	if !o.needsPush(revision, comp) {
-		log.Infof("No local changes detected for '%s' component: nothing to push!", name)
+	if !o.needsPush(revision, o.component) {
+		log.Infof("No local changes detected for '%s' component: nothing to push!", o.component.Name)
 		return nil
 	}
 	pushType := "source code"
 	if o.binary {
 		pushType = "packaged binary"
 	}
-	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", name, pushType)
+	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", o.component.Name, pushType)
 
-	err = o.push(comp)
+	err = o.push(o.component)
 	if err != nil {
 		return err
 	}
@@ -110,7 +120,7 @@ func (o *pushOptions) Run() error {
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
 	c := k8s.GetClient()
-	_, err = c.HalkyonComponentClient.Components(c.Namespace).Patch(name, types.MergePatchType, []byte(patch))
+	_, err = c.HalkyonComponentClient.Components(c.Namespace).Patch(o.component.Name, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -188,6 +198,33 @@ func (o *pushOptions) getComponentBinaryPath() (string, error) {
 	return "no jar file found in " + target, nil
 }
 
+func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Component, error) {
+	if component.ComponentReady == c.Status.Phase || component.ComponentRunning == c.Status.Phase {
+		return c, nil
+	}
+
+	name := o.GetTargetedComponentName()
+	client := k8s.GetClient()
+	cp, err := client.WaitForComponent(name, component.ComponentReady, "Waiting for component "+name+" to be ready…")
+	if err != nil {
+		return nil, fmt.Errorf("error waiting for component: %v", err)
+	}
+	err = errorIfFailedOrUnknown(c)
+	if err != nil {
+		return nil, err
+	}
+	return cp, nil
+}
+
+func errorIfFailedOrUnknown(c *component.Component) error {
+	switch c.Status.Phase {
+	case component.ComponentFailed, component.ComponentUnknown:
+		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Phase, c.Status.Message)
+	default:
+		return nil
+	}
+}
+
 func NewCmdPush(fullParentName string) *cobra.Command {
 	push := &cobra.Command{
 		Use:     fmt.Sprintf("%s [flags]", pushCommandName),
@@ -196,26 +233,8 @@ func NewCmdPush(fullParentName string) *cobra.Command {
 		Example: fmt.Sprintf(pushExample, cmdutil.CommandName(pushCommandName, fullParentName)),
 		Args:    cobra.NoArgs,
 	}
-	options := pushOptions{commonOptions: &commonOptions{}}
+	options := pushOptions{}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options, push)
 	push.Flags().BoolVarP(&options.binary, "binary", "b", false, "Push packaged binary instead of source code")
 	return push
-}
-
-func fetchPod(instance *component.Component) (*k8score.Pod, error) {
-	client := k8s.GetClient()
-	pods, err := client.KubeClient.CoreV1().Pods(instance.Namespace).List(v1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": instance.Name}).String(),
-	})
-	if err != nil {
-		return nil, err
-	} else {
-		// We assume that there is only one Pod containing the label app=component name AND we return it
-		if len(pods.Items) > 0 {
-			return &pods.Items[0], nil
-		} else {
-			err := fmt.Errorf("failed to get pod created for the component")
-			return nil, err
-		}
-	}
 }
