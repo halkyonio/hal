@@ -2,12 +2,19 @@ package link
 
 import (
 	"halkyon.io/api/link/clientset/versioned/typed/link/v1beta1"
+	v1beta12 "halkyon.io/api/link/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type client struct {
 	client v1beta1.LinkInterface
 	ns     string
+}
+
+func (lc client) Create(toCreate runtime.Object) error {
+	_, err := lc.client.Create(toCreate.(*v1beta12.Link))
+	return err
 }
 
 func (lc client) Get(name string, options v1.GetOptions) error {
