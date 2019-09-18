@@ -30,3 +30,12 @@ func CheckFileExist(fileName string) bool {
 	}
 	return true
 }
+
+func IsValid(value string, validValues []string) bool {
+	for _, v := range validValues {
+		if value == v {
+			return true
+		}
+	}
+	return false
+}
