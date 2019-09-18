@@ -56,8 +56,12 @@ func (o *CreateOptions) Validate() error {
 	}
 
 	err := o.Client.Get(o.Name, v1.GetOptions{})
-	if err != nil && !util.IsKeyNotFoundError(errors.Cause(err)) {
-		return err
+	if err != nil {
+		if util.IsKeyNotFoundError(errors.Cause(err)) {
+			return nil
+		} else {
+			return err
+		}
 	}
 	return fmt.Errorf("a %s named '%s' already exists, please select another name", o.ResourceType, o.Name)
 }
