@@ -42,7 +42,7 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 		return err
 	}
 	if len(args) == 0 {
-		o.Name = ui.Ask("Change default name", o.Name, o.generateName())
+		o.Name = ui.Ask("Name", o.Name, o.generateName())
 	} else {
 		o.Name = args[0]
 	}
