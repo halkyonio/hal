@@ -73,9 +73,16 @@ func (o *pushOptions) Run() error {
 				}
 			}
 
+			// create tar file
 			tar := archiver.NewTar()
 			tar.OverwriteExisting = true
 			if err := tar.Archive(toTar, binaryPath); err != nil {
+				return err
+			}
+
+			// re-open file
+			file, err = os.Open(binaryPath)
+			if err != nil {
 				return err
 			}
 		} else {
