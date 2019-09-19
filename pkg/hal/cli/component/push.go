@@ -33,6 +33,7 @@ var (
 		"target":    true,
 		".git":      true,
 		".DS_Store": true,
+		".idea":     true,
 	}
 )
 
@@ -56,38 +57,31 @@ func (o *pushOptions) Run() error {
 	if err != nil {
 		return fmt.Errorf("couldn't find binary to push: %s", binaryPath)
 	}
-	file, err := os.Open(binaryPath)
-	if err != nil {
-		if o.source && os.IsNotExist(err) {
-			// generate tar
-			// naively exclude target from files to be tarred
-			children, err := ioutil.ReadDir(o.GetTargetedComponentPath())
-			toTar := make([]string, 0, len(children))
-			if err != nil {
-				return err
-			}
-			for _, child := range children {
-				name := child.Name()
-				if !excludedFileNames[name] {
-					toTar = append(toTar, filepath.Join(o.GetTargetedComponentName(), name))
-				}
-			}
-
-			// create tar file
-			tar := archiver.NewTar()
-			tar.OverwriteExisting = true
-			if err := tar.Archive(toTar, binaryPath); err != nil {
-				return err
-			}
-
-			// re-open file
-			file, err = os.Open(binaryPath)
-			if err != nil {
-				return err
-			}
-		} else {
+	if o.source {
+		// generate tar
+		// naively exclude target from files to be tarred
+		children, err := ioutil.ReadDir(o.GetTargetedComponentPath())
+		toTar := make([]string, 0, len(children))
+		if err != nil {
 			return err
 		}
+		for _, child := range children {
+			name := child.Name()
+			if !excludedFileNames[name] {
+				toTar = append(toTar, filepath.Join(o.GetTargetedComponentName(), name))
+			}
+		}
+
+		// create tar file
+		tar := archiver.NewTar()
+		tar.OverwriteExisting = true
+		if err := tar.Archive(toTar, binaryPath); err != nil {
+			return err
+		}
+	}
+	file, err := os.Open(binaryPath)
+	if err != nil {
+		return err
 	}
 	input := bufio.NewReader(file)
 	hash := sha1.New()
