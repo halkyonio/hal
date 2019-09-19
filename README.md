@@ -13,7 +13,7 @@
 - [Additional documentation](additional-documentation)
 
 ## Overview
-Hal is a CLI tool for developers to simplify the deployment of applications such as Spring Boot on OpenShift and Kubernetes using Dekorate and Halkyon Component Operator. Made with ❤️ by the Snowdrop team.
+Hal is a CLI tool for developers to simplify the deployment of applications such as Spring Boot on OpenShift and Kubernetes using Dekorate and Halkyon Component Operator. Made with ❤️ by the Halkyon team.
 
 [![CircleCI](https://circleci.com/gh/halkyonio/hal.svg?style=svg)](https://circleci.com/gh/halkyonio/hal)
 
