@@ -23,7 +23,7 @@ const pushCommandName = "push"
 
 type pushOptions struct {
 	*commonOptions
-	source bool
+	binary bool
 }
 
 var (
@@ -57,7 +57,7 @@ func (o *pushOptions) Run() error {
 	if err != nil {
 		return fmt.Errorf("couldn't find binary to push: %s", binaryPath)
 	}
-	if o.source {
+	if !o.binary {
 		// generate tar
 		// naively exclude target from files to be tarred
 		children, err := ioutil.ReadDir(o.GetTargetedComponentPath())
@@ -121,6 +121,7 @@ func (o *pushOptions) needsPush(revision string, c *component.Component) bool {
 	}
 
 	podName := c.Status.PodName
+	// todo: review if we still need to call IsJarPresent (and if logic needs to change)
 	return len(podName) > 0 && !k8s.IsJarPresent(podName)
 }
 
@@ -130,7 +131,7 @@ func (o *pushOptions) push(component *component.Component) error {
 	toPush, _ := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + toPush)
 	defer s.End(false)
-	err := k8s.Copy(toPush, c.Namespace, podName, o.source)
+	err := k8s.Copy(toPush, c.Namespace, podName, !o.binary)
 	if err != nil {
 		return fmt.Errorf("error uploading file: %v", err)
 	}
@@ -148,7 +149,7 @@ func (o *pushOptions) push(component *component.Component) error {
 		}
 	}()
 
-	if o.source {
+	if !o.binary {
 		err = c.ExecCMDInContainer(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer}, pipeWriter, pipeWriter, nil, false)
 		if err != nil {
 			return err
@@ -172,7 +173,7 @@ func (o *pushOptions) push(component *component.Component) error {
 }
 
 func (o *pushOptions) getComponentBinaryPath() (string, error) {
-	if o.source {
+	if !o.binary {
 		currentDir, _ := os.Getwd()
 		return filepath.Join(currentDir, o.GetTargetedComponentName()+".tar"), nil
 	}
@@ -202,6 +203,6 @@ func NewCmdPush(fullParentName string) *cobra.Command {
 	}
 	options := pushOptions{commonOptions: &commonOptions{}}
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options, push)
-	push.Flags().BoolVarP(&options.source, "source", "s", false, "Push source code instead of packaged binary")
+	push.Flags().BoolVarP(&options.binary, "binary", "b", false, "Push packaged binary instead of source code")
 	return push
 }
