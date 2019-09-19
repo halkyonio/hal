@@ -93,6 +93,11 @@ func (o *pushOptions) Run() error {
 		log.Infof("No local changes detected for '%s' component: nothing to push!", name)
 		return nil
 	}
+	pushType := "source code"
+	if o.binary {
+		pushType = "packaged binary"
+	}
+	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", name, pushType)
 
 	// we got the component, we still need to check it's ready
 	comp, err = o.waitUntilReady(comp)
@@ -150,15 +155,21 @@ func (o *pushOptions) push(component *component.Component) error {
 	}()
 
 	if !o.binary {
+		s := log.Spinner("Extracting source on the remote cluster")
+		defer s.End(false)
 		err = c.ExecCMDInContainer(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer}, pipeWriter, pipeWriter, nil, false)
 		if err != nil {
 			return err
 		}
+		s.End(true)
 
+		s = log.Spinner("Performing build")
+		defer s.End(false)
 		err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, pipeWriter, pipeWriter, nil, false)
 		if err != nil {
 			return err
 		}
+		s.End(true)
 	}
 
 	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, pipeWriter, pipeWriter, nil, false)
@@ -169,6 +180,7 @@ func (o *pushOptions) push(component *component.Component) error {
 	if err != nil {
 		return err
 	}
+	log.Successf("Successfully pushed '%s' component to remote cluster", component.Name)
 	return nil
 }
 
