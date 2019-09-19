@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"crypto/sha1"
 	"fmt"
+	"github.com/mholt/archiver"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
+	"halkyon.io/hal/pkg/ui"
 	"io"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/types"
@@ -22,11 +24,17 @@ const pushCommandName = "push"
 
 type pushOptions struct {
 	*commonOptions
+	source bool
 }
 
 var (
 	pushExample = ktemplates.Examples(`  # Deploy the components client-sb, backend-sb
   %[1]s -c client-sb,backend-sb`)
+	excludedFileNames = map[string]bool{
+		"target":    true,
+		".git":      true,
+		".DS_Store": true,
+	}
 )
 
 func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) error {
@@ -44,6 +52,7 @@ func (o *pushOptions) Run() error {
 	}
 	name := comp.Name
 
+	ui.Proceed("foo")
 	// check if the component revision is different
 	binaryPath, err := o.getComponentBinaryPath()
 	if err != nil {
@@ -51,7 +60,29 @@ func (o *pushOptions) Run() error {
 	}
 	file, err := os.Open(binaryPath)
 	if err != nil {
-		return err
+		if o.source && os.IsNotExist(err) {
+			// generate tar
+			// naively exclude target from files to be tarred
+			children, err := ioutil.ReadDir(o.GetTargetedComponentPath())
+			toTar := make([]string, 0, len(children))
+			if err != nil {
+				return err
+			}
+			for _, child := range children {
+				name := child.Name()
+				if !excludedFileNames[name] {
+					toTar = append(toTar, filepath.Join(o.GetTargetedComponentName(), name))
+				}
+			}
+
+			tar := archiver.NewTar()
+			tar.OverwriteExisting = true
+			if err := tar.Archive(toTar, binaryPath); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 	input := bufio.NewReader(file)
 	hash := sha1.New()
@@ -97,17 +128,12 @@ func (o *pushOptions) needsPush(revision string, c *component.Component) bool {
 func (o *pushOptions) push(component *component.Component) error {
 	c := k8s.GetClient()
 	podName := component.Status.PodName
-	/*// todo: fix copy function
-	err = c.CopyFile(".", podName, "/deployments", []string{"target/" + app + "-0.0.1-SNAPSHOT.jar"}, nil)
-	if err != nil {
-		return err
-	}*/
-	jar, _ := o.getComponentBinaryPath()
-	s := log.Spinner("Uploading " + jar)
+	toPush, _ := o.getComponentBinaryPath()
+	s := log.Spinner("Uploading " + toPush)
 	defer s.End(false)
-	err := k8s.Copy(jar, c.Namespace, podName)
+	err := k8s.Copy(toPush, c.Namespace, podName, o.source)
 	if err != nil {
-		return fmt.Errorf("error uploading jar: %v", err)
+		return fmt.Errorf("error uploading file: %v", err)
 	}
 	s.End(true)
 	// use pipes to write output from ExecCMDInContainer in yellow  to 'out' io.Writer
@@ -122,11 +148,24 @@ func (o *pushOptions) push(component *component.Component) error {
 			cmdOutput += fmt.Sprintln(line)
 		}
 	}()
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run-java"}, pipeWriter, pipeWriter, nil, false)
+
+	if o.source {
+		err = c.ExecCMDInContainer(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer}, pipeWriter, pipeWriter, nil, false)
+		if err != nil {
+			return err
+		}
+
+		err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, pipeWriter, pipeWriter, nil, false)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run-java"}, pipeWriter, pipeWriter, nil, false)
+	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run"}, pipeWriter, pipeWriter, nil, false)
 	if err != nil {
 		return err
 	}
@@ -134,6 +173,11 @@ func (o *pushOptions) push(component *component.Component) error {
 }
 
 func (o *pushOptions) getComponentBinaryPath() (string, error) {
+	if o.source {
+		currentDir, _ := os.Getwd()
+		return filepath.Join(currentDir, o.GetTargetedComponentName()+".tar"), nil
+	}
+
 	target := filepath.Join(o.GetTargetedComponentPath(), "target")
 	files, err := ioutil.ReadDir(target)
 	if err != nil {
@@ -157,6 +201,8 @@ func NewCmdPush(fullParentName string) *cobra.Command {
 		Example: fmt.Sprintf(pushExample, cmdutil.CommandName(pushCommandName, fullParentName)),
 		Args:    cobra.NoArgs,
 	}
-	cmdutil.ConfigureRunnableAndCommandWithTargeting(&pushOptions{commonOptions: &commonOptions{}}, push)
+	options := pushOptions{commonOptions: &commonOptions{}}
+	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options, push)
+	push.Flags().BoolVarP(&options.source, "source", "s", false, "Push source code instead of packaged binary")
 	return push
 }
