@@ -48,5 +48,5 @@ func NewCmdVersion(parentCmdName string) *cobra.Command {
 }
 
 func Version() string {
-	return fmt.Sprintf("%s %s built with ❤️ by the Snowdrop team on '%s' (commit: %s) running on top of '%s'", parent, version, date, commit, k8s.GetK8SClientFlavor())
+	return fmt.Sprintf("%s %s built with ❤️ by the Halkyon team on '%s' (commit: %s) running on top of '%s'", parent, version, date, commit, k8s.GetK8SClientFlavor())
 }
