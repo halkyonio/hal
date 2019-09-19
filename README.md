@@ -9,8 +9,7 @@
   * [1 Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
   * [2 Deploy the Component](#2-deploy-the-component)
   * [3 Connect to the rest services](#3-connect-to-the-rest-services)
-- [Demonstration](#demonstration)
-- [Additional documentation](additional-documentation)
+- [Additional documentation](#additional-documentation)
 
 ## Overview
 Hal is a CLI tool for developers to simplify the deployment of applications such as Spring Boot on OpenShift and Kubernetes using Dekorate and Halkyon Component Operator. Made with ❤️ by the Halkyon team.
@@ -62,31 +61,42 @@ hal component spring-boot \
 
 A component represents a micro-service, i.e. part of an application to be deployed. The Component custom resource provides a simpler to fathom abstraction over what's actually required at the Kubernetes level to deploy and optionally expose the micro-service outside of the cluster. In fact, when a component is deployed to a [Halkyon](https://github.com/halkyonio)-enabled cluster, the [Halkyon operator](https://github.com/halkyonio/operator) will create these OpenShift/Kubernetes resources such as `Deployment`, `Service`, `PersistentVolumeClaim`, `Ingress` or `Route` on OpenShift if the component is exposed.
 
-- Compile and generate the `halkyon` descriptors files of the application using the following command
+- Compile and generate the `halkyon` descriptors files of the application using the following command:
 ```
 mvn package -f hello-world
 ```
 
-- Push the hello-world.jar to the hello-world component in the remote cluster you're connected to.
+- Create the `hello-world` component:
+```
+hal component create -c hello-world
+```
+
+- Push the hello-world component to the remote cluster you're connected to:
 ```
 hal component push -c hello-world
 ```
 
-- Check if the components have been correctly installed:
+- Check if the component has been correctly installed:
 ```
-oc get components
+kubectl get components
 
 NAME               RUNTIME       VERSION         AGE       MODE      STATUS    MESSAGE   REVISION
 hello-world        spring-boot   2.1.6.RELEASE   7m17s     dev       Ready     Ready     6aadfc1a982fcd68
 ```
 
-### 3 Connect to the rest services
+### 3 Connect to the REST services
 
-Try the rest service to see if it works. To do so, get the route address of the microservice using this command `oc get routes/hello-world --template={{.spec.host}}`
+If you deploy on OpenShift, get the route address of the microservice using this command: 
+```
+oc get routes/hello-world --template={{.spec.host}}
+```
 
-If you deploy on a plain Kubernetes, you can use this command `kubectl get ingress/hello-world`
+If you deploy on a plain Kubernetes, you can use this command:
+```
+kubectl get ingress/hello-world
+```
 
-Copy/paste the address displayed within the terminal in a browser and say Hello world ;-)
+Copy/paste the address displayed within the terminal in a browser and say Hello world 😉
 
 
 ## Additional documentation
