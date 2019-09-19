@@ -7,16 +7,27 @@ import (
 	"os/exec"
 )
 
-const jarPathInContainer = "/deployments/app.jar"
+const (
+	JarPathInContainer             = "/usr/src/target/"
+	SourcePathInContainer          = "/usr/component.tar"
+	ExtractedSourcePathInContainer = "/usr/src"
+)
 
 var kubectl = "kubectl"
 
-func Copy(path, namespace, destination string) error {
-	return runKubectl([]string{"cp", path, fmt.Sprintf("%s:%s", destination, jarPathInContainer), "-n", namespace}...)
+func Copy(path, namespace, destination string, source bool) error {
+	pathInContainer := JarPathInContainer
+	if source {
+		pathInContainer = SourcePathInContainer
+	}
+	if err := runKubectl([]string{"cp", path, fmt.Sprintf("%s:%s", destination, pathInContainer), "-n", namespace}...); err != nil {
+		return err
+	}
+	return nil
 }
 
 func IsJarPresent(podName string) bool {
-	return runKubectl([]string{"exec", podName, "--", "ls", jarPathInContainer}...) == nil
+	return runKubectl([]string{"exec", podName, "--", "ls", JarPathInContainer}...) == nil
 }
 
 func Apply(path, namespace string) error {
