@@ -10,7 +10,6 @@ import (
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
-	"halkyon.io/hal/pkg/ui"
 	"io"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/types"
@@ -52,7 +51,6 @@ func (o *pushOptions) Run() error {
 	}
 	name := comp.Name
 
-	ui.Proceed("foo")
 	// check if the component revision is different
 	binaryPath, err := o.getComponentBinaryPath()
 	if err != nil {
