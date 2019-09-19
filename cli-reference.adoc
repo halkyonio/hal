@@ -10,7 +10,7 @@ ___________________
   hal  --help 
 ----
 
-hal v0.1.5-10-g8ec1839 built with ❤️ by the Snowdrop team on 'Fri Sep 13 12:41:17 CEST 2019' (commit: 8ec1839) running on top of 'oc'
+hal v0.1.7-3-g6e84308 built with ❤️ by the Halkyon team on 'Thu Sep 19 21:32:33 CEST 2019' (commit: 6e84308) running on top of 'oc'
 Easily create and manage Kubernetes applications using Dekorate and the Halkyon operator.
 
 [[syntax]]
@@ -24,13 +24,13 @@ Syntax
 | Name | Description
 
 | link:#capability[capability]
-| Create a new capability
+| Manage capabilities
 
 | link:#component[component]
 | Manage components
 
 | link:#link[link]
-| Link the current (or target) component to the specified capability or component
+| Manage links
 
 | link:#version[version]
 | Displays this tool's version
@@ -44,12 +44,18 @@ CLI Structure
 [source,sh]
 ----
 hal : Easily create Kubernetes applications
-    capability --category --name --parameters --type --version : Create a new capability
+    capability : Manage capabilities
+        create --category --name --parameters --type --version : Create a new capability
+        delete : Delete the named capability
     component : Manage components
+        create --components : Create a new Halkyon component
+        delete : Delete the named component
         mode --components --mode : Switch the component to the provided mode
-        push --components : Push a local project to the remote cluster you're connected to
+        push --binary --components : Push a local project to the remote cluster you're connected to
         spring-boot --artifactid --groupid --module --packagename --springbootversion --supported --template --urlservice --version : Create a Spring Boot maven project
-    link --env --name --secret --target : Link the current (or target) component to the specified capability or component
+    link : Manage links
+        create --env --name --secret --target : Link the current (or target) component to the specified capability or component
+        delete : Delete the named link
     version : Displays this tool's version
 
 ----
@@ -69,11 +75,14 @@ _________________
 
 [source,sh]
 ----
-  # Create a new database capability de type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
-  hal capability -n db-capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin
+  # Create a new database capability of type postgres 10 and sets up some parameters as the name of the database and the user/password to connect.
+  hal capability create -n db-capability -g database -t postgres -v 10 -p DB_NAME=sample-db -p DB_PASSWORD=admin -p DB_USER=admin
+
+  # Delete the capability named 'foo'
+  hal capability delete foo
 ----
 
-Create a new capability
+Manage capabilities
 
 [[component]]
 component
@@ -90,6 +99,12 @@ _________________
 
 [source,sh]
 ----
+  # Create a new Halkyon component found in the 'foo' child directory of the current directory
+  hal component create -c foo
+
+  # Delete the component named 'foo'
+  hal component delete foo
+
   # Creates a Spring Boot maven project project using the REST HTTP client template
   hal component spring-boot  \
   -i client-sb \
@@ -126,10 +141,13 @@ _________________
 [source,sh]
 ----
   # links the client-sb to the backend-sb component
- hal link -n client-to-backend -t client-sb
+ hal link create -n client-to-backend -t client-sb
+
+  # Delete the link named 'foo'
+  hal link delete foo
 ----
 
-Link the current (or target) component to the specified capability or component
+Manage links
 
 [[version]]
 version
