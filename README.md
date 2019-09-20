@@ -38,7 +38,7 @@ that succeeded! 😁)
 After installing `hal`, the following steps allows to create and deploy a project to a cluster.
 **Note**: this assumes that you are connected to a Halkyon-enabled OpenShift/Kubernetes cluster.
 
-### 1 Scaffold the Spring Boot applications 
+### 1. Scaffold the Spring Boot applications 
 
  - Create a development folder on your laptop
 `mkdir haldemo && cd haldemo`
@@ -57,7 +57,7 @@ hal component spring-boot \
     hello-world
 ```
 
-### 2 Deploy the Component
+### 2. Deploy the Component
 
 A component represents a micro-service, i.e. part of an application to be deployed. The Component custom resource provides a simpler to fathom abstraction over what's actually required at the Kubernetes level to deploy and optionally expose the micro-service outside of the cluster. In fact, when a component is deployed to a [Halkyon](https://github.com/halkyonio)-enabled cluster, the [Halkyon operator](https://github.com/halkyonio/operator) will create these OpenShift/Kubernetes resources such as `Deployment`, `Service`, `PersistentVolumeClaim`, `Ingress` or `Route` on OpenShift if the component is exposed.
 
@@ -84,7 +84,7 @@ NAME               RUNTIME       VERSION         AGE       MODE      STATUS    M
 hello-world        spring-boot   2.1.6.RELEASE   7m17s     dev       Ready     Ready     6aadfc1a982fcd68
 ```
 
-### 3 Connect to the REST services
+### 3. Connect to the REST services
 
 If you deploy on OpenShift, get the route address of the microservice using this command: 
 ```
