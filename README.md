@@ -6,9 +6,9 @@
 - [Building hal](#building-hal)
 - [Downloading a snapshot](#downloading-a-snapshot)
 - [Deploying a component using `hal`](#deploying-a-component-using-hal)
-  * [1 Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
-  * [2 Deploy the Component](#2-deploy-the-component)
-  * [3 Connect to the rest services](#3-connect-to-the-rest-services)
+  * [1. Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
+  * [2. Deploy the Component](#2-deploy-the-component)
+  * [3. Connect to the rest services](#3-connect-to-the-rest-services)
 - [Additional documentation](#additional-documentation)
 
 ## Overview
