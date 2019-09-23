@@ -3,6 +3,7 @@ package link
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"halkyon.io/api/component/v1beta1"
 	link "halkyon.io/api/link/v1beta1"
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
@@ -124,6 +125,35 @@ func (o *createOptions) Run() error {
 		},
 	})
 
+	if err != nil {
+		return err
+	}
+
+	components := client.HalkyonComponentClient.Components(client.Namespace)
+	cp, err := components.Get(o.targetName, v1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	const s = "hal-linked"
+	cp.Labels[s] = "true"
+	msg := fmt.Sprintf("Waiting for '%s' link to be processed", o.name)
+	cp.Status.Message = msg
+	cp.Status.Phase = v1beta1.ComponentPending
+	cp, err = components.UpdateStatus(cp)
+	if err != nil {
+		return err
+	}
+	cp, err = components.Update(cp)
+	if err != nil {
+		return err
+	}
+
+	cp, err = client.WaitForComponent(o.targetName, v1beta1.ComponentReady, "Waiting for link to be ready…")
+	if err != nil {
+		return fmt.Errorf("error waiting for component: %v", err)
+	}
+	cp.Status.Message = fmt.Sprintf("'%s' link successfully created", o.name)
+	_, err = components.UpdateStatus(cp)
 	if err != nil {
 		return err
 	}
