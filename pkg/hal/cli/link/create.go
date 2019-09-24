@@ -130,6 +130,9 @@ func (o *createOptions) Run() error {
 		return err
 	}
 
+	s := log.Spinner("Waiting for '" + l.Name + "' link…")
+	defer s.End(false)
+
 	components := client.HalkyonComponentClient.Components(client.Namespace)
 	cp, err := components.Get(o.targetName, v1.GetOptions{})
 	if err != nil {
@@ -144,9 +147,10 @@ func (o *createOptions) Run() error {
 			return err
 		}
 		if initialPodName == pod.Name {
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		} else {
 			cp.Status.PodName = pod.Name
+			cp.Status.Message = fmt.Sprintf("'%s' link successfully created", o.name)
 			break
 		}
 	}
@@ -155,18 +159,8 @@ func (o *createOptions) Run() error {
 	if err != nil {
 		return err
 	}
-
-	cp, err = client.WaitForComponent(o.targetName, v1beta1.ComponentReady, "Waiting for link to be ready…")
-	if err != nil {
-		return fmt.Errorf("error waiting for component: %v", err)
-	}
-	cp.Status.Message = fmt.Sprintf("'%s' link successfully created", o.name)
-	_, err = components.UpdateStatus(cp)
-	if err != nil {
-		return err
-	}
-
-	log.Successf("Created link %s", l.Name)
+	s.End(true)
+	log.Successf("Successfully created '%s' link", l.Name)
 	// todo:
 	//  - read existing application.yml using viper
 	//  - merge existing and new link
