@@ -47,7 +47,4 @@ workflows:
               ignore: /.*/
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
-      - snapshot:
-          filters:
-            branches:
-              only: master
+      - snapshot
