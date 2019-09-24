@@ -9,6 +9,7 @@ require (
 	github.com/frankban/quicktest v1.5.0 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/mattn/go-colorable v0.1.1
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
@@ -25,7 +26,7 @@ require (
 	halkyon.io/api v1.0.0-beta.5
 	k8s.io/api v0.0.0-20190831074750-7364b6bdad65
 	k8s.io/apimachinery v0.0.0-20190831074630-461753078381
-	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kubectl v0.0.0-20190831163037-3b58a944563f
 )
 
