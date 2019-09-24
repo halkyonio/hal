@@ -13,6 +13,7 @@ import (
 	k8score "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
 	"strings"
 	"time"
 )
@@ -134,16 +135,23 @@ func (o *createOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	const s = "hal-linked"
-	cp.Labels[s] = "true"
-	msg := fmt.Sprintf("Waiting for '%s' link to be processed", o.name)
-	cp.Status.Message = msg
-	cp.Status.Phase = v1beta1.ComponentPending
-	cp, err = components.UpdateStatus(cp)
-	if err != nil {
-		return err
+
+	// while the pod name hasn't changed, wait
+	initialPodName := cp.Status.PodName
+	for {
+		pod, err := fetchPod(cp)
+		if err != nil {
+			return err
+		}
+		if initialPodName == pod.Name {
+			time.Sleep(2 * time.Second)
+		} else {
+			cp.Status.PodName = pod.Name
+			break
+		}
 	}
-	cp, err = components.Update(cp)
+
+	cp, err = components.UpdateStatus(cp)
 	if err != nil {
 		return err
 	}
@@ -240,4 +248,22 @@ func (o *createOptions) checkAndGetValidSecrets() ([]string, bool, error) {
 		}
 	}
 	return known, givenIsValid, nil
+}
+
+func fetchPod(instance *v1beta1.Component) (*k8score.Pod, error) {
+	client := k8s.GetClient()
+	pods, err := client.KubeClient.CoreV1().Pods(instance.Namespace).List(v1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": instance.Name}).String(),
+	})
+	if err != nil {
+		return nil, err
+	} else {
+		// We assume that there is only one Pod containing the label app=component name AND we return it
+		if len(pods.Items) > 0 {
+			return &pods.Items[0], nil
+		} else {
+			err := fmt.Errorf("failed to get pod created for the component")
+			return nil, err
+		}
+	}
 }
