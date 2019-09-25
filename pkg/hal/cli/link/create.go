@@ -112,6 +112,10 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	return nil
 }
 
+func (o *createOptions) Validate() error {
+	return nil
+}
+
 func (o *createOptions) addToEnv(pair string) (halkyon.NameValuePair, error) {
 	// todo: extract as generic version
 	split := strings.Split(pair, "=")
