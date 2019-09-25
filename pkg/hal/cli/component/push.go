@@ -12,6 +12,9 @@ import (
 	"halkyon.io/hal/pkg/log"
 	"io"
 	"io/ioutil"
+	k8score "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"os"
@@ -131,12 +134,33 @@ func (o *pushOptions) needsPush(revision string, c *component.Component) bool {
 }
 
 func (o *pushOptions) push(component *component.Component) error {
+	// wait for component to be ready
+	cp, err := o.waitUntilReady(component)
+	if err != nil {
+		return err
+	}
+
+	// check if the pod has changed
+	pod, err := fetchPod(cp)
+	if err != nil {
+		return err
+	}
+
+	podName := pod.Name
+	if cp.Status.PodName != podName {
+		// update the component and use the new pod name to push
+		cp.Status.PodName = podName
+	}
+
 	c := k8s.GetClient()
-	podName := component.Status.PodName
+	if cp, err = c.HalkyonComponentClient.Components(c.Namespace).UpdateStatus(cp); err != nil {
+		return err
+	}
+
 	toPush, _ := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + toPush)
 	defer s.End(false)
-	err := k8s.Copy(toPush, c.Namespace, podName, !o.binary)
+	err = k8s.Copy(toPush, c.Namespace, podName, !o.binary)
 	if err != nil {
 		return fmt.Errorf("error uploading file: %v", err)
 	}
@@ -196,4 +220,22 @@ func NewCmdPush(fullParentName string) *cobra.Command {
 	cmdutil.ConfigureRunnableAndCommandWithTargeting(&options, push)
 	push.Flags().BoolVarP(&options.binary, "binary", "b", false, "Push packaged binary instead of source code")
 	return push
+}
+
+func fetchPod(instance *component.Component) (*k8score.Pod, error) {
+	client := k8s.GetClient()
+	pods, err := client.KubeClient.CoreV1().Pods(instance.Namespace).List(v1.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{"app": instance.Name}).String(),
+	})
+	if err != nil {
+		return nil, err
+	} else {
+		// We assume that there is only one Pod containing the label app=component name AND we return it
+		if len(pods.Items) > 0 {
+			return &pods.Items[0], nil
+		} else {
+			err := fmt.Errorf("failed to get pod created for the component")
+			return nil, err
+		}
+	}
 }

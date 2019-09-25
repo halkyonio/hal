@@ -3,7 +3,6 @@ package link
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"halkyon.io/api/component/v1beta1"
 	link "halkyon.io/api/link/v1beta1"
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
@@ -13,7 +12,6 @@ import (
 	k8score "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	"k8s.io/apimachinery/pkg/labels"
 	"strings"
 	"time"
 )
@@ -130,36 +128,6 @@ func (o *createOptions) Run() error {
 		return err
 	}
 
-	s := log.Spinner("Waiting for '" + l.Name + "' link…")
-	defer s.End(false)
-
-	components := client.HalkyonComponentClient.Components(client.Namespace)
-	cp, err := components.Get(o.targetName, v1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	// while the pod name hasn't changed, wait
-	initialPodName := cp.Status.PodName
-	for {
-		pod, err := fetchPod(cp)
-		if err != nil {
-			return err
-		}
-		if initialPodName == pod.Name {
-			time.Sleep(1 * time.Second)
-		} else {
-			cp.Status.PodName = pod.Name
-			cp.Status.Message = fmt.Sprintf("'%s' link successfully created", o.name)
-			break
-		}
-	}
-
-	cp, err = components.UpdateStatus(cp)
-	if err != nil {
-		return err
-	}
-	s.End(true)
 	log.Successf("Successfully created '%s' link", l.Name)
 	// todo:
 	//  - read existing application.yml using viper
@@ -242,22 +210,4 @@ func (o *createOptions) checkAndGetValidSecrets() ([]string, bool, error) {
 		}
 	}
 	return known, givenIsValid, nil
-}
-
-func fetchPod(instance *v1beta1.Component) (*k8score.Pod, error) {
-	client := k8s.GetClient()
-	pods, err := client.KubeClient.CoreV1().Pods(instance.Namespace).List(v1.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{"app": instance.Name}).String(),
-	})
-	if err != nil {
-		return nil, err
-	} else {
-		// We assume that there is only one Pod containing the label app=component name AND we return it
-		if len(pods.Items) > 0 {
-			return &pods.Items[0], nil
-		} else {
-			err := fmt.Errorf("failed to get pod created for the component")
-			return nil, err
-		}
-	}
 }
