@@ -141,43 +141,22 @@ func (o *pushOptions) push(component *component.Component) error {
 		return fmt.Errorf("error uploading file: %v", err)
 	}
 	s.End(true)
-	// use pipes to write output from ExecCMDInContainer in yellow  to 'out' io.Writer
-	pipeReader, pipeWriter := io.Pipe()
-	var cmdOutput string
-	// This Go routine will automatically pipe the output from ExecCMDInContainer to
-	// our logger.
-	go func() {
-		scanner := bufio.NewScanner(pipeReader)
-		for scanner.Scan() {
-			line := scanner.Text()
-			cmdOutput += fmt.Sprintln(line)
-		}
-	}()
 
 	if !o.binary {
-		s := log.Spinner("Extracting source on the remote cluster")
-		defer s.End(false)
-		err = c.ExecCMDInContainer(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer}, pipeWriter, pipeWriter, nil, false)
-		if err != nil {
+		if err = c.ExecCommand(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer},
+			"Extracting source on the remote cluster"); err != nil {
 			return err
 		}
-		s.End(true)
 
-		s = log.Spinner("Performing build")
-		defer s.End(false)
-		err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, pipeWriter, pipeWriter, nil, false)
-		if err != nil {
+		if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, "Performing build"); err != nil {
 			return err
 		}
-		s.End(true)
 	}
 
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, pipeWriter, pipeWriter, nil, false)
-	if err != nil {
+	if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, ""); err != nil {
 		return err
 	}
-	err = c.ExecCMDInContainer(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run"}, pipeWriter, pipeWriter, nil, false)
-	if err != nil {
+	if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "run"}, "Restarting app"); err != nil {
 		return err
 	}
 	log.Successf("Successfully pushed '%s' component to remote cluster", component.Name)

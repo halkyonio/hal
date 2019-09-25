@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
 	capability "halkyon.io/api/capability/clientset/versioned/typed/capability/v1beta1"
@@ -19,6 +20,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -69,6 +71,35 @@ func GetClient() *Client {
 	}
 
 	return client
+}
+
+func (c *Client) ExecCommand(podName string, cmd []string, statusMsg string) error {
+	// use pipes to write output from ExecCMDInContainer in yellow  to 'out' io.Writer
+	pipeReader, pipeWriter := io.Pipe()
+	var cmdOutput string
+	// This Go routine will automatically pipe the output from ExecCMDInContainer to
+	// our logger.
+	go func() {
+		scanner := bufio.NewScanner(pipeReader)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cmdOutput += fmt.Sprintln(line)
+		}
+	}()
+
+	var s *log2.Status
+	if len(statusMsg) > 0 {
+		s = log2.Spinner(statusMsg)
+		defer s.End(false)
+	}
+	err := c.ExecCMDInContainer(podName, cmd, pipeWriter, pipeWriter, nil, false)
+	if err != nil {
+		return fmt.Errorf("cannot run '%s' cmd in '%s' pod: %s", strings.Join(cmd, " "), podName, cmdOutput)
+	}
+	if s != nil {
+		s.End(true)
+	}
+	return nil
 }
 
 // ExecCMDInContainer execute command in first container of a pod

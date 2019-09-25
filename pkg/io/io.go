@@ -6,6 +6,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"halkyon.io/hal/pkg/log"
 	"io"
 	"io/ioutil"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -94,9 +95,9 @@ func LogErrorAndExit(err error, context string, a ...interface{}) {
 		}
 
 		if len(context) == 0 {
-			logrus.Fatal(msg)
+			log.Error(msg)
 		} else {
-			logrus.Fatalf(fmt.Sprintf("%s: %s", context, msg), a...)
+			log.Errorf(fmt.Sprintf("%s: %s", context, msg), a...)
 		}
 		os.Exit(1)
 	}
