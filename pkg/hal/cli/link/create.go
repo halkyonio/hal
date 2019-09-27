@@ -76,7 +76,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 			}
 		}
 		for {
-			envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, press enter when done")
+			envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
 			if len(envAsString) == 0 {
 				break
 			}
