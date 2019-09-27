@@ -70,18 +70,21 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	} else {
 		o.linkType = link.EnvLinkType
 		ui.OutputSelection("Selected link type", o.linkType.String())
-		for _, pair := range o.envPairs {
-			if _, e := o.addToEnv(pair); e != nil {
-				return e
+		if useEnv {
+			for _, pair := range o.envPairs {
+				if _, e := o.addToEnv(pair); e != nil {
+					return e
+				}
 			}
-		}
-		for {
-			envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
-			if len(envAsString) == 0 {
-				break
-			}
-			if _, e := o.addToEnv(envAsString); e != nil {
-				return e
+		} else {
+			for {
+				envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
+				if len(envAsString) == 0 {
+					break
+				}
+				if _, e := o.addToEnv(envAsString); e != nil {
+					return e
+				}
 			}
 		}
 	}
