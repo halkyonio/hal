@@ -9,7 +9,7 @@ import (
 
 const (
 	JarPathInContainer             = "/deployments/"
-	SourcePathInContainer          = "/usr/component.tar"
+	SourcePathInContainer          = "/usr/src/component.tar"
 	ExtractedSourcePathInContainer = "/usr/src"
 )
 
