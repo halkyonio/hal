@@ -3,7 +3,6 @@ package capability
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"halkyon.io/api/capability/v1beta1"
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
@@ -58,7 +57,9 @@ func (o *createOptions) Validate() error {
 		params[v.name] = v
 	}
 
-	o.parameters = make([]halkyon.NameValuePair, 0, len(params))
+	if len(o.parameters) == 0 {
+		o.parameters = make([]halkyon.NameValuePair, 0, len(params))
+	}
 
 	// first deal with required params
 	for _, info := range infos {
@@ -178,7 +179,6 @@ func (o *createOptions) addToParams(pair string) error {
 	}
 	parameter := halkyon.NameValuePair{Name: split[0], Value: split[1]}
 	o.parameters = append(o.parameters, parameter)
-	ui.OutputSelection("Set parameter", fmt.Sprintf("%s=%s", parameter.Name, parameter.Value))
 	return nil
 }
 
@@ -210,17 +210,20 @@ func (o *createOptions) getParameterInfos() []parameterInfo {
 }
 
 func (o *createOptions) addValueFor(prop parameterInfo) {
-	var result string
-	prompt := &survey.Input{
-		Message: fmt.Sprintf("Enter a value for %s property %s:", prop.Type, prop.name),
+	// first look if we have provided a value for this already
+	provided := ""
+	for _, parameter := range o.parameters {
+		if parameter.Name == prop.name {
+			provided = parameter.Value
+		}
 	}
-
-	err := survey.AskOne(prompt, &result, ui.GetValidatorFor(prop.AsValidatable()))
-	ui.HandleError(err)
-	o.parameters = append(o.parameters, halkyon.NameValuePair{
-		Name:  prop.name,
-		Value: result,
-	})
+	result := ui.Ask(fmt.Sprintf("Value for %s property %s:", prop.Type, prop.name), provided)
+	if result != provided {
+		o.parameters = append(o.parameters, halkyon.NameValuePair{
+			Name:  prop.name,
+			Value: result,
+		})
+	}
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
