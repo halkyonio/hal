@@ -10,8 +10,8 @@ echo "   "
 echo "   "
 echo " Simplify the deployment of Spring Boot applications using Halkyon Component Operator on Kubernetes"|pv -qL 10
 echo " In this demo, we will :"|pv -qL 10
-echo "   --> Compose & link microservices"|pv -qL 10
-echo "   --> Deploy a capability such as a database and link it to a microservice consuming it"|pv -qL 10
+echo "   --> Compose & link 2 microservices: client and fruits backend"|pv -qL 10
+echo "   --> Deploy a capability such as a database and link it to backend microservice accesing it"|pv -qL 10
 echo "   --> Code locally and next push/build on Kubernetes/OpenShift"|pv -qL 10
 echo "  "|pv -qL 10
 echo " Ready? Let's begin!"|pv -qL 10
@@ -176,7 +176,7 @@ sleep 4
 exec oc get routes/fruit-backend-sb --template={{.spec.host}}
 echo " "
 sleep 2
-echo "# Let's create some fruits ;-)"|pv -qL 10
+echo "# Let's create some fruits on the backend using the HTTPie - https://httpie.org tool"|pv -qL 10
 BACKEND_URL=$(oc get routes/fruit-backend-sb --template={{.spec.host}})
 exec http -s solarized POST "http://${BACKEND_URL}/api/fruits" name=Orange
 sleep 1
@@ -193,7 +193,7 @@ exec oc get routes/fruit-client-sb --template={{.spec.host}}
 sleep 3
 
 clear && sleep 1
-echo "# HTTPie - https://httpie.org the service within your terminal, you should get the fruits created in the previous step."|pv -qL 10
+echo "# Call the client service within your terminal, you should get the fruits created in the previous step."|pv -qL 10
 exec http "http://$(oc get routes/fruit-client-sb --template={{.spec.host}})/api/client"
 sleep 2
 echo " "
