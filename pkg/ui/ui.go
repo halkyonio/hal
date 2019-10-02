@@ -37,6 +37,14 @@ func Proceed(message string) bool {
 
 func Select(message string, options []string, defaultValue ...string) string {
 	sort.Strings(options)
+	return doSelect(message, options, defaultValue)
+}
+
+func SelectUnsorted(message string, options []string, defaultValue ...string) string {
+	return doSelect(message, options, defaultValue)
+}
+
+func doSelect(message string, options []string, defaultValue []string) string {
 	prompt := &survey.Select{
 		Message: message,
 		Options: options,

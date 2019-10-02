@@ -62,7 +62,7 @@ func GetSpringBootVersions(boms map[string]Bom) []string {
 	for k := range boms {
 		result = append(result, k)
 	}
-	sort.Strings(result)
+	sort.Sort(sort.Reverse(sort.StringSlice(result)))
 	return result
 }
 

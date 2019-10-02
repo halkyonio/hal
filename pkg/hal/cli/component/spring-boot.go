@@ -105,7 +105,7 @@ func (p *project) Complete(name string, cmd *cobra.Command, args []string) error
 
 	// if the user didn't specify an SB version, ask for it
 	if !hasSB {
-		p.SpringBootVersion = ui.Select("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
+		p.SpringBootVersion = ui.SelectUnsorted("Spring Boot version", scaffold.GetSpringBootVersions(versions), defaultVersion)
 	}
 
 	// check that the given SB version yields a known BOM, if not ask the user for a supported SB version
