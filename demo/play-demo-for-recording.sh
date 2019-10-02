@@ -158,7 +158,7 @@ clear && sleep 1
 echo "# Push the code"|pv -qL 10
 sleep 2
 exec hal component push -c fruit-client-sb,fruit-backend-sb
-echo "# Let's wait some seconds in order the applications are readies to respond"|pv -qL 10
+echo "# Let's wait a few seconds to let maven to build the application within the pod and start the application"|pv -qL 10
 #Wait some seconds for pods readies
 i=0
 while [ $i -le 15 ]
@@ -170,7 +170,7 @@ done
 
 
 clear && sleep 1
-echo "# Try the backend service to see if it works"|pv -qL 10
+echo "# Call the REST endpoint of the Fruit backend service to verify if we can access it"|pv -qL 10
 echo "# So, get the route address of the backend microservice using this command "|pv -qL 10
 sleep 4
 exec oc get routes/fruit-backend-sb --template={{.spec.host}}
@@ -186,22 +186,23 @@ exec http -s solarized POST "http://${BACKEND_URL}/api/fruits" name=Pineapple
 sleep 10
 
 clear && sleep 1
-echo "# Try the client microservice to see if it works too"|pv -qL 10
+echo "# Call now the REST endpoint of the client microservice"|pv -qL 10
 echo "# So, get also its route address "|pv -qL 10
 sleep 4
 exec oc get routes/fruit-client-sb --template={{.spec.host}}
 sleep 3
 
 clear && sleep 1
-echo "# curl the service within your terminal, you should get the fruits created in the previous step."|pv -qL 10
+echo "# HTTPie - https://httpie.org the service within your terminal, you should get the fruits created in the previous step."|pv -qL 10
 exec http "http://$(oc get routes/fruit-client-sb --template={{.spec.host}})/api/client"
 sleep 2
 echo " "
 echo " "
 echo "# So, this is hal!! "|pv -qL 10
 echo "# Thank you :-) "|pv -qL 10
-clear
+sleep 5
+
 
 # clean up
-oc delete project demo
-cd .. && rm -rf demo
+#oc delete project demo
+#cd .. && rm -rf demo
