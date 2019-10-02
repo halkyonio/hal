@@ -14,7 +14,7 @@ echo "   --> Compose & link microservices"|pv -qL 10
 echo "   --> Deploy a capability such as a database and link it to a microservice consuming it"|pv -qL 10
 echo "   --> Code locally and next push/build on Kubernetes/OpenShift"|pv -qL 10
 echo "  "|pv -qL 10
-echo " Ready? Let's being!"|pv -qL 10
+echo " Ready? Let's begin!"|pv -qL 10
 echo "  "
 echo "  "
 sleep 5
@@ -158,7 +158,7 @@ clear && sleep 1
 echo "# Push the code"|pv -qL 10
 sleep 2
 exec hal component push -c fruit-client-sb,fruit-backend-sb
-echo "# Let's wait a few seconds to let maven to build the application within the pod and start the application"|pv -qL 10
+echo "# Let's wait a few seconds to let maven build the application within the pod and start the application"|pv -qL 10
 #Wait some seconds for pods readies
 i=0
 while [ $i -le 15 ]
