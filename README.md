@@ -102,7 +102,7 @@ Copy/paste the address displayed within the terminal in a browser and say Hello 
 
 The following demonstration provides an overview of `hal`:
 
-[![asciicast](https://asciinema.org/a/TuqtFWyLA3YL97NxQEpk2qwvI.png)](https://asciinema.org/a/TuqtFWyLA3YL97NxQEpk2qwvI)
+[![asciicast](https://asciinema.org/a/gxXU7P0u84SQZnfpZrqMNwgZ9.png)](https://asciinema.org/a/gxXU7P0u84SQZnfpZrqMNwgZ9)
 
 ## Additional documentation
 
