@@ -14,7 +14,7 @@ echo "   --> Compose & link microservices"|pv -qL 10
 echo "   --> Deploy a capability such as a database and link it to a microservice consuming it"|pv -qL 10
 echo "   --> Code locally and next push/build on Kubernetes/OpenShift"|pv -qL 10
 echo "  "|pv -qL 10
-echo " Ready? Let's start!"|pv -qL 10
+echo " Ready? Let's being!"|pv -qL 10
 echo "  "
 echo "  "
 sleep 5
@@ -22,22 +22,22 @@ sleep 5
 clear && sleep 1
 echo "# Log on to the cluster using the oc client"|pv -qL 10
 sleep 2
-exec oc login https://159.69.209.188:8443 --token=Hz8JKkb80xa7rptVGJhq6aerZUGwyaRVYJ7zBQfFly8
+exec oc login https://159.69.209.188:8443 --token=5tKSUvACZ8big9XT2mONlqMU5J4w6Di6RFe9wrnJiU0
 sleep 3
 
 clear && sleep 1
 echo "# Create a new project"|pv -qL 10
 sleep 1
 exec oc new-project demo
-sleep 5
+sleep 7
 
 clear && sleep 1
-echo "# Create a directory named demo and subsequently enter in"|pv -qL 10
+echo "# Create a directory named demo and subsequently navigate to it"|pv -qL 10
 sleep 2
 exec mkdir demo
 sleep 1
 exec cd demo
-sleep 5
+sleep 3
 
 clear && sleep 1
 echo "# Create a pom.xml with the following content"|pv -qL 10
@@ -90,21 +90,21 @@ exec hal component spring-boot \
 sleep 3
 
 clear && sleep 1
-echo "# Create a backend project interactively and use as template the crud type and fruit-backend-sb as maven project name"|pv -qL 10
+echo "# Create a backend maven project named fruit-backend-sb interactively making sure you use crud as the template type"|pv -qL 10
 sleep 3
 exec hal component spring-boot fruit-backend-sb
 sleep 3
 
 clear && sleep 1
 echo "# Build the projects"|pv -qL 10
-echo "# Compile and generate the uber jar of the Spring Boot application client"|pv -qL 10
+echo "# Compile and generate the uber jar of the Spring Boot client application"|pv -qL 10
 sleep 3
 exec mvn package -f fruit-client-sb
 sleep 3
 
 clear && sleep 1
 echo "# Repeat the command executed previously for the CRUD - backend microservice."|pv -qL 10
-echo "# We need to use the kubernetes profile because the project is set up to work both locally using H2 database for quick testing and "remotely" using a PostgreSQL database."|pv -qL 10
+echo "# We need to use the kubernetes profile because the project is set up to work both locally using H2 database for quick testing and \"remotely\" using a PostgreSQL database."|pv -qL 10
 sleep 4
 exec mvn package -f fruit-backend-sb -Pkubernetes
 sleep 3
@@ -118,7 +118,7 @@ exec hal component create -c fruit-backend-sb
 sleep 3
 
 clear && sleep 1
-echo "# Check if the components have been correctly installed"|pv -qL 10
+echo "# Check that the components have been correctly installed"|pv -qL 10
 sleep 2
 exec oc get cp
 sleep 3
@@ -137,7 +137,7 @@ sleep 10
 
 clear && sleep 1
 echo "# Link the microservices"|pv -qL 10
-echo "# We need to wire the fruit-backend-sb component with the postgres-db capability by creating a link between both"|pv -qL 10
+echo "# We need to wire the fruit-backend-sb component with the postgres-db capability by creating a link between them"|pv -qL 10
 sleep 4
 exec hal link create -n backend-to-db -t fruit-backend-sb
 sleep 3
@@ -171,7 +171,7 @@ done
 
 clear && sleep 1
 echo "# Call the REST endpoint of the Fruit backend service to verify if we can access it"|pv -qL 10
-echo "# So, get the route address of the backend microservice using this command "|pv -qL 10
+echo "# Obtain the route address of the backend microservice using this command "|pv -qL 10
 sleep 4
 exec oc get routes/fruit-backend-sb --template={{.spec.host}}
 echo " "
