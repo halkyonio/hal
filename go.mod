@@ -23,7 +23,7 @@ require (
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	golang.org/x/crypto v0.0.0-20190611184440-5c40567a22f8
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
-	halkyon.io/api v1.0.0-beta.5
+	halkyon.io/api v1.0.0-beta.7
 	k8s.io/api v0.0.0-20190831074750-7364b6bdad65
 	k8s.io/apimachinery v0.0.0-20190831074630-461753078381
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
