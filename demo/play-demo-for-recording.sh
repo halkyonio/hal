@@ -11,7 +11,7 @@ echo "   "
 echo " Simplify the deployment of Spring Boot applications using Halkyon Component Operator on Kubernetes"|pv -qL 10
 echo " In this demo, we will :"|pv -qL 10
 echo "   --> Compose & link 2 microservices: client and fruits backend"|pv -qL 10
-echo "   --> Deploy a capability such as a database and link it to backend microservice accessing it"|pv -qL 10
+echo "   --> Deploy a capability such as a database and link it to the backend microservice accessing it"|pv -qL 10
 echo "   --> Code locally and next push/build on Kubernetes/OpenShift"|pv -qL 10
 echo "  "|pv -qL 10
 echo " Ready? Let's begin!"|pv -qL 10
@@ -40,7 +40,7 @@ exec cd demo
 sleep 3
 
 clear && sleep 1
-echo "# Create a pom.xml with the following content"|pv -qL 10
+echo "# Create a pom.xml with 2 modules corresponding each to a microservice"|pv -qL 10
 sleep 2
 echo "<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -76,7 +76,7 @@ cat > pom.xml << ENDOFFILE
 </project>
 ENDOFFILE
 clear && sleep 1
-echo "# Create a new client project using the REST HTTP client template proposed by the scaffolding tool"|pv -qL 10
+echo "# Create a client - microservice using the REST HTTP client template proposed by the scaffolding tool"|pv -qL 10
 sleep 3
 exec hal component spring-boot \
    -i fruit-client-sb \
@@ -90,14 +90,14 @@ exec hal component spring-boot \
 sleep 3
 
 clear && sleep 1
-echo "# Create a backend maven project named fruit-backend-sb interactively making sure you use crud as the template type"|pv -qL 10
+echo "# Create a backend - microservice interactively using now the CRUD template"|pv -qL 10
 sleep 3
 exec hal component spring-boot fruit-backend-sb
 sleep 3
 
 clear && sleep 1
-echo "# Build the projects"|pv -qL 10
-echo "# Compile and generate the uber jar of the Spring Boot client application"|pv -qL 10
+echo "# Build the Spring Boot microservices"|pv -qL 10
+echo "# Compile and generate the Spring Boot uber jar file for the REST Client microservice"|pv -qL 10
 sleep 3
 exec mvn package -f fruit-client-sb
 sleep 3
@@ -110,7 +110,7 @@ exec mvn package -f fruit-backend-sb -Pkubernetes
 sleep 3
 
 clear && sleep 1
-echo "# Deploy the applications as components"|pv -qL 10
+echo "# Create for each microservice a component and deploy it on the cluster"|pv -qL 10
 sleep 2
 exec hal component create -c fruit-client-sb
 sleep 2
@@ -143,7 +143,7 @@ exec hal link create -n backend-to-db -t fruit-backend-sb
 sleep 3
 
 clear && sleep 1
-echo "# Now, create a link targeting the fruit-client-sb component to wire the client and backend"|pv -qL 10
+echo "# Now, create a link targeting the fruit-client-sb component to wire the client and the backend microservices"|pv -qL 10
 sleep 3
 exec hal link create -n client-to-backend -t fruit-client-sb -e KUBERNETES_ENDPOINT_FRUIT=http://fruit-backend-sb:8080/api/fruits
 sleep 3
@@ -155,10 +155,10 @@ exec oc get links
 sleep 3
 
 clear && sleep 1
-echo "# Push the code"|pv -qL 10
+echo "# Push your local code source (e.g pom.xml, ./src,...) to the pod"|pv -qL 10
 sleep 2
 exec hal component push -c fruit-client-sb,fruit-backend-sb
-echo "# Let's wait a few seconds to let maven build the application within the pod and start the application"|pv -qL 10
+echo "# Let's wait to let maven to build the code within the pod and next to start the Spring Boot application"|pv -qL 10
 #Wait some seconds for pods readies
 i=0
 while [ $i -le 15 ]
