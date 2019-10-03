@@ -102,11 +102,6 @@ func (o *pushOptions) Run() error {
 	}
 	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", name, pushType)
 
-	// we got the component, we still need to check it's ready
-	comp, err = o.waitUntilReady(comp)
-	if err != nil {
-		return err
-	}
 	err = o.push(comp)
 	if err != nil {
 		return err
@@ -140,23 +135,8 @@ func (o *pushOptions) push(component *component.Component) error {
 		return err
 	}
 
-	// check if the pod has changed
-	pod, err := fetchPod(cp)
-	if err != nil {
-		return err
-	}
-
-	podName := pod.Name
-	if cp.Status.PodName != podName {
-		// update the component and use the new pod name to push
-		cp.Status.PodName = podName
-	}
-
 	c := k8s.GetClient()
-	if cp, err = c.HalkyonComponentClient.Components(c.Namespace).UpdateStatus(cp); err != nil {
-		return err
-	}
-
+	podName := cp.Status.PodName
 	toPush, _ := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + toPush)
 	defer s.End(false)
