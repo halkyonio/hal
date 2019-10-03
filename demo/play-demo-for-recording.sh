@@ -11,7 +11,7 @@ echo "   "
 echo " Simplify the deployment of Spring Boot applications using Halkyon Component Operator on Kubernetes"|pv -qL 10
 echo " In this demo, we will :"|pv -qL 10
 echo "   --> Compose & link 2 microservices: client and fruits backend"|pv -qL 10
-echo "   --> Deploy a capability such as a database and link it to backend microservice accesing it"|pv -qL 10
+echo "   --> Deploy a capability such as a database and link it to backend microservice accessing it"|pv -qL 10
 echo "   --> Code locally and next push/build on Kubernetes/OpenShift"|pv -qL 10
 echo "  "|pv -qL 10
 echo " Ready? Let's begin!"|pv -qL 10
