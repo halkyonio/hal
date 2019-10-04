@@ -10,6 +10,7 @@ import (
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	k8score "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"strings"
@@ -46,6 +47,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	if len(capabilitiesAndComponents) == 0 {
 		return fmt.Errorf("no valid capabilities or components currently exist on the cluster")
 	}
+	ui.OutputSelection("Selected target", o.targetName)
 	if !validTarget {
 		o.targetName = o.extractTargetName(ui.Select("Target", capabilitiesAndComponents))
 	}
@@ -65,7 +67,11 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 			return fmt.Errorf("no valid secrets currently exist on the cluster")
 		}
 		if !valid {
-			o.secret = ui.Select("Secret (only potential matches shown)", secrets)
+			msg := "Secret (only potential matches shown)"
+			if len(o.secret) > 0 {
+				msg = ui.SelectFromOtherErrorMessage("Unknown secret", o.secret)
+			}
+			o.secret = ui.Select(msg, secrets)
 		}
 	} else {
 		o.linkType = link.EnvLinkType
@@ -90,7 +96,22 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	}
 
 	generated := fmt.Sprintf("%s-link-%d", o.targetName, time.Now().UnixNano())
-	o.name = ui.Ask("Change default name", o.name, generated)
+
+	client := k8s.GetClient()
+	links := client.HalkyonLinkClient.Links(client.Namespace)
+	for {
+		o.name = ui.Ask("Name", o.name, generated)
+		_, err := links.Get(o.name, v1.GetOptions{})
+		if err != nil {
+			if errors.IsNotFound(err) {
+				break // link was not found which is what we want
+			}
+			return err
+		} else {
+			ui.OutputError(fmt.Sprintf("A link named '%s' already exist, please choose a different name", o.name))
+			o.name = "" // reset name and try again!
+		}
+	}
 
 	return nil
 }
@@ -108,7 +129,6 @@ func (o *createOptions) addToEnv(pair string) (halkyon.NameValuePair, error) {
 }
 
 func (o *createOptions) Validate() error {
-	// todo: validate selected link name
 	return nil
 }
 
