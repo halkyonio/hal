@@ -8,7 +8,7 @@ exec() {
 
 echo "   "
 echo "   "
-echo " Simplify the deployment of Spring Boot applications using Halkyon Component Operator on Kubernetes"|pv -qL 10
+echo " Simplify the deployment of Spring Boot applications using Halkyon operator on Kubernetes"|pv -qL 10
 echo " In this demo, we will :"|pv -qL 10
 echo "   --> Compose & link 2 microservices: client and fruits backend"|pv -qL 10
 echo "   --> Deploy a capability such as a database and link it to the backend microservice accessing it"|pv -qL 10
@@ -22,7 +22,7 @@ sleep 5
 clear && sleep 1
 echo "# Log on to the cluster using the oc client"|pv -qL 10
 sleep 2
-exec oc login https://159.69.209.188:8443 --token=5tKSUvACZ8big9XT2mONlqMU5J4w6Di6RFe9wrnJiU0
+oc login https://159.69.209.188:8443 --token=k8EWmKzrAUIcxn4ufuzYYK6O4w7sRJmycyh0kMU24Mg
 sleep 3
 
 clear && sleep 1
@@ -76,7 +76,7 @@ cat > pom.xml << ENDOFFILE
 </project>
 ENDOFFILE
 clear && sleep 1
-echo "# Create a client - microservice using the REST HTTP client template proposed by the scaffolding tool"|pv -qL 10
+echo "# Create a client microservice using the REST HTTP client template proposed by the scaffolding command"|pv -qL 10
 sleep 3
 exec hal component spring-boot \
    -i fruit-client-sb \
@@ -90,27 +90,27 @@ exec hal component spring-boot \
 sleep 3
 
 clear && sleep 1
-echo "# Create a backend - microservice interactively using now the CRUD template"|pv -qL 10
+echo "# Create a backend microservice interactively using now the CRUD template"|pv -qL 10
 sleep 3
 exec hal component spring-boot fruit-backend-sb
 sleep 3
 
 clear && sleep 1
 echo "# Build the Spring Boot microservices"|pv -qL 10
-echo "# Compile and generate the Spring Boot uber jar file for the REST Client microservice"|pv -qL 10
+echo "# Compile and generate the Spring Boot uber jar file for the REST client microservice"|pv -qL 10
 sleep 3
 exec mvn package -f fruit-client-sb
 sleep 3
 
 clear && sleep 1
-echo "# Repeat the command executed previously for the CRUD - backend microservice."|pv -qL 10
+echo "# Repeat the command executed previously for the CRUD backend microservice."|pv -qL 10
 echo "# We need to use the kubernetes profile because the project is set up to work both locally using H2 database for quick testing and \"remotely\" using a PostgreSQL database."|pv -qL 10
 sleep 4
 exec mvn package -f fruit-backend-sb -Pkubernetes
 sleep 3
 
 clear && sleep 1
-echo "# Create for each microservice a component and deploy it on the cluster"|pv -qL 10
+echo "# Create a component for each microservice and deploy it on the cluster"|pv -qL 10
 sleep 2
 exec hal component create -c fruit-client-sb
 sleep 2
@@ -149,7 +149,7 @@ exec hal link create -n client-to-backend -t fruit-client-sb -e KUBERNETES_ENDPO
 sleep 3
 
 clear && sleep 1
-echo "# Check the link status"|pv -qL 10
+echo "# Check the links status"|pv -qL 10
 sleep 2
 exec oc get links
 sleep 3
@@ -158,7 +158,7 @@ clear && sleep 1
 echo "# Push your local code source (e.g pom.xml, ./src,...) to the pod"|pv -qL 10
 sleep 2
 exec hal component push -c fruit-client-sb,fruit-backend-sb
-echo "# Let's wait to let maven to build the code within the pod and next to start the Spring Boot application"|pv -qL 10
+echo "# Let's wait a few seconds to let maven build the Spring Boot application on the cluster. Halkyon will then automatically start the app"|pv -qL 10
 #Wait some seconds for pods readies
 i=0
 while [ $i -le 15 ]
@@ -170,7 +170,7 @@ done
 
 
 clear && sleep 1
-echo "# Call the REST endpoint of the Fruit backend service to verify if we can access it"|pv -qL 10
+echo "# Let's try to access the backend service and see if we can create some fruits!"|pv -qL 10
 echo "# Obtain the route address of the backend microservice using this command "|pv -qL 10
 sleep 4
 exec oc get routes/fruit-backend-sb --template={{.spec.host}}
@@ -186,8 +186,8 @@ exec http -s solarized POST "http://${BACKEND_URL}/api/fruits" name=Pineapple
 sleep 10
 
 clear && sleep 1
-echo "# Call now the REST endpoint of the client microservice"|pv -qL 10
-echo "# So, get also its route address "|pv -qL 10
+echo "# Let's now check our client microservice"|pv -qL 10
+echo "# Obtain its route similarly to what we did for the backend microservice "|pv -qL 10
 sleep 4
 exec oc get routes/fruit-client-sb --template={{.spec.host}}
 sleep 3
