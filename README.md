@@ -98,6 +98,9 @@ kubectl get ingress/hello-world
 
 Copy/paste the address displayed within the terminal in a browser and say Hello world 😉
 
+## Tests
+
+The script `end-to-end.sh` allows to execute automatically a test end to end given a valid connection to an Openshift cluster where a Halkyon operator is installed.
 
 ## Additional documentation
 
