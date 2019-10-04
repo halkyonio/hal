@@ -9,7 +9,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record/util"
-	"strings"
 	"time"
 )
 
@@ -41,10 +40,23 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 	if err := o.Delegate.Complete(name, cmd, args); err != nil {
 		return err
 	}
-	if len(args) == 0 {
-		o.Name = ui.Ask("Name", o.Name, o.generateName())
-	} else {
+
+	if len(args) == 1 {
 		o.Name = args[0]
+	}
+	for {
+		o.Name = ui.Ask("Name", o.Name, o.generateName())
+		err := o.Client.Get(o.Name, v1.GetOptions{})
+		if err != nil {
+			if util.IsKeyNotFoundError(errors.Cause(err)) {
+				break // resource is not found which is what we want
+			} else {
+				return err
+			}
+		} else {
+			ui.OutputError(fmt.Sprintf("A %s named '%s' already exists, please select another name", o.ResourceType, o.Name))
+			o.Name = "" // reset name and try again!
+		}
 	}
 
 	return nil
@@ -54,16 +66,7 @@ func (o *CreateOptions) Validate() error {
 	if err := o.Delegate.Validate(); err != nil {
 		return err
 	}
-
-	err := o.Client.Get(o.Name, v1.GetOptions{})
-	if err != nil {
-		if util.IsKeyNotFoundError(errors.Cause(err)) {
-			return nil
-		} else {
-			return err
-		}
-	}
-	return fmt.Errorf("a %s named '%s' already exists, please select another name", o.ResourceType, o.Name)
+	return nil
 }
 
 func (o *CreateOptions) Run() error {
@@ -80,6 +83,5 @@ func (o *CreateOptions) generateName() string {
 
 func NewGenericCreate(fullParentName string, o *CreateOptions) *cobra.Command {
 	create := NewGenericOperation(fullParentName, o.GenericOperationOptions)
-	create.Flags().StringVarP(&o.Name, "name", "n", "", fmt.Sprintf("%s name", strings.Title(o.ResourceType)))
 	return create
 }
