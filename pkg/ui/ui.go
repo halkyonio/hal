@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mgutz/ansi"
 	"gopkg.in/AlecAivazis/survey.v1"
+	"gopkg.in/AlecAivazis/survey.v1/core"
 	"gopkg.in/AlecAivazis/survey.v1/terminal"
 	"halkyon.io/hal/pkg/validation"
 	"os"
@@ -113,9 +114,17 @@ func GetValidatorFor(prop validation.Validatable) survey.Validator {
 }
 
 func OutputSelection(msg, choice string) {
-	fmt.Println(ansi.Green + ansi.ColorCode("default+hb") + msg + ": " + ansi.Cyan + choice + ansi.Reset)
+	fmt.Println(ansi.Green + ansi.ColorCode("default+hb") + core.SelectFocusIcon + " " + msg + ": " + ansi.Cyan + choice + ansi.Reset)
+}
+
+func OutputError(msg string) {
+	fmt.Println(ansi.Red + ansi.ColorCode("default+hb") + core.ErrorIcon + " " + msg + ansi.Reset)
 }
 
 func SelectFromOtherErrorMessage(msg, wrong string) string {
 	return fmt.Sprintf("%s%s: %s%s\nSelect other(s) from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
+}
+
+func init() {
+	core.SetFancyIcons()
 }
