@@ -20,12 +20,6 @@ echo "  "
 sleep 5
 
 clear && sleep 1
-echo "# Log on to the cluster using the oc client"|pv -qL 10
-sleep 2
-oc login https://159.69.209.188:8443 --token=k8EWmKzrAUIcxn4ufuzYYK6O4w7sRJmycyh0kMU24Mg
-sleep 3
-
-clear && sleep 1
 echo "# Create a new project"|pv -qL 10
 sleep 1
 exec oc new-project demo
