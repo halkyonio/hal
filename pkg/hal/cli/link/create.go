@@ -9,7 +9,6 @@ import (
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
 	k8score "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -90,22 +89,6 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 					return e
 				}
 			}
-		}
-	}
-
-	client := k8s.GetClient()
-	links := client.HalkyonLinkClient.Links(client.Namespace)
-	for {
-		o.Name = ui.Ask("Name", o.Name, o.GeneratePrefix())
-		_, err := links.Get(o.Name, v1.GetOptions{})
-		if err != nil {
-			if errors.IsNotFound(err) {
-				break // link was not found which is what we want
-			}
-			return err
-		} else {
-			ui.OutputError(fmt.Sprintf("A link named '%s' already exist, please choose a different name", o.Name))
-			o.Name = "" // reset name and try again!
 		}
 	}
 
