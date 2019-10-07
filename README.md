@@ -3,12 +3,13 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Key features](#key-features)
+- [Demonstration](#demonstration)
 - [Building hal](#building-hal)
 - [Downloading a snapshot](#downloading-a-snapshot)
-- [Deploying a component using `hal`](#deploying-a-component-using-hal)
-  * [1. Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
-  * [2. Deploy the Component](#2-deploy-the-component)
-  * [3. Connect to the rest services](#3-connect-to-the-rest-services)
+- [Deploying a component using hal](#deploying-a-component-using-hal)
+   * [1. Scaffold the Spring Boot applications](#1-scaffold-the-spring-boot-applications)
+   * [2. Deploy the Component](#2-deploy-the-component)
+   * [3. Connect to the REST services](#3-connect-to-the-rest-services)
 - [Additional documentation](#additional-documentation)
 
 ## Overview
@@ -22,6 +23,11 @@ Hal is a CLI tool for developers to simplify the deployment of applications such
 - Deploy Microservices applications as Components
 - Switch the `DeploymentMode` of the component from `Dev` to `Build` mode
 - Compose & link microservices
+
+## Demonstration
+To see `hal` in action where it will compose 2 Spring Boot Applications as microservices with a Database 
+
+[![asciicast](https://asciinema.org/a/ZWkxvg6LUzedQ2IPzmFTUeCP2.png)](https://asciinema.org/a/ZWkxvg6LUzedQ2IPzmFTUeCP2)
 
 ## Building hal
 - `git clone` this project *outside* of your `$GOPATH` (since it uses `go modules`) or set `GO111MODULE=on` on your environment
@@ -97,12 +103,6 @@ kubectl get ingress/hello-world
 ```
 
 Copy/paste the address displayed within the terminal in a browser and say Hello world 😉
-
-## Demonstration
-
-The following demonstration provides an overview of `hal`:
-
-[![asciicast](https://asciinema.org/a/ZWkxvg6LUzedQ2IPzmFTUeCP2.png)](https://asciinema.org/a/ZWkxvg6LUzedQ2IPzmFTUeCP2)
 
 ## Additional documentation
 
