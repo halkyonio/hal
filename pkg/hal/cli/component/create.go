@@ -86,8 +86,8 @@ func (o *createOptions) Build() runtime.Object {
 }
 
 var (
-	createExample = ktemplates.Examples(`  # Create a new Halkyon component found in the 'foo' child directory of the current directory
-  %[1]s --name foo`)
+	createExample = ktemplates.Examples(`  # Create a new Halkyon component located in the 'foo' child directory of the current directory
+  %[1]s foo`)
 )
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
