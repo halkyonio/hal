@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
+	"halkyon.io/hal/pkg/io"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
@@ -13,25 +14,50 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 )
 
 // todo: remove and replace by operator querying
-var runtimes = map[string][]string{
-	"spring-boot": {"1.5.19.RELEASE", "2.1.2.RELEASE", "2.1.3.RELEASE", "2.1.6.RELEASE"},
-	"vert.x":      {"3.7.1", "3.8.0", "3.8.1"},
-	"thorntail":   {"2.4.0.Final", "2.5.0.Final"},
-	"node.js":     {"8.x", "10.x", "12.x"},
+var runtimes = map[string]halkyonRuntime{
+	"spring-boot": {
+		name:      "spring-boot",
+		versions:  []string{"2.1.6.RELEASE", "1.5.19.RELEASE"},
+		generator: `https://generator.snowdrop.me/app?springbootversion={{.RV}}&groupid={{.G}}&artifactid={{.A}}&version={{.V}}&template={{.Template}}&packagename={{.P}}`,
+	},
+	"vert.x": {
+		name:      "vert.x",
+		versions:  []string{"3.8.2", "3.7.1"},
+		generator: `https://start.vertx.io/starter.zip?vertxVersion={{.RV}}&groupId={{.G}}&artifactId={{.A}}&packageName={{.P}}`,
+	},
+	"thorntail": {name: "thorntail", versions: []string{"2.5.0.Final", "2.4.0.Final"}},
+	"node.js":   {name: "node.js", versions: []string{"12.x", "10.x", "8.x"}},
+}
+
+type halkyonRuntime struct {
+	name      string
+	versions  []string
+	generator string
 }
 
 type createOptions struct {
 	*cmdutil.CreateOptions
-	runtime string
-	version string
-	expose  bool
-	port    int32
+	runtime   string
+	RV        string
+	exposeP   string
+	expose    bool
+	port      int
+	scaffold  bool
+	G         string
+	A         string
+	V         string
+	generator string
+	Template  string
+	P         string
+	scaffoldP string
 }
 
 func (o *createOptions) GeneratePrefix() string {
@@ -39,6 +65,12 @@ func (o *createOptions) GeneratePrefix() string {
 }
 
 func (o *createOptions) Build() runtime.Object {
+	if len(o.generator) > 0 {
+		err := io.Generate(o.generator, o.Name)
+		if err != nil {
+			panic(err)
+		}
+	}
 	return &v1beta1.Component{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      o.Name,
@@ -46,9 +78,9 @@ func (o *createOptions) Build() runtime.Object {
 		},
 		Spec: v1beta1.ComponentSpec{
 			Runtime:       o.runtime,
-			Version:       o.version,
+			Version:       o.RV,
 			ExposeService: o.expose,
-			Port:          o.port,
+			Port:          int32(o.port),
 		},
 	}
 }
@@ -60,22 +92,98 @@ var (
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	ui.SelectOrCheckExisting(&o.runtime, "Runtime", o.getRuntimes(), o.isValidRuntime)
-	ui.SelectOrCheckExisting(&o.version, "Version", o.getVersionsForRuntime(), o.isValidVersionGivenRuntime)
-	o.expose = ui.Proceed("Expose microservice")
-	port := ui.Ask("Port", fmt.Sprintf("%d", o.port), "8080")
-	intPort, err := strconv.Atoi(port)
-	if err != nil {
-		return err
+	ui.SelectOrCheckExisting(&o.RV, "Version", o.getVersionsForRuntime(), o.isValidVersionGivenRuntime)
+
+	if len(o.exposeP) == 0 {
+		o.expose = ui.Proceed("Expose microservice")
+	} else {
+		b, err := strconv.ParseBool(o.exposeP)
+		if err != nil {
+			return err
+		}
+		o.expose = b
 	}
-	o.port = int32(intPort)
-	ui.SelectOrCheckExisting(&o.Name, "Local component directory", o.getChildDirNames(), o.isValidComponentName)
-	return validation.IntegerValidator(port)
+
+	if o.expose && o.port == 0 {
+		port := ui.Ask("Port", fmt.Sprintf("%d", o.port), "8080")
+		intPort, err := strconv.Atoi(port)
+		if err != nil {
+			return err
+		}
+		o.port = intPort
+	}
+
+	if len(o.scaffoldP) == 0 {
+		o.scaffold = ui.Proceed("Use code generator")
+	} else {
+		b, err := strconv.ParseBool(o.scaffoldP)
+		if err != nil {
+			return err
+		}
+		o.scaffold = b
+	}
+
+	r := runtimes[o.runtime]
+	if len(r.generator) > 0 && o.scaffold {
+		o.G = ui.Ask("Group Id", o.G, "dev.snowdrop")
+		o.A = ui.Ask("Artifact Id", o.A, "myproject")
+		o.V = ui.Ask("Version", o.V, "1.0.0-SNAPSHOT")
+		o.P = ui.Ask("Package name", o.P, o.G+"."+o.A)
+
+		// complete generator URL:
+		t := template.New("generator")
+		parsed, err := t.Parse(r.generator)
+		if err != nil {
+			return err
+		}
+		builder := &strings.Builder{}
+		err = parsed.Execute(builder, o)
+		if err != nil {
+			return err
+		}
+		o.generator = builder.String()
+		o.scaffold = true
+	} else {
+		o.scaffold = false
+		names := o.getChildDirNames()
+		if len(names) > 0 {
+			ui.SelectOrCheckExisting(&o.Name, "Local component directory", names, func() bool { return true })
+		}
+	}
+
+	return nil
 }
 
 func (o *createOptions) Validate() error {
-	if !o.isValidComponentName() {
-		currentDir, _ := os.Getwd()
-		return fmt.Errorf("no directory named '%s' exists in %v", o.Name, currentDir)
+	matched, err := regexp.MatchString("^([a-zA-Z][a-zA-Z\\d_]*\\.)*", o.P)
+	if !matched {
+		msg := ""
+		if err != nil {
+			msg = ": " + err.Error()
+		}
+		return fmt.Errorf("'%s' is an invalid package name%s", o.P, msg)
+	}
+	currentDir, _ := os.Getwd()
+	children := o.getChildDirNames()
+	if o.scaffold {
+		// a directory will be created by the scaffolding process, we need to check that it won't override an existing dir
+		for _, child := range children {
+			if o.Name == child {
+				return fmt.Errorf("a directory named '%s' already exists in %s", o.Name, currentDir)
+			}
+		}
+		return nil
+	} else if !validation.IsValidDir(o.Name) {
+		if len(children) == 0 {
+			// if we're not scaffolding and we don't have any existing children directory, create one
+			err := os.Mkdir(o.Name, os.ModePerm)
+			if err != nil {
+				return err
+			}
+			ui.OutputSelection("Created new component directory", o.Name)
+		} else {
+			return fmt.Errorf("no directory named '%s' exists in %v", o.Name, currentDir)
+		}
 	}
 	return nil
 }
@@ -91,15 +199,15 @@ func (o *createOptions) isValidRuntime() bool {
 
 func (o *createOptions) getVersionsForRuntime() []string {
 	// todo: implement operator querying
-	versions, ok := runtimes[o.runtime]
+	r, ok := runtimes[o.runtime]
 	if !ok {
 		return []string{"Unknown runtime " + o.runtime} // shouldn't happen
 	}
-	return versions
+	return r.versions
 }
 
 func (o *createOptions) isValidVersionGivenRuntime() bool {
-	return validation.IsValid(o.version, o.getVersionsForRuntime())
+	return validation.IsValid(o.RV, o.getVersionsForRuntime())
 }
 
 func (o *createOptions) getChildDirNames() []string {
@@ -115,10 +223,6 @@ func (o *createOptions) getChildDirNames() []string {
 		}
 	}
 	return childDirs
-}
-
-func (o *createOptions) isValidComponentName() bool {
-	return validation.IsValidDir(o.Name) && validation.NameValidator(o.Name) == nil
 }
 
 func getRuntimeNames() []string {
@@ -143,8 +247,15 @@ func NewCmdCreate(fullParentName string) *cobra.Command {
 	cmd.Example = fmt.Sprintf(createExample, cmdutil.CommandName(cmd.Name(), fullParentName))
 
 	cmd.Flags().StringVarP(&o.runtime, "runtime", "r", "", "Runtime to use for the component. Possible values:"+strings.Join(getRuntimeNames(), ","))
-	cmd.Flags().StringVarP(&o.version, "version", "v", "", "Runtime version")
-	cmd.Flags().BoolVarP(&o.expose, "expose", "e", true, "Whether or not to expose the microservice outside of the cluster, defaults to 'true'")
-	cmd.Flags().Int32VarP(&o.port, "port", "p", 0, "Port the microservice listens on, defaults to 8080")
+	cmd.Flags().StringVarP(&o.RV, "runtimeVersion", "i", "", "Runtime version")
+	cmd.Flags().StringVarP(&o.exposeP, "expose", "e", "", "Whether or not to expose the microservice outside of the cluster")
+	cmd.Flags().IntVarP(&o.port, "port", "o", 0, "Port the microservice listens on")
+	cmd.Flags().StringVarP(&o.scaffoldP, "scaffold", "s", "", "Use code generator to scaffold the component")
+	cmd.Flags().StringVarP(&o.G, "groupid", "g", "", "Maven group id e.g. com.example")
+	cmd.Flags().StringVarP(&o.A, "artifactid", "a", "", "Maven artifact id e.g. demo")
+	cmd.Flags().StringVarP(&o.V, "version", "v", "", "Maven version e.g. 0.0.1-SNAPSHOT")
+	cmd.Flags().StringVarP(&o.Template, "template", "t", "rest", "Template name used to select the project to be created, only supported for Spring Boot")
+	cmd.Flags().StringVarP(&o.P, "packagename", "p", "", "Package name (defaults to <group id>.<artifact id>)")
+
 	return cmd
 }

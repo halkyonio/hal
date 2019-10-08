@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
+	"halkyon.io/hal/pkg/validation"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record/util"
@@ -46,7 +47,12 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 	}
 	for {
 		o.Name = ui.Ask("Name", o.Name, o.generateName())
-		err := o.Client.Get(o.Name, v1.GetOptions{})
+		err := validation.NameValidator(o.Name)
+		if err != nil {
+			ui.OutputError(fmt.Sprintf("Invalid name: '%s', please select another one", o.Name))
+			o.Name = ""
+		}
+		err = o.Client.Get(o.Name, v1.GetOptions{})
 		if err != nil {
 			if util.IsKeyNotFoundError(errors.Cause(err)) {
 				break // resource is not found which is what we want

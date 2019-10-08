@@ -18,19 +18,36 @@ import (
 	"strings"
 )
 
-func HttpGet(url, endpoint string, values *url.Values) []byte {
-	u := strings.Join([]string{url, endpoint}, "/")
-	if values != nil {
-		parameters := values.Encode()
-		if len(parameters) > 0 {
-			u = u + "?" + parameters
-		}
-	}
+func Generate(url, name string) error {
+	body := get(url)
 
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	zipFile := filepath.Join(currentDir, name+".zip")
+	err = ioutil.WriteFile(zipFile, body, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to download file %s due to %s", zipFile, err)
+	}
+	// output zipped file into proper child directory
+	dir := filepath.Join(filepath.Dir(zipFile), name)
+	err = Unzip(zipFile, dir)
+	if err != nil {
+		return fmt.Errorf("failed to unzip new project file %s due to %s", zipFile, err)
+	}
+	err = os.Remove(zipFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func get(url string) []byte {
 	client := http.Client{}
 
-	req, err := http.NewRequest(http.MethodGet, u, strings.NewReader(""))
-	LogErrorAndExit(err, "error creating request for "+u)
+	req, err := http.NewRequest(http.MethodGet, url, strings.NewReader(""))
+	LogErrorAndExit(err, "error creating request for "+url)
 	addClientHeader(req)
 
 	res, err := client.Do(req)
@@ -55,6 +72,19 @@ func HttpGet(url, endpoint string, values *url.Values) []byte {
 	}
 
 	return body
+
+}
+
+func HttpGet(url, endpoint string, values *url.Values) []byte {
+	u := strings.Join([]string{url, endpoint}, "/")
+	if values != nil {
+		parameters := values.Encode()
+		if len(parameters) > 0 {
+			u = u + "?" + parameters
+		}
+	}
+
+	return get(u)
 }
 
 func UnmarshallYamlFromHttp(url, endpoint string, result interface{}) {
