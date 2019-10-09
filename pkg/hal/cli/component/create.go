@@ -45,6 +45,7 @@ type halkyonRuntime struct {
 
 type createOptions struct {
 	*cmdutil.CreateOptions
+	*cmdutil.EnvOptions
 	runtime   string
 	RV        string
 	exposeP   string
@@ -81,6 +82,7 @@ func (o *createOptions) Build() runtime.Object {
 			Version:       o.RV,
 			ExposeService: o.expose,
 			Port:          int32(o.port),
+			Envs:          o.Envs,
 		},
 	}
 }
@@ -149,6 +151,10 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		if len(names) > 0 {
 			ui.SelectOrCheckExisting(&o.Name, "Local component directory", names, func() bool { return true })
 		}
+	}
+
+	if err := o.EnvOptions.Complete(); err != nil {
+		return err
 	}
 
 	return nil
@@ -234,6 +240,10 @@ func getRuntimeNames() []string {
 	return result
 }
 
+func (o *createOptions) SetEnvOptions(env *cmdutil.EnvOptions) {
+	o.EnvOptions = env
+}
+
 func NewCmdCreate(fullParentName string) *cobra.Command {
 	c := k8s.GetClient()
 	o := &createOptions{}
@@ -248,7 +258,7 @@ func NewCmdCreate(fullParentName string) *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.runtime, "runtime", "r", "", "Runtime to use for the component. Possible values:"+strings.Join(getRuntimeNames(), ","))
 	cmd.Flags().StringVarP(&o.RV, "runtimeVersion", "i", "", "Runtime version")
-	cmd.Flags().StringVarP(&o.exposeP, "expose", "e", "", "Whether or not to expose the microservice outside of the cluster")
+	cmd.Flags().StringVarP(&o.exposeP, "expose", "x", "", "Whether or not to expose the microservice outside of the cluster")
 	cmd.Flags().IntVarP(&o.port, "port", "o", 0, "Port the microservice listens on")
 	cmd.Flags().StringVarP(&o.scaffoldP, "scaffold", "s", "", "Use code generator to scaffold the component")
 	cmd.Flags().StringVarP(&o.G, "groupid", "g", "", "Maven group id e.g. com.example")
@@ -256,6 +266,8 @@ func NewCmdCreate(fullParentName string) *cobra.Command {
 	cmd.Flags().StringVarP(&o.V, "version", "v", "", "Maven version e.g. 0.0.1-SNAPSHOT")
 	cmd.Flags().StringVarP(&o.Template, "template", "t", "rest", "Template name used to select the project to be created, only supported for Spring Boot")
 	cmd.Flags().StringVarP(&o.P, "packagename", "p", "", "Package name (defaults to <group id>.<artifact id>)")
+
+	cmdutil.SetupEnvOptions(o, cmd)
 
 	return cmd
 }

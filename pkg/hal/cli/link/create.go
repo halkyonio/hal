@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	link "halkyon.io/api/link/v1beta1"
-	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
@@ -22,16 +21,19 @@ const (
 type createOptions struct {
 	targetName string
 	secret     string
-	envPairs   []string
-	envs       []halkyon.NameValuePair
 	linkType   link.LinkType
 	*cmdutil.CreateOptions
+	*cmdutil.EnvOptions
+}
+
+func (o *createOptions) SetEnvOptions(env *cmdutil.EnvOptions) {
+	o.EnvOptions = env
 }
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	// first check if proper parameters combination are provided
 	useSecret := len(o.secret) > 0
-	useEnv := len(o.envPairs) > 0
+	useEnv := len(o.EnvPairs) > 0
 	if useSecret && useEnv {
 		return fmt.Errorf("invalid parameter combination: either pass a secret name or environment variables, not both")
 	}
@@ -73,22 +75,8 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	} else {
 		o.linkType = link.EnvLinkType
 		ui.OutputSelection("Selected link type", o.linkType.String())
-		if useEnv {
-			for _, pair := range o.envPairs {
-				if _, e := o.addToEnv(pair); e != nil {
-					return e
-				}
-			}
-		} else {
-			for {
-				envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
-				if len(envAsString) == 0 {
-					break
-				}
-				if _, e := o.addToEnv(envAsString); e != nil {
-					return e
-				}
-			}
+		if err := o.EnvOptions.Complete(); err != nil {
+			return err
 		}
 	}
 
@@ -97,18 +85,6 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 
 func (o *createOptions) Validate() error {
 	return nil
-}
-
-func (o *createOptions) addToEnv(pair string) (halkyon.NameValuePair, error) {
-	// todo: extract as generic version
-	split := strings.Split(pair, "=")
-	if len(split) != 2 {
-		return halkyon.NameValuePair{}, fmt.Errorf("invalid environment variable: %s, format must be 'name=value'", pair)
-	}
-	env := halkyon.NameValuePair{Name: split[0], Value: split[1]}
-	o.envs = append(o.envs, env)
-	ui.OutputSelection("Set env variable", fmt.Sprintf("%s=%s", env.Name, env.Value))
-	return env, nil
 }
 
 func (o *createOptions) Build() runtime.Object {
@@ -121,7 +97,7 @@ func (o *createOptions) Build() runtime.Object {
 			ComponentName: o.targetName,
 			Type:          o.linkType,
 			Ref:           o.secret,
-			Envs:          o.envs,
+			Envs:          o.Envs,
 		},
 	}
 }
@@ -145,7 +121,8 @@ func NewCmdCreate(parent string) *cobra.Command {
 
 	l.Flags().StringVarP(&o.targetName, "target", "t", "", "Name of the component or capability to link to")
 	l.Flags().StringVarP(&o.secret, "secret", "s", "", "Secret name to reference if using Secret type")
-	l.Flags().StringSliceVarP(&o.envPairs, "env", "e", []string{}, "Environment variables as 'name=value' pairs")
+
+	cmdutil.SetupEnvOptions(o, l)
 
 	return l
 }
