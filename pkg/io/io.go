@@ -31,11 +31,40 @@ func Generate(url, name string) error {
 		return fmt.Errorf("failed to download file %s due to %s", zipFile, err)
 	}
 	// output zipped file into proper child directory
-	dir := filepath.Join(filepath.Dir(zipFile), name)
+	dir := filepath.Join(currentDir, name)
 	err = Unzip(zipFile, dir)
 	if err != nil {
 		return fmt.Errorf("failed to unzip new project file %s due to %s", zipFile, err)
 	}
+
+	// quarkus generator generates nested zip file so need to work around it
+	if strings.Contains(url, "quarkus") {
+		// look for artifact id since that's how quarkus names the child dir
+		params := strings.Split(url, "&")
+		for _, param := range params {
+			if strings.Contains(param, "a=") {
+				child := strings.Split(param, "=")[1]
+				// first move child outside of parent
+				tmpChildName := dir + ".new"
+				err = os.Rename(filepath.Join(dir, child), tmpChildName)
+				if err != nil {
+					return err
+				}
+				// then remove parent
+				err := os.Remove(name)
+				if err != nil {
+					return err
+				}
+				// finally, rename child to former parent name
+				err = os.Rename(tmpChildName, dir)
+				if err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+
 	err = os.Remove(zipFile)
 	if err != nil {
 		return err
