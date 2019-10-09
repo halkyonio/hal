@@ -23,7 +23,7 @@ func SetupEnvOptions(o WithEnv, cmd *cobra.Command) {
 	cmd.Flags().StringSliceVarP(&env.EnvPairs, "env", "e", []string{}, "Environment variables as 'name=value' pairs")
 }
 
-func (o *EnvOptions) Complete() error {
+func (o *EnvOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	if len(o.EnvPairs) > 0 {
 		for _, pair := range o.EnvPairs {
 			if _, e := o.addToEnv(pair); e != nil {
@@ -31,13 +31,15 @@ func (o *EnvOptions) Complete() error {
 			}
 		}
 	} else {
-		for {
-			envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
-			if len(envAsString) == 0 {
-				break
-			}
-			if _, e := o.addToEnv(envAsString); e != nil {
-				return e
+		if IsInteractive(cmd) {
+			for {
+				envAsString := ui.AskOrReturnToExit("Env variable in the 'name=value' format, simply press enter when finished")
+				if len(envAsString) == 0 {
+					break
+				}
+				if _, e := o.addToEnv(envAsString); e != nil {
+					return e
+				}
 			}
 		}
 	}

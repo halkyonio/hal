@@ -75,7 +75,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	} else {
 		o.linkType = link.EnvLinkType
 		ui.OutputSelection("Selected link type", o.linkType.String())
-		if err := o.EnvOptions.Complete(); err != nil {
+		if err := o.EnvOptions.Complete(name, cmd, args); err != nil {
 			return err
 		}
 	}
