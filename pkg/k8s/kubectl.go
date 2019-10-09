@@ -36,8 +36,13 @@ func Apply(path, namespace string) error {
 
 func runKubectl(args ...string) error {
 	command := exec.Command(kubectl, args...)
+	interceptor := log.GetErrorInterceptor()
+	command.Stderr = interceptor
 	err := command.Run()
 	if err != nil {
+		if len(interceptor.ErrorMsg) > 0 {
+			return fmt.Errorf("%v: %s", err, interceptor.ErrorMsg)
+		}
 		return err
 	}
 	return nil

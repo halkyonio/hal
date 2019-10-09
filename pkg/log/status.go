@@ -40,6 +40,22 @@ import (
 const suffixSpacing = "  "
 const prefixSpacing = " "
 
+var (
+	stdErr         = colorable.NewColorableStderr()
+	stdOut         = colorable.NewColorableStdout()
+	errInterceptor = &ErrorInterceptor{stdErr: stdErr}
+)
+
+type ErrorInterceptor struct {
+	stdErr   io.Writer
+	ErrorMsg string
+}
+
+func (l *ErrorInterceptor) Write(p []byte) (n int, err error) {
+	l.ErrorMsg = string(p)
+	return len(p), nil
+}
+
 // Status is used to track ongoing status in a CLI, with a nice loading spinner
 // when attached to a terminal
 type Status struct {
@@ -55,6 +71,7 @@ func NewStatus(w io.Writer) *Status {
 		spinner: spin,
 		writer:  w,
 	}
+	s.MaybeWrapWriter(w)
 	return s
 }
 
@@ -238,24 +255,18 @@ func IsDebug() bool {
 	return false
 }
 
-// GetStdout gets the appropriate stdout from the OS. If it's Linux, it will use
-// the go-colorable library in order to fix any and all color ASCII issues.
-// TODO: Test needs to be added once we get Windows testing available on TravisCI / CI platform.
+// GetStdout gets the appropriate stdout from the OS.
 func GetStdout() io.Writer {
-	if runtime.GOOS == "windows" {
-		return colorable.NewColorableStdout()
-	}
-	return os.Stdout
+	return stdOut
 }
 
-// GetStderr gets the appropriate stderrfrom the OS. If it's Linux, it will use
-// the go-colorable library in order to fix any and all color ASCII issues.
-// TODO: Test needs to be added once we get Windows testing available on TravisCI / CI platform.
+// GetStderr gets the appropriate stderr from the OS.
 func GetStderr() io.Writer {
-	if runtime.GOOS == "windows" {
-		return colorable.NewColorableStderr()
-	}
-	return os.Stderr
+	return stdErr
+}
+
+func GetErrorInterceptor() *ErrorInterceptor {
+	return errInterceptor
 }
 
 // getErrString returns a certain string based upon the OS.
