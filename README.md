@@ -49,17 +49,19 @@ After installing `hal`, the following steps allows to create and deploy a projec
  - Create a development folder on your laptop
 `mkdir haldemo && cd haldemo`
 
- - Create a new project using the HTTP `rest` template proposed by the scaffolding tool:
+ - Create a new scaffolded component (note that it might make more sense to do this interactively):
 
 ```
-hal component spring-boot \
-    -i hello-world \
+hal component create \
+    -r spring-boot \
+    -i 2.1.6.RELEASE \
     -g me.example \
-    -p me.example.demo \
-    -s 2.1.6.RELEASE \
-    -t rest \
+    -a hello-world \
     -v 1.0.0-SNAPSHOT \
-    --supported=false \
+    -p me.example.demo \
+    -s true \
+    -x true \
+    -o 8080 \
     hello-world
 ```
 
@@ -70,11 +72,6 @@ A component represents a micro-service, i.e. part of an application to be deploy
 - Compile and generate the `halkyon` descriptors files of the application using the following command:
 ```
 mvn package -f hello-world
-```
-
-- Create the `hello-world` component:
-```
-hal component create -c hello-world
 ```
 
 - Push the hello-world component to the remote cluster you're connected to:
