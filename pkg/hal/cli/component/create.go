@@ -26,7 +26,12 @@ var runtimes = map[string]halkyonRuntime{
 	"spring-boot": {
 		name:      "spring-boot",
 		versions:  []string{"2.1.6.RELEASE", "1.5.19.RELEASE"},
-		generator: `https://generator.snowdrop.me/app?springbootversion={{.RV}}&groupid={{.G}}&artifactid={{.A}}&version={{.V}}&template={{.Template}}&packagename={{.P}}`,
+		generator: `https://generator.snowdrop.me/app?springbootversion={{.RV}}&groupid={{.G}}&artifactid={{.A}}&version={{.V}}&template={{.Template}}&packagename={{.P}}&outdir={{.Name}}`,
+	},
+	"quarkus": {
+		name:      "quarkus",
+		versions:  []string{"0.23.2"},
+		generator: `https://code.quarkus.io/api/download?g={{.G}}&a={{.A}}&v={{.V}}&c={{.P}}.ResourceExample`,
 	},
 	"vert.x": {
 		name:      "vert.x",
@@ -131,19 +136,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		o.A = ui.Ask("Artifact Id", o.A, "myproject")
 		o.V = ui.Ask("Version", o.V, "1.0.0-SNAPSHOT")
 		o.P = ui.Ask("Package name", o.P, o.G+"."+o.A)
-
-		// complete generator URL:
-		t := template.New("generator")
-		parsed, err := t.Parse(r.generator)
-		if err != nil {
-			return err
-		}
-		builder := &strings.Builder{}
-		err = parsed.Execute(builder, o)
-		if err != nil {
-			return err
-		}
-		o.generator = builder.String()
+		o.generator = r.generator // set the generator url to the unparsed runtime generator url to be filled in Validate
 		o.scaffold = true
 	} else {
 		o.scaffold = false
@@ -153,7 +146,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		}
 	}
 
-	if err := o.EnvOptions.Complete(); err != nil {
+	if err := o.EnvOptions.Complete(name, cmd, args); err != nil {
 		return err
 	}
 
@@ -172,6 +165,20 @@ func (o *createOptions) Validate() error {
 	currentDir, _ := os.Getwd()
 	children := o.getChildDirNames()
 	if o.scaffold {
+		// generate the generator URL since we need to make sure that all fields are set (in particular Name) before executing
+		// complete generator URL:
+		t := template.New("generator")
+		parsed, err := t.Parse(o.generator)
+		if err != nil {
+			return err
+		}
+		builder := &strings.Builder{}
+		err = parsed.Execute(builder, o)
+		if err != nil {
+			return err
+		}
+		o.generator = builder.String()
+
 		// a directory will be created by the scaffolding process, we need to check that it won't override an existing dir
 		for _, child := range children {
 			if o.Name == child {
