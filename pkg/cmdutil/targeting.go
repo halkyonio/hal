@@ -3,28 +3,14 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	halkyon "halkyon.io/api"
 	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/validation"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	k8yml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
 	"reflect"
 )
-
-var deserializer runtime.Decoder
-
-func init() {
-	s := scheme.Scheme
-	if err := halkyon.AddToScheme(s); err != nil {
-		panic(err)
-	}
-
-	deserializer = scheme.Codecs.UniversalDeserializer()
-}
 
 type ComponentTargetingOptions struct {
 	paths    []string
@@ -41,7 +27,7 @@ type targetComponent struct {
 
 func initTargetComponent(path string) (tc targetComponent, err error) {
 	// check that we have an halkyon descriptor
-	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
+	descriptor := halkyonDescriptorFrom(path)
 	tc.name = filepath.Base(path)
 	tc.path = path
 	tc.descriptor = descriptor
@@ -50,7 +36,7 @@ func initTargetComponent(path string) (tc targetComponent, err error) {
 
 func initTargetComponentFromDekorate(path string) (tc targetComponent, err error) {
 	// check that we have an halkyon descriptor
-	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
+	descriptor := halkyonDescriptorFrom(path)
 	if !validation.CheckFileExist(descriptor) {
 		return tc, fmt.Errorf("halkyon descriptor was not found at %s", descriptor)
 	}

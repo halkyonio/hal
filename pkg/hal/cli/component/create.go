@@ -64,9 +64,17 @@ type createOptions struct {
 	Template  string
 	P         string
 	scaffoldP string
+	component *v1beta1.Component
+}
+
+func (o *createOptions) Set(object runtime.Object) {
+	o.component = object.(*v1beta1.Component)
 }
 
 func (o *createOptions) GeneratePrefix() string {
+	if o.component != nil {
+		return o.component.Spec.Runtime
+	}
 	return o.runtime
 }
 

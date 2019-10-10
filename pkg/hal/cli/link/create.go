@@ -24,6 +24,11 @@ type createOptions struct {
 	linkType   link.LinkType
 	*cmdutil.CreateOptions
 	*cmdutil.EnvOptions
+	link *link.Link
+}
+
+func (o *createOptions) Set(object runtime.Object) {
+	o.link = object.(*link.Link)
 }
 
 func (o *createOptions) SetEnvOptions(env *cmdutil.EnvOptions) {
