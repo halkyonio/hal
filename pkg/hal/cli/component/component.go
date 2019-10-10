@@ -10,7 +10,6 @@ const commandName = "component"
 
 func NewCmdComponent(parent string) *cobra.Command {
 	fullName := cmdutil.CommandName(commandName, parent)
-	project := NewCmdProject(fullName)
 	push := NewCmdPush(fullName)
 	mode := NewCmdMode(fullName)
 	create := NewCmdCreate(fullName)
@@ -20,10 +19,9 @@ func NewCmdComponent(parent string) *cobra.Command {
 		Use:   fmt.Sprintf("%s [flags]", commandName),
 		Short: "Manage components",
 		Long:  `Manage components`,
-		Example: fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n\n%s",
+		Example: fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s",
 			create.Example,
 			del.Example,
-			project.Example,
 			push.Example,
 			mode.Example),
 	}
@@ -31,7 +29,6 @@ func NewCmdComponent(parent string) *cobra.Command {
 	hal.AddCommand(
 		create,
 		del,
-		project,
 		push,
 		mode,
 	)
