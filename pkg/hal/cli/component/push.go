@@ -158,6 +158,12 @@ func (o *pushOptions) push(component *component.Component) error {
 	s.End(true)
 
 	if !o.binary {
+		// clean up any existing code to avoid getting remnants from all code
+		if err = c.ExecCommand(podName, []string{"rm", "-rf", k8s.ExtractedSourcePathInContainer + "/*"},
+			"Cleaning up component"); err != nil {
+			return err
+		}
+
 		if err = c.ExecCommand(podName, []string{"tar", "xmf", k8s.SourcePathInContainer, "-C", k8s.ExtractedSourcePathInContainer},
 			"Extracting source on the remote cluster"); err != nil {
 			return err
