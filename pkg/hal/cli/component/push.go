@@ -37,10 +37,7 @@ var (
 	pushExample = ktemplates.Examples(`  # Deploy the components client-sb, backend-sb
   %[1]s -c client-sb,backend-sb`)
 	excludedFileNames = map[string]bool{
-		"target":    true,
-		".git":      true,
-		".DS_Store": true,
-		".idea":     true,
+		"target": true,
 	}
 )
 
@@ -73,8 +70,14 @@ func (o *pushOptions) Run() error {
 		return fmt.Errorf("couldn't find binary to push: %s", binaryPath)
 	}
 	if !o.binary {
+		// first check execution context: if we're executing in the component's directory, we don't need to prepend it to the file
+		currentDir, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		isInComponentDir := filepath.Base(currentDir) == o.GetTargetedComponentName()
+
 		// generate tar
-		// naively exclude target from files to be tarred
 		children, err := ioutil.ReadDir(o.GetTargetedComponentPath())
 		toTar := make([]string, 0, len(children))
 		if err != nil {
@@ -82,8 +85,12 @@ func (o *pushOptions) Run() error {
 		}
 		for _, child := range children {
 			name := child.Name()
-			if !excludedFileNames[name] {
-				toTar = append(toTar, filepath.Join(o.GetTargetedComponentName(), name))
+			if !strings.HasPrefix(name, ".") && !excludedFileNames[name] {
+				fileName := name
+				if !isInComponentDir {
+					fileName = filepath.Join(o.GetTargetedComponentName(), name)
+				}
+				toTar = append(toTar, fileName)
 			}
 		}
 
