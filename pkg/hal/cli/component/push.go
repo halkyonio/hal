@@ -26,8 +26,7 @@ const pushCommandName = "push"
 
 type pushOptions struct {
 	*cmdutil.ComponentTargetingOptions
-	component *component.Component
-	binary    bool
+	binary bool
 }
 
 func (o *pushOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
@@ -50,9 +49,15 @@ func (o *pushOptions) Complete(name string, cmd *cobra.Command, args []string) e
 }
 
 func (o *pushOptions) Validate() (err error) {
+	return nil
+}
+
+func (o *pushOptions) Run() error {
+	// first check that the component exists:
 	c := k8s.GetClient()
 	name := o.GetTargetedComponentName()
-	o.component, err = c.HalkyonComponentClient.Components(c.Namespace).Get(name, v1.GetOptions{})
+	components := c.HalkyonComponentClient.Components(c.Namespace)
+	comp, err := components.Get(name, v1.GetOptions{})
 	if err != nil {
 		// check error to see if it means that the component doesn't exist yet
 		if util.IsKeyNotFoundError(errors.Cause(err)) {
@@ -61,10 +66,7 @@ func (o *pushOptions) Validate() (err error) {
 			return err
 		}
 	}
-	return nil
-}
 
-func (o *pushOptions) Run() error {
 	// check if the component revision is different
 	binaryPath, err := o.getComponentBinaryPath()
 	if err != nil {
@@ -102,25 +104,24 @@ func (o *pushOptions) Run() error {
 		return err
 	}
 	revision := fmt.Sprintf("%x", hash.Sum(nil))
-	if !o.needsPush(revision, o.component) {
-		log.Infof("No local changes detected for '%s' component: nothing to push!", o.component.Name)
+	if !o.needsPush(revision, comp) {
+		log.Infof("No local changes detected for '%s' component: nothing to push!", name)
 		return nil
 	}
 	pushType := "source code"
 	if o.binary {
 		pushType = "packaged binary"
 	}
-	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", o.component.Name, pushType)
+	log.Infof("Local changes detected for '%s' component: about to push %s to remote cluster", name, pushType)
 
-	err = o.push(o.component)
+	err = o.push(comp)
 	if err != nil {
 		return err
 	}
 
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
-	c := k8s.GetClient()
-	_, err = c.HalkyonComponentClient.Components(c.Namespace).Patch(o.component.Name, types.MergePatchType, []byte(patch))
+	_, err = components.Patch(name, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
