@@ -6,7 +6,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true
+          docker_layer_caching: false
       - run: curl -sL https://git.io/goreleaser | bash
       - run:
           name: Build hal container image and publish it on quay under halkyonio org
@@ -24,7 +24,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true
+          docker_layer_caching: false
       - run: curl -sL https://git.io/goreleaser | bash -s -- --snapshot
       - run:
           name: Build hal container image and publish it on quay under halkyonio org
