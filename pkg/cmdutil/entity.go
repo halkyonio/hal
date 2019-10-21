@@ -21,6 +21,23 @@ func (r ResourceType) String() string {
 	return string(r)
 }
 
+func KnownResourceTypes() []ResourceType {
+	return []ResourceType{Capability, Component, Link}
+}
+
+func ResourceTypeFor(object runtime.Object) (ResourceType, error) {
+	if object == nil {
+		return "", fmt.Errorf("must provide a non-nil runtime.Object")
+	}
+	kind := strings.ToLower(object.GetObjectKind().GroupVersionKind().Kind)
+	for _, t := range KnownResourceTypes() {
+		if kind == t.String() {
+			return t, nil
+		}
+	}
+	return "", fmt.Errorf("unknown resource type: %s", kind)
+}
+
 type GenericOperationOptions struct {
 	ResourceType  ResourceType
 	Name          string
