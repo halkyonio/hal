@@ -143,7 +143,7 @@ func LogErrorAndExit(err error, context string, a ...interface{}) {
 		switch t := err.(type) {
 		case k8serrors.APIStatus:
 			reason := k8serrors.ReasonForError(err)
-			msg = fmt.Sprintf("error communicating with cluster: %s", reason)
+			msg = fmt.Sprintf("error communicating with cluster: %s: %s", msg, reason)
 		default:
 			errName := reflect.TypeOf(t).Name()
 			if len(errName) > 0 {
