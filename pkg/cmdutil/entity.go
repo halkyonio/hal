@@ -9,8 +9,20 @@ import (
 	"strings"
 )
 
+type ResourceType string
+
+const (
+	Component  ResourceType = "component"
+	Capability ResourceType = "capability"
+	Link       ResourceType = "link"
+)
+
+func (r ResourceType) String() string {
+	return string(r)
+}
+
 type GenericOperationOptions struct {
-	ResourceType  string
+	ResourceType  ResourceType
 	Name          string
 	Client        HalkyonEntity
 	operationName string

@@ -16,7 +16,7 @@ type DeleteOptions struct {
 	*GenericOperationOptions
 }
 
-func NewDeleteOptions(resourceType string, client HalkyonEntity) *DeleteOptions {
+func NewDeleteOptions(resourceType ResourceType, client HalkyonEntity) *DeleteOptions {
 	d := &DeleteOptions{}
 	d.GenericOperationOptions = &GenericOperationOptions{
 		ResourceType:  resourceType,
@@ -58,7 +58,7 @@ func (o *DeleteOptions) Validate() error {
 		if len(o.Name) == 0 {
 			s = "No provided " + o.ResourceType + " name"
 		}
-		message := ui.SelectFromOtherErrorMessage(s, o.Name)
+		message := ui.SelectFromOtherErrorMessage(s.String(), o.Name)
 		o.Name = ui.Select(message, known)
 	}
 	return nil

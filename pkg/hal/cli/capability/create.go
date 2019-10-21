@@ -195,7 +195,7 @@ func (o *createOptions) addValueFor(prop parameterInfo) {
 func NewCmdCreate(parent string) *cobra.Command {
 	c := k8s.GetClient()
 	o := &createOptions{}
-	generic := cmdutil.NewCreateOptions("capability", client{
+	generic := cmdutil.NewCreateOptions(cmdutil.Capability, client{
 		client: c.HalkyonCapabilityClient.Capabilities(c.Namespace),
 		ns:     c.Namespace,
 	})

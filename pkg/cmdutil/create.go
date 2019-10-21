@@ -26,7 +26,7 @@ type CreateOptions struct {
 	Delegate Creator
 }
 
-func NewCreateOptions(resourceType string, client HalkyonEntity) *CreateOptions {
+func NewCreateOptions(resourceType ResourceType, client HalkyonEntity) *CreateOptions {
 	c := &CreateOptions{}
 	c.GenericOperationOptions = &GenericOperationOptions{
 		ResourceType:  resourceType,

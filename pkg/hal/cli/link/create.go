@@ -109,7 +109,7 @@ func (o *createOptions) GeneratePrefix() string {
 func NewCmdCreate(parent string) *cobra.Command {
 	c := k8s.GetClient()
 	o := &createOptions{}
-	generic := cmdutil.NewCreateOptions("link", client{
+	generic := cmdutil.NewCreateOptions(cmdutil.Link, client{
 		client: c.HalkyonLinkClient.Links(c.Namespace),
 		ns:     c.Namespace,
 	})
