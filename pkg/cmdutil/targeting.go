@@ -3,28 +3,11 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	halkyon "halkyon.io/api"
-	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/validation"
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	k8yml "k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
 	"reflect"
 )
-
-var deserializer runtime.Decoder
-
-func init() {
-	s := scheme.Scheme
-	if err := halkyon.AddToScheme(s); err != nil {
-		panic(err)
-	}
-
-	deserializer = scheme.Codecs.UniversalDeserializer()
-}
 
 type ComponentTargetingOptions struct {
 	paths    []string
@@ -46,40 +29,6 @@ func initTargetComponent(path string) (tc targetComponent, err error) {
 	tc.path = path
 	tc.descriptor = descriptor
 	return tc, nil
-}
-
-func initTargetComponentFromDekorate(path string) (tc targetComponent, err error) {
-	// check that we have an halkyon descriptor
-	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
-	if !validation.CheckFileExist(descriptor) {
-		return tc, fmt.Errorf("halkyon descriptor was not found at %s", descriptor)
-	}
-
-	// look for the component name in the halkyon descriptor
-	file, err := os.Open(descriptor)
-	if err != nil {
-		return tc, err
-	}
-	decoder := k8yml.NewYAMLToJSONDecoder(file)
-	list := &v1.List{}
-	err = decoder.Decode(list)
-	for _, value := range list.Items {
-		object := value.Object
-		if object == nil {
-			object, _, err = deserializer.Decode(value.Raw, nil, nil)
-			if err != nil {
-				return tc, err
-			}
-		}
-		// look for a component descriptor in the halkyon list
-		if c, ok := object.(*v1beta1.Component); ok {
-			tc.name = c.Name
-			tc.path = path
-			tc.descriptor = descriptor
-			return tc, nil
-		}
-	}
-	return tc, fmt.Errorf("no component configuration found in %s", descriptor)
 }
 
 type withTargeting interface {
