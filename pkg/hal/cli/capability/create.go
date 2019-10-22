@@ -22,6 +22,11 @@ type createOptions struct {
 	paramPairs  []string
 	parameters  []halkyon.NameValuePair
 	*cmdutil.CreateOptions
+	target *v1beta1.Capability
+}
+
+func (o *createOptions) Set(entity runtime.Object) {
+	o.target = entity.(*v1beta1.Capability)
 }
 
 var (

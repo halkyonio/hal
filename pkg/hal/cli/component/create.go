@@ -64,6 +64,7 @@ type createOptions struct {
 	Template  string
 	P         string
 	scaffoldP string
+	target    *v1beta1.Component
 }
 
 func (o *createOptions) GeneratePrefix() string {
@@ -90,6 +91,10 @@ func (o *createOptions) Build() runtime.Object {
 			Envs:          o.Envs,
 		},
 	}
+}
+
+func (o *createOptions) Set(entity runtime.Object) {
+	o.target = entity.(*v1beta1.Component)
 }
 
 var (

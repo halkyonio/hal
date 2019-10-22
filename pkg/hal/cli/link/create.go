@@ -24,6 +24,7 @@ type createOptions struct {
 	linkType   link.LinkType
 	*cmdutil.CreateOptions
 	*cmdutil.EnvOptions
+	target *link.Link
 }
 
 func (o *createOptions) SetEnvOptions(env *cmdutil.EnvOptions) {
@@ -104,6 +105,10 @@ func (o *createOptions) Build() runtime.Object {
 
 func (o *createOptions) GeneratePrefix() string {
 	return o.targetName
+}
+
+func (o *createOptions) Set(entity runtime.Object) {
+	o.target = entity.(*link.Link)
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
