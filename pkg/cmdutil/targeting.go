@@ -24,7 +24,7 @@ type targetComponent struct {
 
 func initTargetComponent(path string) (tc targetComponent, err error) {
 	// check that we have an halkyon descriptor
-	descriptor := filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
+	descriptor := halkyonDescriptorFrom(path, "yml")
 	tc.name = filepath.Base(path)
 	tc.path = path
 	tc.descriptor = descriptor
