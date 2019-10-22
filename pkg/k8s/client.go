@@ -185,7 +185,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1beta1.ComponentPha
 					podChannel <- e
 					break loop
 				case v1beta1.ComponentFailed, v1beta1.ComponentUnknown:
-					watchErrorChannel <- errors.Errorf("component %s status %s", e.Name, e.Status.Phase)
+					watchErrorChannel <- errors.Errorf("'%s' component's status is %s: %s", e.Name, e.Status.Phase, e.Status.Message)
 					break loop
 				}
 			} else {
