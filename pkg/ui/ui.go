@@ -122,6 +122,10 @@ func OutputError(msg string) {
 	fmt.Println(ansi.Red + ansi.ColorCode("default+hb") + core.ErrorIcon + " " + msg + ansi.Reset)
 }
 
+func OutputMessage(msg string) {
+	fmt.Println(ansi.Cyan + ansi.ColorCode("default+hb") + msg + ansi.Reset)
+}
+
 func SelectFromOtherErrorMessage(msg, wrong string) string {
 	return fmt.Sprintf("%s%s: %s%s\nSelect other(s) from:", ansi.Red, msg, wrong, ansi.ColorCode("default"))
 }
