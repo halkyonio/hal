@@ -100,6 +100,7 @@ func (o *pushOptions) Run() error {
 		if err := tar.Archive(toTar, binaryPath); err != nil {
 			return err
 		}
+		defer os.Remove(binaryPath)
 	}
 	file, err := os.Open(binaryPath)
 	if err != nil {
