@@ -102,12 +102,8 @@ func (hd *HalkyonDescriptor) GetDefinedEntitiesWith(t ResourceType) entitiesRegi
 }
 
 func LoadAvailableHalkyonEntities(path string) *HalkyonDescriptor {
-	hdPath := filepath.Join(path, "halkyon.yaml")
-	hd, _ := LoadHalkyonDescriptor(hdPath)
-
-	hdPath = filepath.Join(path, "target", "classes", "META-INF", "dekorate", "halkyon.yml")
-	fromDekorate, _ := LoadHalkyonDescriptor(hdPath)
-	hd.mergeWith(fromDekorate)
+	hd := newHalkyonDescriptor(10)
+	hd.addEntitiesFromDir(path)
 
 	children, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -115,11 +111,24 @@ func LoadAvailableHalkyonEntities(path string) *HalkyonDescriptor {
 	}
 	for _, child := range children {
 		if child.IsDir() {
-			hd.mergeWith(LoadAvailableHalkyonEntities(filepath.Join(path, child.Name())))
+			hd.addEntitiesFromDir(filepath.Join(path, child.Name()))
 		}
 	}
 
 	return hd
+}
+
+func (hd *HalkyonDescriptor) addEntitiesFromDir(path string) {
+	extensions := []string{"yaml", "yml"}
+	for _, extension := range extensions {
+		hdPath := filepath.Join(path, descriptorName(extension))
+		d, _ := LoadHalkyonDescriptor(hdPath)
+		hd.mergeWith(d)
+
+		hdPath = halkyonDescriptorFrom(path, extension)
+		fromDekorate, _ := LoadHalkyonDescriptor(hdPath)
+		hd.mergeWith(fromDekorate)
+	}
 }
 
 func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
@@ -148,4 +157,12 @@ func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
 	}
 
 	return hd, nil
+}
+
+func halkyonDescriptorFrom(path, extension string) string {
+	return filepath.Join(path, "target", "classes", "META-INF", "dekorate", descriptorName(extension))
+}
+
+func descriptorName(extension string) string {
+	return fmt.Sprintf("halkyon.%s", extension)
 }
