@@ -39,18 +39,21 @@ func (o *createOptions) GeneratePrefix() string {
 }
 
 func (o *createOptions) Build() runtime.Object {
-	return &v1beta1.Capability{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      o.Name,
-			Namespace: o.CreateOptions.Client.GetNamespace(),
-		},
-		Spec: v1beta1.CapabilitySpec{
-			Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
-			Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
-			Version:    o.version,
-			Parameters: o.parameters,
-		},
+	if o.target == nil {
+		o.target = &v1beta1.Capability{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      o.Name,
+				Namespace: o.CreateOptions.Client.GetNamespace(),
+			},
+			Spec: v1beta1.CapabilitySpec{
+				Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
+				Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
+				Version:    o.version,
+				Parameters: o.parameters,
+			},
+		}
 	}
+	return o.target
 }
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {

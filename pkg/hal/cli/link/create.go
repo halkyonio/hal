@@ -89,18 +89,21 @@ func (o *createOptions) Validate() error {
 }
 
 func (o *createOptions) Build() runtime.Object {
-	return &link.Link{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      o.Name,
-			Namespace: o.CreateOptions.Client.GetNamespace(),
-		},
-		Spec: link.LinkSpec{
-			ComponentName: o.targetName,
-			Type:          o.linkType,
-			Ref:           o.secret,
-			Envs:          o.Envs,
-		},
+	if o.target == nil {
+		o.target = &link.Link{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      o.Name,
+				Namespace: o.CreateOptions.Client.GetNamespace(),
+			},
+			Spec: link.LinkSpec{
+				ComponentName: o.targetName,
+				Type:          o.linkType,
+				Ref:           o.secret,
+				Envs:          o.Envs,
+			},
+		}
 	}
+	return o.target
 }
 
 func (o *createOptions) GeneratePrefix() string {

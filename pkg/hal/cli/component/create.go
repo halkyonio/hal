@@ -76,25 +76,30 @@ func (o *createOptions) GeneratePrefix() string {
 }
 
 func (o *createOptions) Build() runtime.Object {
-	if len(o.generator) > 0 {
-		err := io.Generate(o.generator, o.Name)
-		if err != nil {
-			panic(err)
+	if o.target == nil {
+		if len(o.generator) > 0 {
+			err := io.Generate(o.generator, o.Name)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		o.target = &v1beta1.Component{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      o.Name,
+				Namespace: o.CreateOptions.Client.GetNamespace(),
+			},
+			Spec: v1beta1.ComponentSpec{
+				Runtime:       o.runtime,
+				Version:       o.RV,
+				ExposeService: o.expose,
+				Port:          int32(o.port),
+				Envs:          o.Envs,
+			},
 		}
 	}
-	return &v1beta1.Component{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      o.Name,
-			Namespace: o.CreateOptions.Client.GetNamespace(),
-		},
-		Spec: v1beta1.ComponentSpec{
-			Runtime:       o.runtime,
-			Version:       o.RV,
-			ExposeService: o.expose,
-			Port:          int32(o.port),
-			Envs:          o.Envs,
-		},
-	}
+
+	return o.target
 }
 
 func (o *createOptions) Set(entity runtime.Object) {
