@@ -35,7 +35,7 @@ var runtimes = map[string]halkyonRuntime{
 	},
 	"vert.x": {
 		name:      "vert.x",
-		versions:  []string{"3.8.2", "3.7.1"},
+		versions:  []string{"3.8.3", "3.7.1"},
 		generator: `https://start.vertx.io/starter.zip?vertxVersion={{.RV}}&groupId={{.G}}&artifactId={{.A}}&packageName={{.P}}`,
 	},
 	"thorntail": {
@@ -43,7 +43,7 @@ var runtimes = map[string]halkyonRuntime{
 		versions:  []string{"2.5.0.Final", "2.4.0.Final"},
 		generator: `https://generator.thorntail.io/generator?g={{.G}}&a={{.A}}&v={{.V}}&p={{.P}}&sv={{.RV}}&d=cdi&d=jaxrs&d=microprofile-health&nested=false`,
 	},
-	"node.js":   {name: "node.js", versions: []string{"12.x", "10.x", "8.x"}},
+	"node.js": {name: "node.js", versions: []string{"12.x", "10.x", "8.x"}},
 }
 
 type halkyonRuntime struct {
