@@ -41,7 +41,7 @@ var runtimes = map[string]halkyonRuntime{
 	"thorntail": {
 		name:      "thorntail",
 		versions:  []string{"2.5.0.Final", "2.4.0.Final"},
-		generator: `https://generator.thorntail.io/generator?g={{.G}}&a={{.A}}&v={{.V}}&p={{.P}}&sv={{.RV}}&d=cdi&d=jaxrs&d=microprofile-health&nested=false`,
+		generator: `http://generator.thorntail.io/generator?g={{.G}}&a={{.A}}&v={{.V}}&p={{.P}}&sv={{.RV}}&d=cdi&d=jaxrs&d=microprofile-health&nested=false`,
 	},
 	"node.js": {name: "node.js", versions: []string{"12.x", "10.x", "8.x"}},
 }
