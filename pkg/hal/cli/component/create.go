@@ -125,7 +125,7 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		o.expose = b
 	}
 
-	if o.expose && o.port == 0 {
+	if o.port == 0 {
 		port := ui.Ask("Port", fmt.Sprintf("%d", o.port), "8080")
 		intPort, err := strconv.Atoi(port)
 		if err != nil {
