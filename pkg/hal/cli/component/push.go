@@ -177,7 +177,13 @@ func (o *pushOptions) push(component *component.Component) error {
 			return err
 		}
 
-		if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, "Performing build"); err != nil {
+		// need to stop running app before building a new version
+		if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, ""); err != nil {
+			return err
+		}
+
+		// perform build directly to block until it's finished
+		if err = c.ExecCommand(podName, []string{"/usr/local/bin/build"}, "Performing build"); err != nil {
 			return err
 		}
 	}
