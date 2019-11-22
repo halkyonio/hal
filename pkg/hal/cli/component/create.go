@@ -35,7 +35,7 @@ var runtimes = map[string]halkyonRuntime{
 	},
 	"vert.x": {
 		name:      "vert.x",
-		versions:  []string{"3.8.3", "3.7.1"},
+		versions:  []string{"3.8.4", "3.7.1"},
 		generator: `https://start.vertx.io/starter.zip?vertxVersion={{.RV}}&groupId={{.G}}&artifactId={{.A}}&packageName={{.P}}`,
 	},
 	"thorntail": {
