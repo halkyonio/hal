@@ -170,7 +170,7 @@ func (o *createOptions) Validate() error {
 		}
 		return nil
 	} else if !validation.IsValidDir(o.Name) {
-		if len(children) == 0 {
+		if len(children) == 0 || ui.Proceed(fmt.Sprintf("no directory named '%s' exists in %v, create it", o.Name, currentDir)) {
 			// if we're not scaffolding and we don't have any existing children directory, create one
 			err := os.Mkdir(o.Name, os.ModePerm)
 			if err != nil {
@@ -178,7 +178,7 @@ func (o *createOptions) Validate() error {
 			}
 			ui.OutputSelection("Created new component directory", o.Name)
 		} else {
-			return fmt.Errorf("no directory named '%s' exists in %v", o.Name, currentDir)
+			return fmt.Errorf("'%s' directory was not created in %v", o.Name, currentDir)
 		}
 	}
 	return nil
