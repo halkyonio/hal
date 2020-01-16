@@ -106,18 +106,22 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		o.port = intPort
 	}
 
+	r := runtimes[o.runtime]
+	hasGenerator := len(r.generator) > 0
 	if len(o.scaffoldP) == 0 {
-		o.scaffold = ui.Proceed("Use code generator")
+		o.scaffold = hasGenerator && ui.Proceed("Use code generator")
 	} else {
 		b, err := strconv.ParseBool(o.scaffoldP)
 		if err != nil {
 			return err
 		}
-		o.scaffold = b
+		if b && !hasGenerator {
+			ui.OutputError(fmt.Sprintf("ignoring scaffolding option because unsupported by %s runtime", r.name))
+		}
+		o.scaffold = hasGenerator && b
 	}
 
-	r := runtimes[o.runtime]
-	if len(r.generator) > 0 && o.scaffold {
+	if o.scaffold {
 		o.GroupId = ui.Ask("Group Id", o.GroupId, "dev.snowdrop")
 		o.ArtifactId = ui.Ask("Artifact Id", o.ArtifactId, "myproject")
 		o.ProjectVersion = ui.Ask("Version", o.ProjectVersion, "1.0.0-SNAPSHOT")
