@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"halkyon.io/api/component/v1beta1"
+	v1beta12 "halkyon.io/api/runtime/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/io"
 	"halkyon.io/hal/pkg/k8s"
@@ -19,7 +20,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"text/template"
 )
 
 var runtimes = <-getRuntimes()
@@ -33,18 +33,13 @@ type halkyonRuntime struct {
 type createOptions struct {
 	*cmdutil.CreateOptions
 	*cmdutil.EnvOptions
+	*v1beta12.GeneratorOptions
 	runtime   string
-	RV        string
 	exposeP   string
 	expose    bool
 	port      int
 	scaffold  bool
-	G         string
-	A         string
-	V         string
 	generator string
-	Template  string
-	P         string
 	scaffoldP string
 	target    *v1beta1.Component
 }
@@ -69,7 +64,7 @@ func (o *createOptions) Build() runtime.Object {
 			},
 			Spec: v1beta1.ComponentSpec{
 				Runtime:       o.runtime,
-				Version:       o.RV,
+				Version:       o.RuntimeVersion,
 				ExposeService: o.expose,
 				Port:          int32(o.port),
 				Envs:          o.Envs,
@@ -91,7 +86,7 @@ var (
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
 	ui.SelectOrCheckExisting(&o.runtime, "Runtime", o.getRuntimes(), o.isValidRuntime)
-	ui.SelectOrCheckExisting(&o.RV, "Version", o.getVersionsForRuntime(), o.isValidVersionGivenRuntime)
+	ui.SelectOrCheckExisting(&o.RuntimeVersion, "Version", o.getVersionsForRuntime(), o.isValidVersionGivenRuntime)
 
 	if len(o.exposeP) == 0 {
 		o.expose = ui.Proceed("Expose microservice")
@@ -124,10 +119,10 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 
 	r := runtimes[o.runtime]
 	if len(r.generator) > 0 && o.scaffold {
-		o.G = ui.Ask("Group Id", o.G, "dev.snowdrop")
-		o.A = ui.Ask("Artifact Id", o.A, "myproject")
-		o.V = ui.Ask("Version", o.V, "1.0.0-SNAPSHOT")
-		o.P = ui.Ask("Package name", o.P, o.G+"."+o.A)
+		o.GroupId = ui.Ask("Group Id", o.GroupId, "dev.snowdrop")
+		o.ArtifactId = ui.Ask("Artifact Id", o.ArtifactId, "myproject")
+		o.ProjectVersion = ui.Ask("Version", o.ProjectVersion, "1.0.0-SNAPSHOT")
+		o.PackageName = ui.Ask("Package name", o.PackageName, o.GroupId+"."+o.ArtifactId)
 		o.generator = r.generator // set the generator url to the unparsed runtime generator url to be filled in Validate
 		o.scaffold = true
 	} else {
@@ -146,30 +141,23 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 }
 
 func (o *createOptions) Validate() error {
-	matched, err := regexp.MatchString("^([a-zA-Z][a-zA-Z\\d_]*\\.)*", o.P)
+	matched, err := regexp.MatchString("^([a-zA-Z][a-zA-Z\\d_]*\\.)*", o.PackageName)
 	if !matched {
 		msg := ""
 		if err != nil {
 			msg = ": " + err.Error()
 		}
-		return fmt.Errorf("'%s' is an invalid package name%s", o.P, msg)
+		return fmt.Errorf("'%s' is an invalid package name%s", o.PackageName, msg)
 	}
 	currentDir, _ := os.Getwd()
 	children := o.getChildDirNames()
 	if o.scaffold {
 		// generate the generator URL since we need to make sure that all fields are set (in particular Name) before executing
 		// complete generator URL:
-		t := template.New("generator")
-		parsed, err := t.Parse(o.generator)
+		o.generator, err = v1beta12.ComputeGeneratorURL(o.generator, *o.GeneratorOptions)
 		if err != nil {
 			return err
 		}
-		builder := &strings.Builder{}
-		err = parsed.Execute(builder, o)
-		if err != nil {
-			return err
-		}
-		o.generator = builder.String()
 
 		// a directory will be created by the scaffolding process, we need to check that it won't override an existing dir
 		for _, child := range children {
@@ -212,7 +200,7 @@ func (o *createOptions) getVersionsForRuntime() []string {
 }
 
 func (o *createOptions) isValidVersionGivenRuntime() bool {
-	return validation.IsValid(o.RV, o.getVersionsForRuntime())
+	return validation.IsValid(o.RuntimeVersion, o.getVersionsForRuntime())
 }
 
 func (o *createOptions) getChildDirNames() []string {
@@ -316,19 +304,20 @@ func NewCmdCreate(fullParentName string) *cobra.Command {
 	})
 	generic.Delegate = o
 	o.CreateOptions = generic
+	o.GeneratorOptions = &v1beta12.GeneratorOptions{}
 	cmd := cmdutil.NewGenericCreate(fullParentName, generic)
 	cmd.Example = fmt.Sprintf(createExample, cmdutil.CommandName(cmd.Name(), fullParentName))
 
 	cmd.Flags().StringVarP(&o.runtime, "runtime", "r", "", "Runtime to use for the component. Possible values:"+strings.Join(getRuntimeNames(), ","))
-	cmd.Flags().StringVarP(&o.RV, "runtimeVersion", "i", "", "Runtime version")
+	cmd.Flags().StringVarP(&o.RuntimeVersion, "runtimeVersion", "i", "", "Runtime version")
 	cmd.Flags().StringVarP(&o.exposeP, "expose", "x", "", "Whether or not to expose the microservice outside of the cluster")
 	cmd.Flags().IntVarP(&o.port, "port", "o", 0, "Port the microservice listens on")
 	cmd.Flags().StringVarP(&o.scaffoldP, "scaffold", "s", "", "Use code generator to scaffold the component")
-	cmd.Flags().StringVarP(&o.G, "groupid", "g", "", "Maven group id e.g. com.example")
-	cmd.Flags().StringVarP(&o.A, "artifactid", "a", "", "Maven artifact id e.g. demo")
-	cmd.Flags().StringVarP(&o.V, "version", "v", "", "Maven version e.g. 0.0.1-SNAPSHOT")
-	cmd.Flags().StringVarP(&o.Template, "template", "t", "rest", "Template name used to select the project to be created, only supported for Spring Boot")
-	cmd.Flags().StringVarP(&o.P, "packagename", "p", "", "Package name (defaults to <group id>.<artifact id>)")
+	cmd.Flags().StringVarP(&o.GroupId, "groupid", "g", "", "Maven group id e.g. com.example")
+	cmd.Flags().StringVarP(&o.ArtifactId, "artifactid", "a", "", "Maven artifact id e.g. demo")
+	cmd.Flags().StringVarP(&o.ProjectVersion, "version", "v", "", "Maven version e.g. 0.0.1-SNAPSHOT")
+	cmd.Flags().StringVarP(&o.ProjectTemplate, "template", "t", "rest", "Template name used to select the project to be created, only supported for Spring Boot")
+	cmd.Flags().StringVarP(&o.PackageName, "packagename", "p", "", "Package name (defaults to <group id>.<artifact id>)")
 
 	cmdutil.SetupEnvOptions(o, cmd)
 
