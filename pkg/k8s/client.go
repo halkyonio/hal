@@ -8,6 +8,7 @@ import (
 	component "halkyon.io/api/component/clientset/versioned/typed/component/v1beta1"
 	"halkyon.io/api/component/v1beta1"
 	link "halkyon.io/api/link/clientset/versioned/typed/link/v1beta1"
+	hruntime "halkyon.io/api/runtime/clientset/versioned/typed/runtime/v1beta1"
 	io2 "halkyon.io/hal/pkg/io"
 	log2 "halkyon.io/hal/pkg/log"
 	"io"
@@ -35,6 +36,7 @@ type Client struct {
 	HalkyonComponentClient  *component.HalkyonV1beta1Client
 	HalkyonLinkClient       *link.HalkyonV1beta1Client
 	HalkyonCapabilityClient *capability.HalkyonV1beta1Client
+	HalkyonRuntimeClient    *hruntime.HalkyonV1beta1Client
 	KubeConfig              clientcmd.ClientConfig
 	Namespace               string
 }
@@ -64,6 +66,9 @@ func GetClient() *Client {
 
 		client.HalkyonCapabilityClient, err = capability.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating halkyon capability client")
+
+		client.HalkyonRuntimeClient, err = hruntime.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating halkyon runtime client")
 
 		namespace, _, err := client.KubeConfig.Namespace()
 		io2.LogErrorAndExit(err, "error retrieving namespace")

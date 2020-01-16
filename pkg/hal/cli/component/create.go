@@ -22,30 +22,7 @@ import (
 	"text/template"
 )
 
-// todo: remove and replace by operator querying
-var runtimes = map[string]halkyonRuntime{
-	"spring-boot": {
-		name:      "spring-boot",
-		versions:  []string{"2.1.6.RELEASE", "1.5.19.RELEASE"},
-		generator: `https://generator.snowdrop.me/app?springbootversion={{.RV}}&groupid={{.G}}&artifactid={{.A}}&version={{.V}}&template={{.Template}}&packagename={{.P}}&outdir={{.Name}}`,
-	},
-	"quarkus": {
-		name:      "quarkus",
-		versions:  []string{"0.23.2"},
-		generator: `https://code.quarkus.io/api/download?g={{.G}}&a={{.A}}&v={{.V}}&c={{.P}}.ResourceExample`,
-	},
-	"vert.x": {
-		name:      "vert.x",
-		versions:  <-getVertXVersions(),
-		generator: `https://start.vertx.io/starter.zip?vertxVersion={{.RV}}&groupId={{.G}}&artifactId={{.A}}&packageName={{.P}}`,
-	},
-	"thorntail": {
-		name:      "thorntail",
-		versions:  []string{"2.5.0.Final", "2.4.0.Final"},
-		generator: `http://generator.thorntail.io/generator?g={{.G}}&a={{.A}}&v={{.V}}&p={{.P}}&sv={{.RV}}&d=cdi&d=jaxrs&d=microprofile-health&nested=false`,
-	},
-	"node.js": {name: "node.js", versions: []string{"12.x", "10.x", "8.x"}},
-}
+var runtimes = <-getRuntimes()
 
 type halkyonRuntime struct {
 	name      string
@@ -251,6 +228,38 @@ func (o *createOptions) getChildDirNames() []string {
 		}
 	}
 	return childDirs
+}
+
+func getRuntimes() chan map[string]*halkyonRuntime {
+	r := make(chan map[string]*halkyonRuntime)
+
+	go func() {
+		list, err := k8s.GetClient().HalkyonRuntimeClient.Runtimes().List(v1.ListOptions{})
+		if err != nil {
+			panic(err)
+		}
+
+		hRuntimes := make(map[string]*halkyonRuntime, 11)
+		for _, item := range list.Items {
+			name := item.Spec.Name
+			runtime, ok := hRuntimes[name]
+			if !ok {
+				runtime = &halkyonRuntime{name: name, generator: item.Spec.GeneratorTemplate}
+				hRuntimes[name] = runtime
+			}
+
+			versions := runtime.versions
+			if len(versions) == 0 {
+				versions = make([]string, 0, 7)
+			}
+			versions = append(versions, item.Spec.Version)
+			runtime.versions = versions
+		}
+
+		r <- hRuntimes
+	}()
+
+	return r
 }
 
 func getVertXVersions() chan []string {
