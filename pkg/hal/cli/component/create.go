@@ -1,7 +1,6 @@
 package component
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"halkyon.io/api/component/v1beta1"
@@ -248,38 +247,6 @@ func getRuntimes() chan map[string]*halkyonRuntime {
 	}()
 
 	return r
-}
-
-func getVertXVersions() chan []string {
-	versions := make(chan []string)
-	go func() {
-		resp := io.HttpGet("https://start.vertx.io", "metadata", nil)
-		type version struct {
-			Number     string
-			Exclusions []string
-		}
-
-		var objMap map[string]*json.RawMessage
-		err := json.Unmarshal(resp, &objMap)
-		if err != nil {
-			versions <- []string{"couldn't retrieve vert.x metadata: " + err.Error()}
-		}
-
-		var versionObjs []version
-		err = json.Unmarshal(*objMap["versions"], &versionObjs)
-		if err != nil {
-			versions <- []string{"couldn't retrieve vert.x metadata: " + err.Error()}
-		}
-
-		vers := make([]string, 0, len(versionObjs))
-		for _, v := range versionObjs {
-			vers = append(vers, v.Number)
-		}
-
-		versions <- vers
-	}()
-
-	return versions
 }
 
 func getRuntimeNames() []string {
