@@ -180,6 +180,11 @@ func (o *pushOptions) push(component *component.Component) error {
 		if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "start", "build"}, "Performing build"); err != nil {
 			return err
 		}
+
+		if err = c.ExecCommand(podName, []string{"bash", "-c", "while /var/lib/supervisord/bin/supervisord ctl status build | grep RUNNING; do sleep 1; done"},
+			"Waiting for build to finish"); err != nil {
+			return err
+		}
 	}
 
 	if err = c.ExecCommand(podName, []string{"/var/lib/supervisord/bin/supervisord", "ctl", "stop", "run"}, ""); err != nil {
