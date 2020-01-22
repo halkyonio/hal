@@ -185,7 +185,6 @@ func (o *createOptions) Validate() error {
 }
 
 func (o *createOptions) getRuntimes() []string {
-	// todo: implement operator querying
 	return getRuntimeNames()
 }
 
@@ -194,7 +193,6 @@ func (o *createOptions) isValidRuntime() bool {
 }
 
 func (o *createOptions) getVersionsForRuntime() []string {
-	// todo: implement operator querying
 	r, ok := runtimes[o.runtime]
 	if !ok {
 		return []string{"Unknown runtime " + o.runtime} // shouldn't happen
