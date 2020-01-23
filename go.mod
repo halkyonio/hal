@@ -19,7 +19,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
-	halkyon.io/api v1.0.0-rc.2
+	halkyon.io/api v1.0.0-rc.3
 	k8s.io/api v0.0.0-20190831074750-7364b6bdad65
 	k8s.io/apimachinery v0.0.0-20190831074630-461753078381
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible

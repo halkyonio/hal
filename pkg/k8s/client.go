@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
+	capInfo "halkyon.io/api/capability-info/clientset/versioned/typed/capability-info/v1beta1"
 	capability "halkyon.io/api/capability/clientset/versioned/typed/capability/v1beta1"
 	component "halkyon.io/api/component/clientset/versioned/typed/component/v1beta1"
 	"halkyon.io/api/component/v1beta1"
@@ -32,13 +33,14 @@ const (
 )
 
 type Client struct {
-	KubeClient              kubernetes.Interface
-	HalkyonComponentClient  *component.HalkyonV1beta1Client
-	HalkyonLinkClient       *link.HalkyonV1beta1Client
-	HalkyonCapabilityClient *capability.HalkyonV1beta1Client
-	HalkyonRuntimeClient    *hruntime.HalkyonV1beta1Client
-	KubeConfig              clientcmd.ClientConfig
-	Namespace               string
+	KubeClient                  kubernetes.Interface
+	HalkyonComponentClient      *component.HalkyonV1beta1Client
+	HalkyonLinkClient           *link.HalkyonV1beta1Client
+	HalkyonCapabilityClient     *capability.HalkyonV1beta1Client
+	HalkyonCapabilityInfoClient *capInfo.HalkyonV1beta1Client
+	HalkyonRuntimeClient        *hruntime.HalkyonV1beta1Client
+	KubeConfig                  clientcmd.ClientConfig
+	Namespace                   string
 }
 
 var client *Client
@@ -69,6 +71,9 @@ func GetClient() *Client {
 
 		client.HalkyonRuntimeClient, err = hruntime.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating halkyon runtime client")
+
+		client.HalkyonCapabilityInfoClient, err = capInfo.NewForConfig(config)
+		io2.LogErrorAndExit(err, "error creating halkyon capability info client")
 
 		namespace, _, err := client.KubeConfig.Namespace()
 		io2.LogErrorAndExit(err, "error retrieving namespace")

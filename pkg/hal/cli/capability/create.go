@@ -3,6 +3,7 @@ package capability
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	v1beta12 "halkyon.io/api/capability-info/v1beta1"
 	"halkyon.io/api/capability/v1beta1"
 	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
@@ -12,8 +13,14 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
+	"sort"
 	"strings"
 )
+
+type typeRegistry map[string][]string
+type categoryRegisty map[string]typeRegistry
+
+var categories = <-getCapabilityInfos()
 
 type createOptions struct {
 	category    string
@@ -111,8 +118,12 @@ func (p parameterInfo) AsValidatable() validation.Validatable {
 }
 
 func (o *createOptions) getCategories() []string {
-	// todo: implement operator querying of available capabilities
-	return []string{"database"}
+	result := make([]string, 0, len(categories))
+	for k := range categories {
+		result = append(result, k)
+	}
+	sort.Strings(result)
+	return result
 }
 
 func (o *createOptions) isValidCategory() bool {
@@ -120,8 +131,13 @@ func (o *createOptions) isValidCategory() bool {
 }
 
 func (o *createOptions) getTypesFor(category string) []string {
-	// todo: implement operator querying for available types for given category
-	return []string{"postgres"}
+	types := categories[category]
+	result := make([]string, 0, len(types))
+	for k := range types {
+		result = append(result, k)
+	}
+	sort.Strings(result)
+	return result
 }
 
 func (o *createOptions) isValidTypeGivenCategory() bool {
@@ -133,8 +149,7 @@ func (o *createOptions) isValidTypeFor(category string) bool {
 }
 
 func (o *createOptions) getVersionsFor(category, subCategory string) []string {
-	// todo: implement operator querying
-	return []string{"11", "10", "9.6", "9.5", "9.4"}
+	return categories[category][subCategory]
 }
 
 func (o *createOptions) isValidVersionFor(category, subCategory string) bool {
@@ -198,6 +213,38 @@ func (o *createOptions) addValueFor(prop parameterInfo) {
 			Value: result,
 		})
 	}
+}
+
+func getCapabilityInfos() chan categoryRegisty {
+	r := make(chan categoryRegisty)
+
+	go func() {
+		list, err := k8s.GetClient().HalkyonCapabilityInfoClient.CapabilityInfos().List(v1.ListOptions{})
+		if err != nil {
+			panic(err)
+		}
+
+		capInfos := make(categoryRegisty, 11)
+		for _, item := range list.Items {
+			category := item.Spec.Category
+			types, ok := capInfos[category]
+			if !ok {
+				types = make(typeRegistry, 7)
+				capInfos[category] = types
+			}
+
+			_, ok = types[item.Spec.Type]
+			if !ok {
+				types[item.Spec.Type] = strings.Split(item.Spec.Versions, v1beta12.CapabilityInfoVersionSeparator)
+			} else {
+				panic(fmt.Errorf("a type named %s is already registered for category %s", item.Spec.Type, category))
+			}
+		}
+
+		r <- capInfos
+	}()
+
+	return r
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
