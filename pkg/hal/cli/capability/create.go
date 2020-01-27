@@ -53,8 +53,8 @@ func (o *createOptions) Build() runtime.Object {
 				Namespace: o.CreateOptions.Client.GetNamespace(),
 			},
 			Spec: v1beta1.CapabilitySpec{
-				Category:   v1beta1.DatabaseCategory, // todo: replace hardcoded value
-				Type:       v1beta1.PostgresType,     // todo: replace hardcoded value
+				Category:   v1beta1.CapabilityCategory(o.category),
+				Type:       v1beta1.CapabilityType(o.subCategory),
 				Version:    o.version,
 				Parameters: o.parameters,
 			},
