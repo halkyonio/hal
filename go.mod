@@ -7,7 +7,6 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/frankban/quicktest v1.5.0 // indirect
 	github.com/ghodss/yaml v1.0.0
-	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/mattn/go-colorable v0.1.1
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
@@ -19,10 +18,10 @@ require (
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/crypto v0.0.0-20191107222254-f4817d981bb6
 	gopkg.in/AlecAivazis/survey.v1 v1.8.4
-	halkyon.io/api v1.0.0-rc.3
-	k8s.io/api v0.0.0-20190831074750-7364b6bdad65
-	k8s.io/apimachinery v0.0.0-20190831074630-461753078381
-	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+	halkyon.io/api v1.0.0-rc.4.0.20200207214728-573979f07f11
+	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
+	k8s.io/apimachinery v0.17.0
+	k8s.io/client-go v11.0.1-0.20190805182715-88a2adca7e76+incompatible
 	k8s.io/kubectl v0.0.0-20190831163037-3b58a944563f
 )
 
