@@ -5,7 +5,6 @@ import (
 	halkyon "halkyon.io/api"
 	capability "halkyon.io/api/capability/v1beta1"
 	component "halkyon.io/api/component/v1beta1"
-	link "halkyon.io/api/link/v1beta1"
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -56,8 +55,6 @@ func (hd *HalkyonDescriptor) add(object runtime.Object, path string) {
 	case *capability.Capability:
 		hd.addNewEntity(t, t.Name, path)
 	case *component.Component:
-		hd.addNewEntity(t, t.Name, path)
-	case *link.Link:
 		hd.addNewEntity(t, t.Name, path)
 	default:
 		panic(fmt.Errorf("unknown object %T", t))

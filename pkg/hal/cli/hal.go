@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/hal/cli/capability"
 	"halkyon.io/hal/pkg/hal/cli/component"
-	"halkyon.io/hal/pkg/hal/cli/link"
 	"halkyon.io/hal/pkg/hal/cli/version"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 )
@@ -29,7 +28,6 @@ Easily create and manage Kubernetes applications using Dekorate and the Halkyon 
 	hal.AddCommand(
 		capability.NewCmdCapability(commandName),
 		component.NewCmdComponent(commandName),
-		link.NewCmdLink(commandName),
 		version.NewCmdVersion(commandName),
 	)
 

@@ -8,7 +8,6 @@ import (
 	capability "halkyon.io/api/capability/clientset/versioned/typed/capability/v1beta1"
 	component "halkyon.io/api/component/clientset/versioned/typed/component/v1beta1"
 	"halkyon.io/api/component/v1beta1"
-	link "halkyon.io/api/link/clientset/versioned/typed/link/v1beta1"
 	hruntime "halkyon.io/api/runtime/clientset/versioned/typed/runtime/v1beta1"
 	io2 "halkyon.io/hal/pkg/io"
 	log2 "halkyon.io/hal/pkg/log"
@@ -35,7 +34,6 @@ const (
 type Client struct {
 	KubeClient                  kubernetes.Interface
 	HalkyonComponentClient      *component.HalkyonV1beta1Client
-	HalkyonLinkClient           *link.HalkyonV1beta1Client
 	HalkyonCapabilityClient     *capability.HalkyonV1beta1Client
 	HalkyonCapabilityInfoClient *capInfo.HalkyonV1beta1Client
 	HalkyonRuntimeClient        *hruntime.HalkyonV1beta1Client
@@ -62,9 +60,6 @@ func GetClient() *Client {
 
 		client.HalkyonComponentClient, err = component.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating halkyon component client")
-
-		client.HalkyonLinkClient, err = link.NewForConfig(config)
-		io2.LogErrorAndExit(err, "error creating halkyon link client")
 
 		client.HalkyonCapabilityClient, err = capability.NewForConfig(config)
 		io2.LogErrorAndExit(err, "error creating halkyon capability client")
@@ -153,7 +148,7 @@ func (c *Client) ExecCMDInContainer(podName string, cmd []string, stdout io.Writ
 	return nil
 }
 
-func (c *Client) WaitForComponent(name string, desiredPhase v1beta1.ComponentPhase, waitMessage string) (*v1beta1.Component, error) {
+func (c *Client) WaitForComponent(name string, desiredPhase string, waitMessage string) (*v1beta1.Component, error) {
 	s := log2.Spinner(waitMessage)
 	defer s.End(false)
 
@@ -189,13 +184,13 @@ func (c *Client) WaitForComponent(name string, desiredPhase v1beta1.ComponentPha
 				break loop
 			}
 			if e, ok := object.(*v1beta1.Component); ok {
-				switch e.Status.Phase {
+				switch e.Status.Reason {
 				case desiredPhase:
 					s.End(true)
 					podChannel <- e
 					break loop
 				case v1beta1.ComponentFailed, v1beta1.ComponentUnknown:
-					watchErrorChannel <- errors.Errorf("'%s' component's status is %s: %s", e.Name, e.Status.Phase, e.Status.Message)
+					watchErrorChannel <- errors.Errorf("'%s' component's status is %s: %s", e.Name, e.Status.Reason, e.Status.Message)
 					break loop
 				}
 			} else {

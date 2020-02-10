@@ -219,7 +219,7 @@ func (o *pushOptions) getComponentBinaryPath() (string, error) {
 }
 
 func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Component, error) {
-	if component.ComponentReady == c.Status.Phase || component.ComponentRunning == c.Status.Phase {
+	if component.ComponentReady == c.Status.Reason || component.ComponentRunning == c.Status.Reason {
 		return c, nil
 	}
 
@@ -237,9 +237,9 @@ func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Compone
 }
 
 func errorIfFailedOrUnknown(c *component.Component) error {
-	switch c.Status.Phase {
+	switch c.Status.Reason {
 	case component.ComponentFailed, component.ComponentUnknown:
-		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Phase, c.Status.Message)
+		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Reason, c.Status.Message)
 	default:
 		return nil
 	}
