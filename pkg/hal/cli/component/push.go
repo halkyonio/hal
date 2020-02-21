@@ -142,7 +142,7 @@ func (o *pushOptions) needsPush(revision string, c *component.Component) bool {
 		return true
 	}
 
-	podName := c.Status.PodName
+	podName := c.Status.GetAssociatedPodName()
 	// todo: review if we still need to call IsJarPresent (and if logic needs to change)
 	return len(podName) > 0 && !k8s.IsJarPresent(podName)
 }
@@ -155,7 +155,7 @@ func (o *pushOptions) push(component *component.Component) error {
 	}
 
 	c := k8s.GetClient()
-	podName := cp.Status.PodName
+	podName := cp.Status.GetAssociatedPodName()
 	toPush, _ := o.getComponentBinaryPath()
 	s := log.Spinner("Uploading " + toPush)
 	defer s.End(false)
