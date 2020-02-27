@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
+	"halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/log"
@@ -219,13 +220,13 @@ func (o *pushOptions) getComponentBinaryPath() (string, error) {
 }
 
 func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Component, error) {
-	if component.ComponentReady == c.Status.Reason || component.ComponentRunning == c.Status.Reason {
+	if v1beta1.ReasonReady == c.Status.Reason {
 		return c, nil
 	}
 
 	name := o.GetTargetedComponentName()
 	client := k8s.GetClient()
-	cp, err := client.WaitForComponent(name, component.ComponentReady, "Waiting for component "+name+" to be ready…")
+	cp, err := client.WaitForComponent(name, component.PushReady, "Waiting for component "+name+" to be ready…")
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for component: %v", err)
 	}
@@ -238,7 +239,7 @@ func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Compone
 
 func errorIfFailedOrUnknown(c *component.Component) error {
 	switch c.Status.Reason {
-	case component.ComponentFailed, component.ComponentUnknown:
+	case v1beta1.ReasonFailed:
 		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Reason, c.Status.Message)
 	default:
 		return nil
