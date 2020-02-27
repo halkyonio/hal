@@ -81,7 +81,7 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 						o.Delegate.Set(entity.Entity)
 					}
 				}
-			} else if IsInteractive(cmd) && ui.Proceed(fmt.Sprintf("Found %d %s(s), do you want to %s from them", size, t, o.operationName)) {
+			} else if IsInteractive(cmd) && ui.Proceed(fmt.Sprintf("Found %d %s(s) in %s, do you want to %s from them", size, t, currentDirName, o.operationName)) {
 				o.Name = ui.Select(t, names, o.Name)
 			}
 		}
