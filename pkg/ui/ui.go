@@ -131,10 +131,15 @@ func SelectFromOtherErrorMessage(msg, wrong string) string {
 }
 
 func SelectOrCheckExisting(parameterValue *string, capitalizedParameterName string, validValues []string, validator func() bool) {
+	lowerCaseParameterName := strings.ToLower(capitalizedParameterName)
 	if len(*parameterValue) == 0 {
+		if len(validValues) == 1 {
+			*parameterValue = validValues[0]
+			OutputSelection("Automatically selected only available "+lowerCaseParameterName, *parameterValue)
+			return
+		}
 		*parameterValue = Select(capitalizedParameterName, validValues)
 	} else {
-		lowerCaseParameterName := strings.ToLower(capitalizedParameterName)
 		if !validator() {
 			s := SelectFromOtherErrorMessage("Unknown "+lowerCaseParameterName, *parameterValue)
 			Select(s, validValues)
