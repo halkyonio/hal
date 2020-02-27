@@ -9,6 +9,7 @@ import (
 	component "halkyon.io/api/component/clientset/versioned/typed/component/v1beta1"
 	"halkyon.io/api/component/v1beta1"
 	hruntime "halkyon.io/api/runtime/clientset/versioned/typed/runtime/v1beta1"
+	v1beta12 "halkyon.io/api/v1beta1"
 	io2 "halkyon.io/hal/pkg/io"
 	log2 "halkyon.io/hal/pkg/log"
 	"io"
@@ -189,7 +190,7 @@ func (c *Client) WaitForComponent(name string, desiredPhase string, waitMessage 
 					s.End(true)
 					podChannel <- e
 					break loop
-				case v1beta1.ComponentFailed, v1beta1.ComponentUnknown:
+				case v1beta12.ReasonFailed:
 					watchErrorChannel <- errors.Errorf("'%s' component's status is %s: %s", e.Name, e.Status.Reason, e.Status.Message)
 					break loop
 				}
