@@ -3,6 +3,7 @@ package capability
 import (
 	"halkyon.io/api/capability/clientset/versioned/typed/capability/v1beta1"
 	v1beta12 "halkyon.io/api/capability/v1beta1"
+	"halkyon.io/hal/pkg/k8s"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -41,4 +42,14 @@ func (lc client) Delete(name string, options *v1.DeleteOptions) error {
 
 func (lc client) GetNamespace() string {
 	return lc.ns
+}
+
+var Entity client
+
+func init() {
+	c := k8s.GetClient()
+	Entity = client{
+		client: c.HalkyonCapabilityClient.Capabilities(c.Namespace),
+		ns:     c.Namespace,
+	}
 }

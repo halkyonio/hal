@@ -265,12 +265,8 @@ func (o *createOptions) SetEnvOptions(env *cmdutil.EnvOptions) {
 }
 
 func NewCmdCreate(fullParentName string) *cobra.Command {
-	c := k8s.GetClient()
 	o := &createOptions{}
-	generic := cmdutil.NewCreateOptions(cmdutil.Component, client{
-		client: c.HalkyonComponentClient.Components(c.Namespace),
-		ns:     c.Namespace,
-	})
+	generic := cmdutil.NewCreateOptions(cmdutil.Component, Entity)
 	generic.Delegate = o
 	o.CreateOptions = generic
 	o.GeneratorOptions = &v1beta12.GeneratorOptions{}

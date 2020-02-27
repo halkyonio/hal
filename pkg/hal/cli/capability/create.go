@@ -248,12 +248,8 @@ func getCapabilityInfos() chan categoryRegisty {
 }
 
 func NewCmdCreate(parent string) *cobra.Command {
-	c := k8s.GetClient()
 	o := &createOptions{}
-	generic := cmdutil.NewCreateOptions(cmdutil.Capability, client{
-		client: c.HalkyonCapabilityClient.Capabilities(c.Namespace),
-		ns:     c.Namespace,
-	})
+	generic := cmdutil.NewCreateOptions(cmdutil.Capability, Entity)
 	generic.Delegate = o
 	o.CreateOptions = generic
 	capability := cmdutil.NewGenericCreate(parent, generic)

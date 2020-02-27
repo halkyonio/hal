@@ -3,14 +3,9 @@ package component
 import (
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/cmdutil"
-	"halkyon.io/hal/pkg/k8s"
 )
 
 func NewCmdDelete(fullParentName string) *cobra.Command {
-	c := k8s.GetClient()
-	generic := cmdutil.NewDeleteOptions("component", client{
-		client: c.HalkyonComponentClient.Components(c.Namespace),
-		ns:     c.Namespace,
-	})
+	generic := cmdutil.NewDeleteOptions("component", Entity)
 	return cmdutil.NewGenericDelete(fullParentName, generic)
 }
