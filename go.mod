@@ -28,7 +28,6 @@ require (
 replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190516230258-a675ac48af67
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
-	k8s.io/cli-runtime => k8s.io/cli-runtime v0.0.0-20190516231937-17bc0b7fcef5
 	k8s.io/client-go => k8s.io/client-go v11.0.1-0.20190516230509-ae8359b20417+incompatible
 )
 
