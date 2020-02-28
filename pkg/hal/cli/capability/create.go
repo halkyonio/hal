@@ -22,12 +22,25 @@ type categoryRegisty map[string]typeRegistry
 
 var categories = <-getCapabilityInfos()
 
-type createOptions struct {
+type CapabilityCreateOptions struct {
 	category    string
 	subCategory string
 	version     string
 	paramPairs  []string
 	parameters  []halkyon.NameValuePair
+}
+
+func (c CapabilityCreateOptions) AsCapabilitySpec() v1beta1.CapabilitySpec {
+	return v1beta1.CapabilitySpec{
+		Category:   v1beta1.CapabilityCategory(c.category),
+		Type:       v1beta1.CapabilityType(c.subCategory),
+		Version:    c.version,
+		Parameters: c.parameters,
+	}
+}
+
+type createOptions struct {
+	CapabilityCreateOptions
 	*cmdutil.CreateOptions
 	target *v1beta1.Capability
 }
@@ -52,24 +65,27 @@ func (o *createOptions) Build() runtime.Object {
 				Name:      o.Name,
 				Namespace: o.CreateOptions.Client.GetNamespace(),
 			},
-			Spec: v1beta1.CapabilitySpec{
-				Category:   v1beta1.CapabilityCategory(o.category),
-				Type:       v1beta1.CapabilityType(o.subCategory),
-				Version:    o.version,
-				Parameters: o.parameters,
-			},
+			Spec: o.AsCapabilitySpec(),
 		}
 	}
 	return o.target
 }
 
 func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string) error {
-	ui.SelectOrCheckExisting(&o.category, "Category", o.getCategories(), o.isValidCategory)
-	ui.SelectOrCheckExisting(&o.subCategory, "Type", o.getTypesFor(o.category), o.isValidTypeGivenCategory)
-	ui.SelectOrCheckExisting(&o.version, "Version", o.getVersionsFor(o.category, o.subCategory), o.isValidVersionGivenCategoryAndType)
+	return o.CapabilityCreateOptions.Complete()
+}
 
-	for _, pair := range o.paramPairs {
-		if e := o.addToParams(pair); e != nil {
+func (o *createOptions) Validate() error {
+	return o.CapabilityCreateOptions.Validate()
+}
+
+func (c *CapabilityCreateOptions) Complete() error {
+	ui.SelectOrCheckExisting(&c.category, "Category", c.getCategories(), c.isValidCategory)
+	ui.SelectOrCheckExisting(&c.subCategory, "Type", c.getTypesFor(c.category), c.isValidTypeGivenCategory)
+	ui.SelectOrCheckExisting(&c.version, "Version", c.getVersionsFor(c.category, c.subCategory), c.isValidVersionGivenCategoryAndType)
+
+	for _, pair := range c.paramPairs {
+		if e := c.addToParams(pair); e != nil {
 			return e
 		}
 	}
@@ -77,22 +93,22 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	return nil
 }
 
-func (o *createOptions) Validate() error {
-	infos := o.getParameterInfos()
+func (c *CapabilityCreateOptions) Validate() error {
+	infos := c.getParameterInfos()
 
 	params := make(map[string]parameterInfo, len(infos))
 	for _, v := range infos {
 		params[v.name] = v
 	}
 
-	if len(o.parameters) == 0 {
-		o.parameters = make([]halkyon.NameValuePair, 0, len(params))
+	if len(c.parameters) == 0 {
+		c.parameters = make([]halkyon.NameValuePair, 0, len(params))
 	}
 
 	// first deal with required params
 	for _, info := range infos {
 		if info.Required {
-			o.addValueFor(info)
+			c.addValueFor(info)
 			// remove property from list of properties to consider
 			delete(params, info.name)
 		}
@@ -101,7 +117,7 @@ func (o *createOptions) Validate() error {
 	// finally check if we still have capability parameters that have not been considered
 	if len(params) > 0 && ui.Proceed("Provide values for non-required parameters") {
 		for _, prop := range params {
-			o.addValueFor(prop)
+			c.addValueFor(prop)
 		}
 	}
 
@@ -117,7 +133,7 @@ func (p parameterInfo) AsValidatable() validation.Validatable {
 	return p.Validatable
 }
 
-func (o *createOptions) getCategories() []string {
+func (c *CapabilityCreateOptions) getCategories() []string {
 	result := make([]string, 0, len(categories))
 	for k := range categories {
 		result = append(result, k)
@@ -126,11 +142,11 @@ func (o *createOptions) getCategories() []string {
 	return result
 }
 
-func (o *createOptions) isValidCategory() bool {
-	return validation.IsValid(o.category, o.getCategories())
+func (c *CapabilityCreateOptions) isValidCategory() bool {
+	return validation.IsValid(c.category, c.getCategories())
 }
 
-func (o *createOptions) getTypesFor(category string) []string {
+func (c *CapabilityCreateOptions) getTypesFor(category string) []string {
 	types := categories[category]
 	result := make([]string, 0, len(types))
 	for k := range types {
@@ -140,38 +156,38 @@ func (o *createOptions) getTypesFor(category string) []string {
 	return result
 }
 
-func (o *createOptions) isValidTypeGivenCategory() bool {
-	return o.isValidTypeFor(o.category)
+func (c *CapabilityCreateOptions) isValidTypeGivenCategory() bool {
+	return c.isValidTypeFor(c.category)
 }
 
-func (o *createOptions) isValidTypeFor(category string) bool {
-	return validation.IsValid(o.subCategory, o.getTypesFor(category))
+func (c *CapabilityCreateOptions) isValidTypeFor(category string) bool {
+	return validation.IsValid(c.subCategory, c.getTypesFor(category))
 }
 
-func (o *createOptions) getVersionsFor(category, subCategory string) []string {
+func (c *CapabilityCreateOptions) getVersionsFor(category, subCategory string) []string {
 	return categories[category][subCategory]
 }
 
-func (o *createOptions) isValidVersionFor(category, subCategory string) bool {
-	return validation.IsValid(o.version, o.getVersionsFor(category, subCategory))
+func (c *CapabilityCreateOptions) isValidVersionFor(category, subCategory string) bool {
+	return validation.IsValid(c.version, c.getVersionsFor(category, subCategory))
 }
 
-func (o *createOptions) isValidVersionGivenCategoryAndType() bool {
-	return o.isValidVersionFor(o.category, o.subCategory)
+func (c *CapabilityCreateOptions) isValidVersionGivenCategoryAndType() bool {
+	return c.isValidVersionFor(c.category, c.subCategory)
 }
 
-func (o *createOptions) addToParams(pair string) error {
+func (c *CapabilityCreateOptions) addToParams(pair string) error {
 	// todo: extract as generic version to be used for Envs and Parameters
 	split := strings.Split(pair, "=")
 	if len(split) != 2 {
 		return fmt.Errorf("invalid parameter: %s, format must be 'name=value'", pair)
 	}
 	parameter := halkyon.NameValuePair{Name: split[0], Value: split[1]}
-	o.parameters = append(o.parameters, parameter)
+	c.parameters = append(c.parameters, parameter)
 	return nil
 }
 
-func (o *createOptions) getParameterInfos() []parameterInfo {
+func (c *CapabilityCreateOptions) getParameterInfos() []parameterInfo {
 	// todo: implement operator querying
 	infos := make([]parameterInfo, 3, 3)
 	infos[0] = parameterInfo{
@@ -198,17 +214,17 @@ func (o *createOptions) getParameterInfos() []parameterInfo {
 	return infos
 }
 
-func (o *createOptions) addValueFor(prop parameterInfo) {
+func (c *CapabilityCreateOptions) addValueFor(prop parameterInfo) {
 	// first look if we have provided a value for this already
 	provided := ""
-	for _, parameter := range o.parameters {
+	for _, parameter := range c.parameters {
 		if parameter.Name == prop.name {
 			provided = parameter.Value
 		}
 	}
 	result := ui.Ask(fmt.Sprintf("Value for %s property %s:", prop.Type, prop.name), provided)
 	if result != provided {
-		o.parameters = append(o.parameters, halkyon.NameValuePair{
+		c.parameters = append(c.parameters, halkyon.NameValuePair{
 			Name:  prop.name,
 			Value: result,
 		})
