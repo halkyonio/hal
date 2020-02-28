@@ -3,9 +3,11 @@ package component
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	v1beta13 "halkyon.io/api/capability/v1beta1"
 	"halkyon.io/api/component/v1beta1"
 	v1beta12 "halkyon.io/api/runtime/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
+	"halkyon.io/hal/pkg/hal/cli/capability"
 	"halkyon.io/hal/pkg/io"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
@@ -33,14 +35,16 @@ type createOptions struct {
 	*cmdutil.CreateOptions
 	*cmdutil.EnvOptions
 	*v1beta12.GeneratorOptions
-	runtime   string
-	exposeP   string
-	expose    bool
-	port      int
-	scaffold  bool
-	generator string
-	scaffoldP string
-	target    *v1beta1.Component
+	runtime      string
+	exposeP      string
+	expose       bool
+	port         int
+	scaffold     bool
+	generator    string
+	scaffoldP    string
+	requiredCaps []v1beta1.RequiredCapabilityConfig
+	providedCaps []v1beta1.CapabilityConfig
+	target       *v1beta1.Component
 }
 
 func (o *createOptions) GeneratePrefix() string {
@@ -66,7 +70,11 @@ func (o *createOptions) Build() runtime.Object {
 				Version:       o.RuntimeVersion,
 				ExposeService: o.expose,
 				Port:          int32(o.port),
-				Envs:          o.Envs,
+				Capabilities: v1beta1.CapabilitiesConfig{
+					Requires: o.requiredCaps,
+					Provides: o.providedCaps,
+				},
+				Envs: o.Envs,
 			},
 		}
 	}
@@ -136,11 +144,62 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		}
 	}
 
+	if ui.Proceed("Requires capabilities") {
+		required := v1beta1.RequiredCapabilityConfig{}
+		o.requiredCaps = make([]v1beta1.RequiredCapabilityConfig, 0, 10)
+		existing := capability.Entity.GetMatching()
+		hasCaps := len(existing) > 0
+		for {
+			required.Name = ui.AskOrReturnToExit("Required capability name, simply press enter to finish")
+			if len(required.Name) == 0 {
+				break
+			}
+			if hasCaps && ui.Proceed("Bind to existing capability") {
+				required.BoundTo = ui.Select("Target capability", getCapabilityNames(existing))
+				required.Spec = existing[required.BoundTo]
+			} else {
+				capCreate := capability.CapabilityCreateOptions{}
+				if err := capCreate.Complete(); err != nil {
+					return err
+				}
+				required.Spec = capCreate.AsCapabilitySpec()
+				required.AutoBindable = ui.Proceed("Auto-bindable")
+			}
+			o.requiredCaps = append(o.requiredCaps, required)
+		}
+	}
+
+	if ui.Proceed("Provides capabilities") {
+		provided := v1beta1.CapabilityConfig{}
+		o.providedCaps = make([]v1beta1.CapabilityConfig, 0, 10)
+		for {
+			provided.Name = ui.AskOrReturnToExit("Provided capability name, simply press enter to finish")
+			if len(provided.Name) == 0 {
+				break
+			}
+			capCreate := capability.CapabilityCreateOptions{}
+			if err := capCreate.Complete(); err != nil {
+				return err
+			}
+			provided.Spec = capCreate.AsCapabilitySpec()
+			o.providedCaps = append(o.providedCaps, provided)
+		}
+	}
+
 	if err := o.EnvOptions.Complete(name, cmd, args); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func getCapabilityNames(caps map[string]v1beta13.CapabilitySpec) []string {
+	result := make([]string, 0, len(caps))
+	for k := range caps {
+		result = append(result, k)
+	}
+	sort.Strings(result)
+	return result
 }
 
 func (o *createOptions) Validate() error {
