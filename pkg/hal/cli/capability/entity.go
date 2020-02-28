@@ -36,6 +36,22 @@ func (lc client) GetKnown() []string {
 	return names
 }
 
+func (lc client) GetMatching(spec ...v1beta12.CapabilitySpec) map[string]v1beta12.CapabilitySpec {
+	list, err := lc.client.List(v1.ListOptions{})
+	if err != nil {
+		return map[string]v1beta12.CapabilitySpec{}
+	}
+	items := list.Items
+	matching := make(map[string]v1beta12.CapabilitySpec, len(items))
+	skipMatch := len(spec) != 1
+	for _, item := range items {
+		if skipMatch || item.Spec.Matches(spec[0]) {
+			matching[item.Name] = item.Spec
+		}
+	}
+	return matching
+}
+
 func (lc client) Delete(name string, options *v1.DeleteOptions) error {
 	return lc.client.Delete(name, options)
 }
