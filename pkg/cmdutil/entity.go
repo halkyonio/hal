@@ -14,7 +14,6 @@ type ResourceType string
 const (
 	Component  ResourceType = "component"
 	Capability ResourceType = "capability"
-	Link       ResourceType = "link"
 )
 
 func (r ResourceType) String() string {
@@ -22,7 +21,7 @@ func (r ResourceType) String() string {
 }
 
 func KnownResourceTypes() []ResourceType {
-	return []ResourceType{Capability, Component, Link}
+	return []ResourceType{Capability, Component}
 }
 
 func ResourceTypeFor(object runtime.Object) (ResourceType, error) {
