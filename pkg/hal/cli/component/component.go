@@ -14,6 +14,7 @@ func NewCmdComponent(parent string) *cobra.Command {
 	mode := NewCmdMode(fullName)
 	create := NewCmdCreate(fullName)
 	del := NewCmdDelete(fullName)
+	bind := NewCmdBind(fullName)
 
 	hal := &cobra.Command{
 		Use:   fmt.Sprintf("%s [flags]", commandName),
@@ -31,6 +32,7 @@ func NewCmdComponent(parent string) *cobra.Command {
 		del,
 		push,
 		mode,
+		bind,
 	)
 
 	return hal
