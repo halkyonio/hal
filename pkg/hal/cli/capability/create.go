@@ -189,6 +189,15 @@ func (c *CapabilityCreateOptions) addToParams(pair string) error {
 
 func (c *CapabilityCreateOptions) getParameterInfos() []parameterInfo {
 	// todo: implement operator querying
+	if c.category == "api" {
+		return []parameterInfo{{
+			Validatable: validation.Validatable{
+				Required: true,
+				Type:     "string",
+			},
+			name: "context",
+		}}
+	}
 	infos := make([]parameterInfo, 3, 3)
 	infos[0] = parameterInfo{
 		Validatable: validation.Validatable{
