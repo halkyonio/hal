@@ -6,6 +6,7 @@ import (
 	v1beta13 "halkyon.io/api/capability/v1beta1"
 	"halkyon.io/api/component/v1beta1"
 	v1beta12 "halkyon.io/api/runtime/v1beta1"
+	halkyon "halkyon.io/api/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/hal/cli/capability"
 	"halkyon.io/hal/pkg/io"
@@ -165,6 +166,21 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 				required.Spec = capCreate.AsCapabilitySpec()
 				required.AutoBindable = ui.Proceed("Auto-bindable")
 			}
+			if ui.Proceed("Add extra parameters") {
+				for {
+					paramPair := ui.AskOrReturnToExit("Parameter in the 'name=value' format, simply press enter when finished")
+					if len(paramPair) == 0 {
+						break
+					}
+					split := strings.Split(paramPair, "=")
+					if len(split) != 2 {
+						return fmt.Errorf("invalid parameter: %s, format must be 'name=value'", paramPair)
+					}
+					param := halkyon.NameValuePair{Name: split[0], Value: split[1]}
+					required.Spec.Parameters = append(required.Spec.Parameters, param)
+					ui.OutputSelection("Set parameter", fmt.Sprintf("%s=%s", param.Name, param.Value))
+				}
+			}
 			o.requiredCaps = append(o.requiredCaps, required)
 		}
 	}
@@ -179,6 +195,9 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 			}
 			capCreate := capability.CapabilityCreateOptions{}
 			if err := capCreate.Complete(); err != nil {
+				return err
+			}
+			if err := capCreate.Validate(); err != nil {
 				return err
 			}
 			provided.Spec = capCreate.AsCapabilitySpec()
