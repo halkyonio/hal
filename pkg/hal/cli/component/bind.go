@@ -6,9 +6,7 @@ import (
 	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/hal/cli/capability"
-	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const bindCommandName = "bind"
@@ -24,8 +22,7 @@ func (o *bindOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOpt
 
 func (o *bindOptions) Complete(name string, cmd *cobra.Command, args []string) (err error) {
 	// get the targeted component
-	client := k8s.GetClient()
-	o.component, err = client.HalkyonComponentClient.Components(client.Namespace).Get(o.GetTargetedComponentName(), v1.GetOptions{})
+	o.component, err = Entity.GetTyped(o.GetTargetedComponentName())
 	if err != nil {
 		return err
 	}
