@@ -86,7 +86,7 @@ func NewGenericOperation(fullParentName string, o *GenericOperationOptions) *cob
 }
 
 type HalkyonEntity interface {
-	Get(string, v1.GetOptions) error
+	Get(name string) (runtime.Object, error)
 	Create(runtime.Object) error
 	Delete(string, *v1.DeleteOptions) error
 	GetKnown() ui.DisplayableMap

@@ -23,9 +23,12 @@ func (lc client) Create(toCreate runtime.Object) error {
 	return err
 }
 
-func (lc client) Get(name string, options v1.GetOptions) error {
-	_, err := lc.client.Get(name, options)
-	return err
+func (lc client) Get(name string) (runtime.Object, error) {
+	return lc.GetTyped(name)
+}
+
+func (lc client) GetTyped(name string) (*v1beta12.Component, error) {
+	return lc.client.Get(name, v1.GetOptions{})
 }
 
 type displayableCapability struct {

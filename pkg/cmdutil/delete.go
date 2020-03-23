@@ -40,7 +40,7 @@ func (o *DeleteOptions) Complete(name string, cmd *cobra.Command, args []string)
 func (o *DeleteOptions) Validate() error {
 	needName := len(o.Name) == 0
 	if !needName {
-		err := o.Client.Get(o.Name, v1.GetOptions{})
+		_, err := o.Client.Get(o.Name)
 		if err != nil {
 			if util.IsKeyNotFoundError(errors.Cause(err)) {
 				needName = true
