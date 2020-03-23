@@ -2,13 +2,11 @@ package cmdutil
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record/util"
 	"os"
 	"path/filepath"
 	"time"
@@ -129,18 +127,6 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 	}
 
 	return nil
-}
-
-func (o *CreateOptions) Exists() (bool, error) {
-	_, err := o.Client.Get(o.Name)
-	if err != nil {
-		if util.IsKeyNotFoundError(errors.Cause(err)) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-	return true, nil
 }
 
 func (o *CreateOptions) Validate() error {

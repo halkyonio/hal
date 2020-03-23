@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/ui"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
@@ -44,6 +45,20 @@ type GenericOperationOptions struct {
 	Client        HalkyonEntity
 	operationName string
 	delegate      Runnable
+}
+
+// Exists checks if the object associated with this GenericOperationOptions exists. Returns (true, nil) if it exists,
+// (false, nil) if it is determined to not exist or (false, error) if an error that doesn't determine existence occurred
+func (o *GenericOperationOptions) Exists() (bool, error) {
+	_, err := o.Client.Get(o.Name)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+	return true, nil
 }
 
 func (o *GenericOperationOptions) Complete(name string, cmd *cobra.Command, args []string) error {

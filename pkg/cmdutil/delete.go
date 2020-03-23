@@ -2,12 +2,10 @@ package cmdutil
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record/util"
 )
 
 const deleteCommandName = "delete"
@@ -39,10 +37,10 @@ func (o *DeleteOptions) Complete(name string, cmd *cobra.Command, args []string)
 
 func (o *DeleteOptions) Validate() error {
 	needName := len(o.Name) == 0
-	if !needName {
-		_, err := o.Client.Get(o.Name)
-		if err != nil {
-			if util.IsKeyNotFoundError(errors.Cause(err)) {
+	// if a name is provided, check that it corresponds to an existing component
+	if found, err := o.Exists(); !needName {
+		if !found {
+			if err == nil {
 				needName = true
 			} else {
 				return err
