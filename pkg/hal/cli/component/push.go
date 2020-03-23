@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"github.com/mholt/archiver"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	component "halkyon.io/api/component/v1beta1"
 	"halkyon.io/api/v1beta1"
@@ -14,9 +13,8 @@ import (
 	"halkyon.io/hal/pkg/log"
 	"io"
 	"io/ioutil"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/record/util"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
 	"os"
 	"path/filepath"
@@ -52,13 +50,11 @@ func (o *pushOptions) Validate() (err error) {
 
 func (o *pushOptions) Run() error {
 	// first check that the component exists:
-	c := k8s.GetClient()
 	name := o.GetTargetedComponentName()
-	components := c.HalkyonComponentClient.Components(c.Namespace)
-	comp, err := components.Get(name, v1.GetOptions{})
+	comp, err := Entity.GetTyped(name)
 	if err != nil {
 		// check error to see if it means that the component doesn't exist yet
-		if util.IsKeyNotFoundError(errors.Cause(err)) {
+		if errors.IsNotFound(err) {
 			return fmt.Errorf("no component named '%s' exists, please create it first", name)
 		} else {
 			return err
@@ -130,7 +126,7 @@ func (o *pushOptions) Run() error {
 
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
-	_, err = components.Patch(name, types.MergePatchType, []byte(patch))
+	_, err = Entity.client.Patch(name, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
@@ -240,7 +236,7 @@ func (o *pushOptions) waitUntilReady(c *component.Component) (*component.Compone
 func errorIfFailedOrUnknown(c *component.Component) error {
 	switch c.Status.Reason {
 	case v1beta1.ReasonFailed:
-		return errors.Errorf("status of component %s is %s: %s", c.Name, c.Status.Reason, c.Status.Message)
+		return fmt.Errorf("status of component %s is %s: %s", c.Name, c.Status.Reason, c.Status.Message)
 	default:
 		return nil
 	}
