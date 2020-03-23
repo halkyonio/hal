@@ -115,16 +115,16 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 			ui.OutputError(fmt.Sprintf("Invalid name: '%s', please select another one", o.Name))
 			o.Name = ""
 		}
-		_, err = o.Client.Get(o.Name)
-		if err != nil {
-			if util.IsKeyNotFoundError(errors.Cause(err)) {
-				break // resource is not found which is what we want
-			} else {
-				return err
-			}
-		} else {
+		exists, err := o.Exists()
+		if exists {
 			ui.OutputError(fmt.Sprintf("A %s named '%s' already exists, please select another name", o.ResourceType, o.Name))
 			o.Name = "" // reset name and try again!
+		} else {
+			if err == nil {
+				break // resource is not found which is what we want
+			} else {
+				return err // another error has occurred, report it
+			}
 		}
 	}
 
