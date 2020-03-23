@@ -3,6 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"halkyon.io/hal/pkg/ui"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ktemplates "k8s.io/kubectl/pkg/util/templates"
@@ -88,6 +89,6 @@ type HalkyonEntity interface {
 	Get(string, v1.GetOptions) error
 	Create(runtime.Object) error
 	Delete(string, *v1.DeleteOptions) error
-	GetKnown() []string
+	GetKnown() ui.DisplayableMap
 	GetNamespace() string
 }

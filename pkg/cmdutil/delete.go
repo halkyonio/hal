@@ -51,7 +51,7 @@ func (o *DeleteOptions) Validate() error {
 	}
 	if needName {
 		known := o.Client.GetKnown()
-		if len(known) == 0 {
+		if known.Len() == 0 {
 			return fmt.Errorf("no %s currently exist in '%s'", o.ResourceType, o.Client.GetNamespace())
 		}
 		s := "Unknown " + o.ResourceType
@@ -59,7 +59,7 @@ func (o *DeleteOptions) Validate() error {
 			s = "No provided " + o.ResourceType + " name"
 		}
 		message := ui.SelectFromOtherErrorMessage(s.String(), o.Name)
-		o.Name = ui.Select(message, known)
+		o.Name = ui.SelectDisplayable(message, known).Name()
 	}
 	return nil
 }

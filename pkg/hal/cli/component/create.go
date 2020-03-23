@@ -149,15 +149,16 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 		required := v1beta1.RequiredCapabilityConfig{}
 		o.requiredCaps = make([]v1beta1.RequiredCapabilityConfig, 0, 10)
 		existing := capability.Entity.GetMatching()
-		hasCaps := len(existing) > 0
+		hasCaps := existing.Len() > 0
 		for {
 			required.Name = ui.AskOrReturnToExit("Required capability name, simply press enter to finish")
 			if len(required.Name) == 0 {
 				break
 			}
 			if hasCaps && ui.Proceed("Bind to existing capability") {
-				required.BoundTo = ui.Select("Target capability", getCapabilityNames(existing))
-				required.Spec = existing[required.BoundTo]
+				required.BoundTo = ui.Select("Target capability", existing.AsDisplayableOptions())
+				displayable, _ := existing.GetByName(required.BoundTo)
+				required.Spec = displayable.GetUnderlying().(v1beta13.Capability).Spec
 			} else {
 				capCreate := capability.CapabilityCreateOptions{}
 				if err := capCreate.Complete(); err != nil {
@@ -210,15 +211,6 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 	}
 
 	return nil
-}
-
-func getCapabilityNames(caps map[string]v1beta13.CapabilitySpec) []string {
-	result := make([]string, 0, len(caps))
-	for k := range caps {
-		result = append(result, k)
-	}
-	sort.Strings(result)
-	return result
 }
 
 func (o *createOptions) Validate() error {

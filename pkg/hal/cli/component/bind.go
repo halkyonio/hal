@@ -33,17 +33,22 @@ func (o *bindOptions) Complete(name string, cmd *cobra.Command, args []string) (
 	// get list of required capabilities and check if they are already bound
 	requires := o.component.Spec.Capabilities.Requires
 	for i, required := range requires {
+		// filter capabilities that don't match the requirements
+		matching := capability.Entity.GetMatching(required.Spec)
+
 		// only consider unbound capabilities for now
 		isBound := len(required.BoundTo) > 0
 		if isBound {
-			ui.OutputSelection("Already bound capability", required.BoundTo)
+			specified, found := matching.GetByName(required.BoundTo)
+			if found {
+				ui.OutputSelection("Already bound capability", specified.Display())
+			} else {
+				ui.OutputError(fmt.Sprintf("No capability matching %v named %s was found", required.Spec, required.BoundTo))
+			}
 		}
 		if !isBound || ui.Proceed("Change bound capability") {
-			// filter capabilities that don't match the requirements
-			matching := capability.Entity.GetMatching(required.Spec)
-
 			// ask user to select which matching capability to bind
-			selected := ui.Select("Matching capability", getCapabilityNames(matching))
+			selected := ui.Select("Matching capability", matching.AsDisplayableOptions())
 			updated := required.DeepCopy()
 			updated.BoundTo = selected
 			requires[i] = *updated
