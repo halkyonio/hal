@@ -42,8 +42,12 @@ func Select(message string, options []string, defaultValue ...string) string {
 	return doSelect(message, options, defaultValue)
 }
 
-func SelectUnsorted(message string, options []string, defaultValue ...string) string {
-	return doSelect(message, options, defaultValue)
+func SelectDisplayable(message string, options DisplayableMap, defaultValue ...string) Displayable {
+	sort.Sort(options)
+	displayableOptions := options.AsDisplayableOptions()
+	name := doSelect(message, displayableOptions, defaultValue)
+	displayable, _ := options.GetByName(name)
+	return displayable
 }
 
 func doSelect(message string, options []string, defaultValue []string) string {
