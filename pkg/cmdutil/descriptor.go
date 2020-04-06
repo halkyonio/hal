@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var deserializer runtime.Decoder
@@ -107,8 +108,9 @@ func LoadAvailableHalkyonEntities(path string) *HalkyonDescriptor {
 		panic(err)
 	}
 	for _, child := range children {
-		if child.IsDir() {
-			hd.addEntitiesFromDir(filepath.Join(path, child.Name()))
+		name := child.Name()
+		if !strings.HasPrefix(name, ".") && child.IsDir() {
+			hd.addEntitiesFromDir(filepath.Join(path, name))
 		}
 	}
 
