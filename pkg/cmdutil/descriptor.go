@@ -5,6 +5,7 @@ import (
 	halkyon "halkyon.io/api"
 	capability "halkyon.io/api/capability/v1beta1"
 	component "halkyon.io/api/component/v1beta1"
+	"halkyon.io/hal/pkg/ui"
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -121,13 +122,19 @@ func (hd *HalkyonDescriptor) addEntitiesFromDir(path string) {
 	extensions := []string{"yaml", "yml"}
 	for _, extension := range extensions {
 		hdPath := filepath.Join(path, descriptorName(extension))
-		d, _ := LoadHalkyonDescriptor(hdPath)
-		hd.mergeWith(d)
+		hd.loadDescriptorAt(hdPath)
 
 		hdPath = halkyonDescriptorFrom(path, extension)
-		fromDekorate, _ := LoadHalkyonDescriptor(hdPath)
-		hd.mergeWith(fromDekorate)
+		hd.loadDescriptorAt(hdPath)
 	}
+}
+
+func (hd *HalkyonDescriptor) loadDescriptorAt(hdPath string) {
+	fromDekorate, e := LoadHalkyonDescriptor(hdPath)
+	if e != nil && !os.IsNotExist(e) {
+		ui.OutputError(fmt.Sprintf("Ignoring %s due to error: %v", hdPath, e))
+	}
+	hd.mergeWith(fromDekorate)
 }
 
 func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
@@ -148,7 +155,7 @@ func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
 		if object == nil {
 			object, _, err = deserializer.Decode(value.Raw, nil, nil)
 			if err != nil {
-				return nil, err
+				return newHalkyonDescriptor(0), err
 			}
 		}
 
