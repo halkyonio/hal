@@ -13,22 +13,25 @@ type Displayable interface {
 }
 
 type DisplayableMap struct {
-	byNames map[string]Displayable
-	byIndex []Displayable
+	byName    map[string]Displayable
+	byIndex   []Displayable
+	byDisplay map[string]Displayable
 }
 
 var Empty = DisplayableMap{}
 
 func NewDisplayableMap(size int) DisplayableMap {
 	return DisplayableMap{
-		byNames: make(map[string]Displayable, size),
-		byIndex: make([]Displayable, 0, size),
+		byName:    make(map[string]Displayable, size),
+		byIndex:   make([]Displayable, 0, size),
+		byDisplay: make(map[string]Displayable, size),
 	}
 }
 
 func (d *DisplayableMap) Add(displayable Displayable) {
-	d.byNames[displayable.Name()] = displayable
+	d.byName[displayable.Name()] = displayable
 	d.byIndex = append(d.byIndex, displayable)
+	d.byDisplay[displayable.Display()] = displayable
 }
 
 func (d DisplayableMap) Len() int {
@@ -57,6 +60,11 @@ func (d DisplayableMap) GetByIndex(i int) Displayable {
 }
 
 func (d DisplayableMap) GetByName(name string) (Displayable, bool) {
-	displayable, ok := d.byNames[name]
+	displayable, ok := d.byName[name]
+	return displayable, ok
+}
+
+func (d DisplayableMap) GetByDisplay(display string) (Displayable, bool) {
+	displayable, ok := d.byDisplay[display]
 	return displayable, ok
 }
