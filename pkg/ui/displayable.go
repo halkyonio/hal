@@ -46,7 +46,7 @@ func (d DisplayableMap) Swap(i, j int) {
 	d.byIndex[j] = d.byIndex[i]
 }
 
-func (d DisplayableMap) AsDisplayableOptions() []string {
+func (d DisplayableMap) asDisplayableOptions() []string {
 	result := make([]string, 0, d.Len())
 	for _, displayable := range d.byIndex {
 		result = append(result, displayable.Display())

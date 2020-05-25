@@ -156,8 +156,8 @@ func (o *createOptions) Complete(name string, cmd *cobra.Command, args []string)
 				break
 			}
 			if hasCaps && ui.Proceed("Bind to existing capability") {
-				required.BoundTo = ui.Select("Target capability", existing.AsDisplayableOptions())
-				displayable, _ := existing.GetByName(required.BoundTo)
+				displayable := ui.SelectDisplayable("Target capability", existing)
+				required.BoundTo = displayable.Name()
 				required.Spec = displayable.GetUnderlying().(v1beta13.Capability).Spec
 			} else {
 				capCreate := capability.CapabilityCreateOptions{}

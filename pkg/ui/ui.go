@@ -44,9 +44,9 @@ func Select(message string, options []string, defaultValue ...string) string {
 
 func SelectDisplayable(message string, options DisplayableMap, defaultValue ...string) Displayable {
 	sort.Sort(options)
-	displayableOptions := options.AsDisplayableOptions()
-	name := doSelect(message, displayableOptions, defaultValue)
-	displayable, _ := options.GetByName(name)
+	displayableOptions := options.asDisplayableOptions()
+	display := doSelect(message, displayableOptions, defaultValue)
+	displayable, _ := options.GetByDisplay(display)
 	return displayable
 }
 

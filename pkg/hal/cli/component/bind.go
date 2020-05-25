@@ -45,9 +45,9 @@ func (o *bindOptions) Complete(name string, cmd *cobra.Command, args []string) (
 		}
 		if !isBound || ui.Proceed("Change bound capability") {
 			// ask user to select which matching capability to bind
-			selected := ui.Select("Matching capability", matching.AsDisplayableOptions())
+			selected := ui.SelectDisplayable("Matching capability", matching)
 			updated := required.DeepCopy()
-			updated.BoundTo = selected
+			updated.BoundTo = selected.Name()
 			requires[i] = *updated
 		}
 	}
