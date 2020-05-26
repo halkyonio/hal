@@ -31,7 +31,7 @@ func IsJarPresent(podName string) bool {
 }
 
 func Logs(podName string) error {
-	command, interceptor := configureKubectlCmd("logs", "--since=10s", podName)
+	command, interceptor := configureKubectlCmd("logs", "--tail=100", podName)
 	command.Stdout = os.Stdout // so that we can print the output of the command
 	return runKubectlCmd(command, interceptor)
 }
