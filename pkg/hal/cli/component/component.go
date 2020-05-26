@@ -33,6 +33,7 @@ func NewCmdComponent(parent string) *cobra.Command {
 		push,
 		mode,
 		bind,
+		NewCmdLog(fullName),
 	)
 
 	return hal

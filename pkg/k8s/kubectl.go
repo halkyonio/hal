@@ -30,14 +30,22 @@ func IsJarPresent(podName string) bool {
 	return runKubectl([]string{"exec", podName, "--", "ls", JarPathInContainer}...) == nil
 }
 
+func Logs(podName string) error {
+	command, interceptor := configureKubectlCmd("logs", "--since=10s", podName)
+	command.Stdout = os.Stdout // so that we can print the output of the command
+	return runKubectlCmd(command, interceptor)
+}
+
 func Apply(path, namespace string) error {
 	return runKubectl([]string{"apply", "-f", path, "-n", namespace}...)
 }
 
 func runKubectl(args ...string) error {
-	command := exec.Command(kubectl, args...)
-	interceptor := log.GetErrorInterceptor()
-	command.Stderr = interceptor
+	command, interceptor := configureKubectlCmd(args...)
+	return runKubectlCmd(command, interceptor)
+}
+
+func runKubectlCmd(command *exec.Cmd, interceptor *log.ErrorInterceptor) error {
 	err := command.Run()
 	if err != nil {
 		if len(interceptor.ErrorMsg) > 0 {
@@ -46,6 +54,13 @@ func runKubectl(args ...string) error {
 		return err
 	}
 	return nil
+}
+
+func configureKubectlCmd(args ...string) (*exec.Cmd, *log.ErrorInterceptor) {
+	command := exec.Command(kubectl, args...)
+	interceptor := log.GetErrorInterceptor()
+	command.Stderr = interceptor
+	return command, interceptor
 }
 
 func GetK8SClientFlavor() string {
