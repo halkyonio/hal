@@ -283,7 +283,10 @@ func (o *createOptions) getChildDirNames() []string {
 	}
 	for _, child := range children {
 		if child.IsDir() {
-			childDirs = append(childDirs, child.Name())
+			name := child.Name()
+			if !strings.HasPrefix(name, ".") {
+				childDirs = append(childDirs, name)
+			}
 		}
 	}
 	return childDirs
