@@ -42,7 +42,11 @@ type displayableCapability struct {
 var _ ui.Displayable = displayableCapability{}
 
 func (d displayableCapability) Help() string {
-	return fmt.Sprintf("%s (%v/%v/%s)", d.Name(), d.capability.Spec.Category, d.capability.Spec.Type, d.capability.Spec.Version)
+	return GetDisplay(d.Name(), d.capability.Spec)
+}
+
+func GetDisplay(name string, spec v1beta12.CapabilitySpec) string {
+	return fmt.Sprintf("%s (%v/%v/%s)", name, spec.Category, spec.Type, spec.Version)
 }
 
 func (d displayableCapability) Display() string {
