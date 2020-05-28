@@ -12,6 +12,34 @@ type Displayable interface {
 	GetUnderlying() interface{}
 }
 
+func NewControlDisplayable(name string, display string) Displayable {
+	return controlDisplayable{
+		name:    name,
+		display: display,
+	}
+}
+
+type controlDisplayable struct {
+	name    string
+	display string
+}
+
+func (c controlDisplayable) Help() string {
+	return c.Display()
+}
+
+func (c controlDisplayable) Display() string {
+	return c.display
+}
+
+func (c controlDisplayable) Name() string {
+	return c.name
+}
+
+func (controlDisplayable) GetUnderlying() interface{} {
+	panic("implement me")
+}
+
 type DisplayableMap struct {
 	byName    map[string]Displayable
 	byIndex   []Displayable
