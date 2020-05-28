@@ -34,6 +34,7 @@ func NewCmdComponent(parent string) *cobra.Command {
 		mode,
 		bind,
 		NewCmdLog(fullName),
+		NewCmdEdit(fullName),
 	)
 
 	return hal
