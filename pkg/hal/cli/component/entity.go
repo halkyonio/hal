@@ -7,6 +7,7 @@ import (
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/k8s"
 	"halkyon.io/hal/pkg/ui"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -19,7 +20,16 @@ type client struct {
 var _ cmdutil.HalkyonEntity = client{}
 
 func (lc client) Create(toCreate runtime.Object) error {
-	_, err := lc.client.Create(toCreate.(*v1beta12.Component))
+	component := toCreate.(*v1beta12.Component)
+	c, err := lc.Get(component.Name)
+	if errors.IsNotFound(err) {
+		// create
+		_, err = lc.client.Create(component)
+	} else if err == nil {
+		component.ResourceVersion = c.(*v1beta12.Component).ResourceVersion
+		c, err = lc.client.Update(component)
+	}
+
 	return err
 }
 
