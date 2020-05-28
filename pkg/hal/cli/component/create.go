@@ -62,6 +62,7 @@ func (o *createOptions) Build() runtime.Object {
 		}
 
 		o.target = &v1beta1.Component{
+			TypeMeta: typeMeta(),
 			ObjectMeta: v1.ObjectMeta{
 				Name:      o.Name,
 				Namespace: o.CreateOptions.Client.GetNamespace(),

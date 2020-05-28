@@ -141,7 +141,24 @@ func (o *CreateOptions) Validate() error {
 }
 
 func (o *CreateOptions) Run() error {
-	err := o.Client.Create(o.Delegate.Build())
+	build := o.Delegate.Build()
+
+	// create or update halkyon descriptor
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	// if we're already in the component's dir, use that, otherwise use child directory
+	componentDir := currentDir
+	if filepath.Base(currentDir) != o.Name {
+		componentDir = filepath.Join(currentDir, o.Name)
+	}
+	err = io.GenerateHalkyonDescriptor(build, componentDir)
+	if err != nil {
+		return err
+	}
+
+	err = o.Client.Create(build)
 	if err == nil {
 		log.Successf("Successfully created '%s' %s", o.Name, o.ResourceType)
 	}

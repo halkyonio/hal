@@ -9,7 +9,9 @@ import (
 	"halkyon.io/hal/pkg/log"
 	"io"
 	"io/ioutil"
+	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
 	"net/http"
 	"net/url"
 	"os"
@@ -126,6 +128,17 @@ func unmarshall(body []byte, result interface{}) {
 	if err != nil {
 		LogErrorAndExit(err, "error unmarshalling")
 	}
+}
+
+func GenerateHalkyonDescriptor(object runtime.Object, path string) error {
+	// todo: this is currently a one-time operation that doesn't account for changes
+	list := v1.List{Items: []runtime.RawExtension{{Object: object}}}
+
+	bytes, err := yaml.Marshal(list)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filepath.Join(path, "halkyon.yml"), bytes, 0644)
 }
 
 func addClientHeader(req *http.Request) {

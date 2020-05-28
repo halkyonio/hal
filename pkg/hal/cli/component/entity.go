@@ -78,6 +78,13 @@ func (lc client) GetNamespace() string {
 	return lc.ns
 }
 
+func typeMeta() v1.TypeMeta {
+	return v1.TypeMeta{
+		Kind:       v1beta12.Kind,
+		APIVersion: "halkyon.io/v1beta1",
+	}
+}
+
 var Entity client
 
 func init() {
