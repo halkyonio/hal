@@ -43,7 +43,7 @@ type GenericOperationOptions struct {
 	ResourceType  ResourceType
 	Name          string
 	Client        HalkyonEntity
-	operationName string
+	OperationName string
 	delegate      Runnable
 }
 
@@ -76,15 +76,15 @@ func (o *GenericOperationOptions) Run() error {
 func (o *GenericOperationOptions) example(fullParentName string) string {
 	tmpl := ktemplates.Examples(`  # %[1]s the %[2]s named 'foo'
   %[3]s foo`)
-	return fmt.Sprintf(tmpl, strings.Title(o.operationName), o.ResourceType, CommandName(o.operationName, fullParentName))
+	return fmt.Sprintf(tmpl, strings.Title(o.OperationName), o.ResourceType, CommandName(o.OperationName, fullParentName))
 }
 
 func (o *GenericOperationOptions) use() string {
-	return fmt.Sprintf("%s <name of the %s to %s>", o.operationName, o.ResourceType, o.operationName)
+	return fmt.Sprintf("%s <name of the %s to %s>", o.OperationName, o.ResourceType, o.OperationName)
 }
 
 func (o *GenericOperationOptions) short() string {
-	return fmt.Sprintf("%s the named %s", strings.Title(o.operationName), o.ResourceType)
+	return fmt.Sprintf("%s the named %s", strings.Title(o.OperationName), o.ResourceType)
 }
 
 func NewGenericOperation(fullParentName string, o *GenericOperationOptions) *cobra.Command {

@@ -3,6 +3,7 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"halkyon.io/hal/pkg/io"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
@@ -25,6 +26,7 @@ type CreateOptions struct {
 	*GenericOperationOptions
 	Delegate       Creator
 	fromDescriptor bool
+	edit           bool
 }
 
 func NewCreateOptions(resourceType ResourceType, client HalkyonEntity) *CreateOptions {
@@ -32,7 +34,7 @@ func NewCreateOptions(resourceType ResourceType, client HalkyonEntity) *CreateOp
 	c.GenericOperationOptions = &GenericOperationOptions{
 		ResourceType:  resourceType,
 		Client:        client,
-		operationName: createCommandName,
+		OperationName: createCommandName,
 		delegate:      c,
 	}
 	return c
@@ -78,7 +80,7 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 						o.Delegate.Set(entity.Entity)
 					}
 				}
-			} else if IsInteractive(cmd) && ui.Proceed(fmt.Sprintf("Found %d %s(s) in %s, do you want to %s from them", size, t, currentDirName, o.operationName)) {
+			} else if IsInteractive(cmd) && ui.Proceed(fmt.Sprintf("Found %d %s(s) in %s, do you want to %s from them", size, t, currentDirName, o.OperationName)) {
 				o.Name = ui.Select(t, names, o.Name)
 			}
 		}

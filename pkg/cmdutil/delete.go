@@ -19,7 +19,7 @@ func NewDeleteOptions(resourceType ResourceType, client HalkyonEntity) *DeleteOp
 	d.GenericOperationOptions = &GenericOperationOptions{
 		ResourceType:  resourceType,
 		Client:        client,
-		operationName: deleteCommandName,
+		OperationName: deleteCommandName,
 		delegate:      d,
 	}
 	return d
