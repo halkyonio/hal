@@ -118,6 +118,10 @@ func GetValidatorFor(prop validation.Validatable) survey.Validator {
 	return survey.Validator(validation.GetValidatorFor(prop))
 }
 
+func ControlString(msg string) string {
+	return ansi.Yellow + ansi.ColorCode("default+hb") + msg + ansi.Reset
+}
+
 func OutputSelection(msg, choice string) {
 	fmt.Println(ansi.Green + ansi.ColorCode("default+hb") + core.SelectFocusIcon + " " + msg + ": " + ansi.Cyan + choice + ansi.Reset)
 }
