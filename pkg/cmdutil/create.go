@@ -98,11 +98,11 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 			return err
 		}
 		if exists {
-			return fmt.Errorf("a %s named '%s' already exists, please use update instead (NOT YET IMPLEMENTED)", o.ResourceType, o.Name)
+			o.edit = true
 		}
 	}
 
-	if !o.fromDescriptor {
+	if !o.fromDescriptor || o.edit {
 		if err := o.Delegate.Complete(name, cmd, args); err != nil {
 			return err
 		}
@@ -110,20 +110,25 @@ func (o *CreateOptions) Complete(name string, cmd *cobra.Command, args []string)
 
 	for {
 		o.Name = ui.Ask("Name", o.Name, o.generateName())
+		if o.edit {
+			break
+		}
 		err := validation.NameValidator(o.Name)
 		if err != nil {
 			ui.OutputError(fmt.Sprintf("Invalid name: '%s', please select another one", o.Name))
 			o.Name = ""
 		}
-		exists, err := o.Exists()
-		if exists {
-			ui.OutputError(fmt.Sprintf("A %s named '%s' already exists, please select another name", o.ResourceType, o.Name))
-			o.Name = "" // reset name and try again!
-		} else {
-			if err == nil {
-				break // resource is not found which is what we want
+		if !o.edit {
+			exists, err := o.Exists()
+			if exists {
+				ui.OutputError(fmt.Sprintf("A %s named '%s' already exists, please select another name", o.ResourceType, o.Name))
+				o.Name = "" // reset name and try again!
 			} else {
-				return err // another error has occurred, report it
+				if err == nil {
+					break // resource is not found which is what we want
+				} else {
+					return err // another error has occurred, report it
+				}
 			}
 		}
 	}
@@ -160,7 +165,7 @@ func (o *CreateOptions) Run() error {
 
 	err = o.Client.Create(build)
 	if err == nil {
-		log.Successf("Successfully created '%s' %s", o.Name, o.ResourceType)
+		log.Successf("Successfully created or updated '%s' %s", o.Name, o.ResourceType)
 	}
 	return err
 }
