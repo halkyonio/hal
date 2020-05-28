@@ -43,7 +43,7 @@ func (d DisplayableMap) Less(i, j int) bool {
 }
 
 func (d DisplayableMap) Swap(i, j int) {
-	d.byIndex[j] = d.byIndex[i]
+	d.byIndex[i], d.byIndex[j] = d.byIndex[j], d.byIndex[i]
 }
 
 func (d DisplayableMap) asDisplayableOptions() []string {
