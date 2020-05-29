@@ -126,10 +126,30 @@ func (o *pushOptions) Run() error {
 
 	// update the component revision
 	patch := fmt.Sprintf(`{"spec":{"revision":"%s"}}`, revision)
+	comp.Spec.Revision = revision
 	_, err = Entity.client.Patch(name, types.MergePatchType, []byte(patch))
 	if err != nil {
 		return err
 	}
+
+	/// create or update halkyon descriptor
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	// if we're already in the component's dir, use that, otherwise use child directory if we're dealing with a component
+	componentDir := currentDir
+	if filepath.Base(currentDir) != comp.Name {
+		componentDir = filepath.Join(currentDir, comp.Name)
+	}
+	// remove Status
+	comp.Status = component.ComponentStatus{}
+	comp.TypeMeta = typeMeta()
+	err = cmdutil.CreateOrUpdateHalkyonDescriptorWith(comp, componentDir)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
