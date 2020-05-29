@@ -70,8 +70,10 @@ func (hd *HalkyonDescriptor) addNewEntity(object runtime.Object, name, path stri
 	}
 	hdMap := hd.entitiesByType[rt]
 	if e, ok := hdMap[name]; ok {
-		panic(fmt.Errorf("attempted to register a %s named %s from %s but another one already exist in %s",
-			object.GetObjectKind().GroupVersionKind().Kind, name, path, e.Path))
+		if path != e.Path {
+			panic(fmt.Errorf("attempted to register a %s named %s from %s but another one already exist in %s",
+				object.GetObjectKind().GroupVersionKind().Kind, name, path, e.Path))
+		}
 	}
 	hdMap[name] = newHalkyonDescriptorEntity(object, name, path)
 }
