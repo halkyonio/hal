@@ -61,6 +61,7 @@ func (o *createOptions) GeneratePrefix() string {
 func (o *createOptions) Build() runtime.Object {
 	if o.target == nil {
 		o.target = &v1beta1.Capability{
+			TypeMeta: typeMeta(),
 			ObjectMeta: v1.ObjectMeta{
 				Name:      o.Name,
 				Namespace: o.CreateOptions.Client.GetNamespace(),
