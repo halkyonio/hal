@@ -6,6 +6,7 @@ import (
 	"halkyon.io/api/component/v1beta1"
 	"halkyon.io/hal/pkg/cmdutil"
 	"halkyon.io/hal/pkg/hal/cli/capability"
+	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 )
 
@@ -14,6 +15,7 @@ const bindCommandName = "bind"
 type bindOptions struct {
 	component *v1beta1.Component
 	*cmdutil.ComponentTargetingOptions
+	capability string
 }
 
 func (o *bindOptions) SetTargetingOptions(options *cmdutil.ComponentTargetingOptions) {
@@ -28,8 +30,7 @@ func (o *bindOptions) Complete(name string, cmd *cobra.Command, args []string) (
 	}
 
 	// get list of required capabilities and check if they are already bound
-	requires := o.component.Spec.Capabilities.Requires
-	for i, required := range requires {
+	for i, required := range o.component.Spec.Capabilities.Requires {
 		// filter capabilities that don't match the requirements
 		matching := capability.Entity.GetMatching(required.Spec)
 
@@ -47,8 +48,9 @@ func (o *bindOptions) Complete(name string, cmd *cobra.Command, args []string) (
 			// ask user to select which matching capability to bind
 			selected := ui.SelectDisplayable("Matching capability", matching)
 			updated := required.DeepCopy()
-			updated.BoundTo = selected.Name()
-			requires[i] = *updated
+			o.capability = selected.Name()
+			updated.BoundTo = o.capability
+			o.component.Spec.Capabilities.Requires[i] = *updated
 		}
 	}
 
@@ -61,6 +63,9 @@ func (o *bindOptions) Validate() error {
 
 func (o *bindOptions) Run() error {
 	_, err := Entity.client.Update(o.component)
+	if err == nil {
+		log.Successf("Successfully bound '%s' capability to '%s' component", o.capability, o.component.Name)
+	}
 	return err
 }
 
