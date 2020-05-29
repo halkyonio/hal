@@ -8,11 +8,13 @@ import (
 	"halkyon.io/hal/pkg/ui"
 	"io/ioutil"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8yml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes/scheme"
 	"os"
 	"path/filepath"
+	"sigs.k8s.io/yaml"
 	"strings"
 )
 
@@ -41,6 +43,7 @@ type entitiesRegistry map[string]HalkyonDescriptorEntity
 
 type HalkyonDescriptor struct {
 	entitiesByType map[ResourceType]entitiesRegistry
+	path           string
 }
 
 func newHalkyonDescriptor(size int) *HalkyonDescriptor {
@@ -52,22 +55,22 @@ func newHalkyonDescriptor(size int) *HalkyonDescriptor {
 	return hd
 }
 
+func (hd *HalkyonDescriptor) Add(object runtime.Object) {
+	hd.add(object, hd.path)
+}
+
 func (hd *HalkyonDescriptor) add(object runtime.Object, path string) {
 	switch t := object.(type) {
 	case *capability.Capability:
-		hd.addNewEntity(t, t.Name, path)
+		hd.addNewEntity(t, t.Name, path, Capability)
 	case *component.Component:
-		hd.addNewEntity(t, t.Name, path)
+		hd.addNewEntity(t, t.Name, path, Component)
 	default:
 		panic(fmt.Errorf("unknown object %T", t))
 	}
 }
 
-func (hd *HalkyonDescriptor) addNewEntity(object runtime.Object, name, path string) {
-	rt, err := ResourceTypeFor(object)
-	if err != nil {
-		panic(err)
-	}
+func (hd *HalkyonDescriptor) addNewEntity(object runtime.Object, name, path string, rt ResourceType) {
 	hdMap := hd.entitiesByType[rt]
 	if e, ok := hdMap[name]; ok {
 		if path != e.Path {
@@ -104,6 +107,7 @@ func (hd *HalkyonDescriptor) GetDefinedEntitiesWith(t ResourceType) entitiesRegi
 
 func LoadAvailableHalkyonEntities(path string) *HalkyonDescriptor {
 	hd := newHalkyonDescriptor(10)
+	hd.path = path
 	hd.addEntitiesFromDir(path)
 
 	children, err := ioutil.ReadDir(path)
@@ -140,10 +144,23 @@ func (hd *HalkyonDescriptor) loadDescriptorAt(hdPath string) {
 }
 
 func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
+	return LoadHalkyonDescriptorCreatingIfNeeded(descriptor, false)
+}
+
+func LoadHalkyonDescriptorCreatingIfNeeded(descriptor string, create bool) (*HalkyonDescriptor, error) {
 	// look for the component name in the halkyon descriptor
+	if filepath.Base(descriptor) != "halkyon.yml" && filepath.Base(descriptor) != "halkyon.yaml" {
+		descriptor = filepath.Join(descriptor, "halkyon.yml")
+	}
 	file, err := os.Open(descriptor)
 	if err != nil {
-		return newHalkyonDescriptor(0), err
+		if !create {
+			return newHalkyonDescriptor(0), err
+		} else {
+			hd := newHalkyonDescriptor(7)
+			hd.path = descriptor
+			return hd, nil
+		}
 	}
 	decoder := k8yml.NewYAMLToJSONDecoder(file)
 	list := &v1.List{}
@@ -152,6 +169,7 @@ func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
 		return newHalkyonDescriptor(0), err
 	}
 	hd := newHalkyonDescriptor(len(list.Items))
+	hd.path = descriptor
 	for _, value := range list.Items {
 		object := value.Object
 		if object == nil {
@@ -167,10 +185,44 @@ func LoadHalkyonDescriptor(descriptor string) (*HalkyonDescriptor, error) {
 	return hd, nil
 }
 
+func (hd *HalkyonDescriptor) OutputAt(path ...string) error {
+	list := v1.List{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "List",
+			APIVersion: "v1",
+		},
+		Items: make([]runtime.RawExtension, 0, 7),
+	}
+	for _, registry := range hd.entitiesByType {
+		for _, entity := range registry {
+			list.Items = append(list.Items, runtime.RawExtension{Object: entity.Entity})
+		}
+	}
+
+	bytes, err := yaml.Marshal(list)
+	if err != nil {
+		return err
+	}
+	p := hd.path
+	if len(hd.path) == 0 || len(path) == 1 {
+		p = path[0]
+	}
+	return ioutil.WriteFile(p, bytes, 0644)
+}
+
 func halkyonDescriptorFrom(path, extension string) string {
 	return filepath.Join(path, "target", "classes", "META-INF", "dekorate", descriptorName(extension))
 }
 
 func descriptorName(extension string) string {
 	return fmt.Sprintf("halkyon.%s", extension)
+}
+
+func CreateOrUpdateHalkyonDescriptorWith(object runtime.Object, path string) error {
+	descriptor, err := LoadHalkyonDescriptorCreatingIfNeeded(path, true)
+	if err != nil {
+		return err
+	}
+	descriptor.Add(object)
+	return descriptor.OutputAt()
 }

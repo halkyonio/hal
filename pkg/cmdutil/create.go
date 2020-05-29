@@ -3,7 +3,6 @@ package cmdutil
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"halkyon.io/hal/pkg/io"
 	"halkyon.io/hal/pkg/log"
 	"halkyon.io/hal/pkg/ui"
 	"halkyon.io/hal/pkg/validation"
@@ -153,12 +152,12 @@ func (o *CreateOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	// if we're already in the component's dir, use that, otherwise use child directory
+	// if we're already in the component's dir, use that, otherwise use child directory if we're dealing with a component
 	componentDir := currentDir
-	if filepath.Base(currentDir) != o.Name {
+	if o.ResourceType == Component && filepath.Base(currentDir) != o.Name {
 		componentDir = filepath.Join(currentDir, o.Name)
 	}
-	err = io.GenerateHalkyonDescriptor(build, componentDir)
+	err = CreateOrUpdateHalkyonDescriptorWith(build, componentDir)
 	if err != nil {
 		return err
 	}
