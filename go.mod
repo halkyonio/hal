@@ -23,6 +23,7 @@ require (
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v11.0.1-0.20190805182715-88a2adca7e76+incompatible
 	k8s.io/kubectl v0.0.0-20190831163037-3b58a944563f
+	sigs.k8s.io/yaml v1.1.0
 )
 
 replace (
